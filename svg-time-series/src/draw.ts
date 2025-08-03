@@ -344,7 +344,7 @@ export class TimeSeriesChart {
   }
 
   private refreshChart(
-    zoomArea: Selection<BaseType, unknown, HTMLElement, unknown>,
+    zoomArea: Selection<SVGRectElement, unknown, any, any>,
     currentPanZoomTransformState: ZoomTransform,
     bScreenXVisible: AR1Basis,
     pathTransformNy: MyTransform,
@@ -354,8 +354,8 @@ export class TimeSeriesChart {
     ySf: ScaleLinear<number, number>,
     xAxis: MyAxis,
     yAxis: MyAxis,
-    gX: Selection<BaseType, unknown, HTMLElement, unknown>,
-    gY: Selection<BaseType, unknown, HTMLElement, unknown>,
+    gX: Selection<SVGGElement, unknown, any, any>,
+    gY: Selection<SVGGElement, unknown, any, any>,
   ) {
     if (currentPanZoomTransformState != null) {
       d3zoom().transform(zoomArea, currentPanZoomTransformState);
@@ -389,7 +389,7 @@ export class TimeSeriesChart {
   }
 
   private renderPaths(
-    path: Selection<SVGPathElement, number, SVGGElement, unknown>,
+    path: Selection<SVGPathElement, number, any, unknown>,
   ) {
     const drawLine = (cityIdx: number) =>
       line()
