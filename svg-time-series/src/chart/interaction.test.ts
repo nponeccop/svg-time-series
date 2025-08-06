@@ -7,6 +7,7 @@ import { AR1Basis } from "../math/affine.ts";
 import { ChartData } from "./data.ts";
 import { setupRender } from "./render.ts";
 import { setupInteraction } from "./interaction.ts";
+import { TimeSeriesChart } from "../draw.ts";
 
 class Matrix {
   constructor(
@@ -259,5 +260,55 @@ describe("chart interaction", () => {
       createChart([]);
       vi.runAllTimers();
     }).toThrow();
+  });
+
+  it("dispose removes handlers and dom nodes", () => {
+    const data: Array<[number, number]> = [
+      [0, 0],
+      [1, 1],
+    ];
+    currentDataLength = data.length;
+    const parent = document.createElement("div");
+    Object.defineProperty(parent, "clientWidth", {
+      value: 1,
+      configurable: true,
+    });
+    Object.defineProperty(parent, "clientHeight", {
+      value: 50,
+      configurable: true,
+    });
+    const svgEl = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    parent.appendChild(svgEl);
+    const legend = document.createElement("div");
+    legend.innerHTML =
+      '<span class="chart-legend__time"></span>' +
+      '<span class="chart-legend__green_value"></span>' +
+      '<span class="chart-legend__blue_value"></span>';
+    const mouseMoveHandler = vi.fn();
+    const chart = new TimeSeriesChart(
+      select(svgEl) as any,
+      select(legend) as any,
+      0,
+      1,
+      data,
+      (i, arr) => ({ min: arr[i][0], max: arr[i][0] }),
+      (i, arr) => ({ min: arr[i][1]!, max: arr[i][1]! }),
+      () => {},
+      mouseMoveHandler,
+    );
+    vi.runAllTimers();
+    const zoomRect = svgEl.querySelector(".zoom") as SVGRectElement;
+    expect(zoomRect).not.toBeNull();
+
+    zoomRect.dispatchEvent(new MouseEvent("mousemove"));
+    expect(mouseMoveHandler).toHaveBeenCalledTimes(1);
+
+    chart.dispose();
+
+    expect(svgEl.querySelector(".zoom")).toBeNull();
+    expect(svgEl.querySelectorAll("circle").length).toBe(0);
+
+    zoomRect.dispatchEvent(new MouseEvent("mousemove"));
+    expect(mouseMoveHandler).toHaveBeenCalledTimes(1);
   });
 });

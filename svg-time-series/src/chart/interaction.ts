@@ -152,5 +152,15 @@ export function setupInteraction(
     schedulePointRefresh();
   }
 
-  return { zoom, onHover, drawNewData };
+  function destroy() {
+    zoomBehavior.on("zoom", null);
+    zoomArea.on("mousemove", null);
+    // remove all zoom listeners attached by the behavior
+    zoomArea.on(".zoom", null);
+    zoomArea.remove();
+    highlightedGreenDot.remove();
+    highlightedBlueDot?.remove();
+  }
+
+  return { zoom, onHover, drawNewData, destroy };
 }
