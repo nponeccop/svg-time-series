@@ -13,7 +13,7 @@ import {
   updateScaleY,
   type ScaleSet,
 } from "./render/scales.ts";
-import { initPaths, createTransforms, type PathSet } from "./render/paths.ts";
+import { initPaths, type PathSet } from "./render/paths.ts";
 
 function bindAxisToDom(
   svg: Selection<BaseType, unknown, HTMLElement, unknown>,
@@ -83,7 +83,10 @@ export function setupRender(
     createDimensions(svg);
   const paths = initPaths(svg, hasSf);
   const scales = createScales(bScreenXVisible, bScreenYVisible, hasSf);
-  const transformsInner = createTransforms(paths);
+  const transformsInner = {
+    ny: new ViewportTransform(),
+    sf: paths.viewSf ? new ViewportTransform() : undefined,
+  };
 
   updateScaleX(scales.x, data.bIndexFull, data);
   updateScaleY(
