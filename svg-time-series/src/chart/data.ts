@@ -1,5 +1,6 @@
 import { AR1, AR1Basis, betweenTBasesAR1, bUnit } from "../math/affine.ts";
 import { IMinMax, SegmentTree } from "../segmentTree.ts";
+import { rebuildSegmentTrees } from "./segmentTreeManager.ts";
 
 export type { IMinMax };
 
@@ -49,29 +50,26 @@ export class ChartData {
     );
     this.idxShift = betweenTBasesAR1(new AR1Basis(1, 2), bUnit);
     this.bIndexFull = new AR1Basis(0, data.length - 1);
-    this.rebuildSegmentTrees();
+    const { treeNy, treeSf } = rebuildSegmentTrees(
+      this.data,
+      this.buildSegmentTreeTupleNy,
+      this.buildSegmentTreeTupleSf,
+    );
+    this.treeNy = treeNy;
+    this.treeSf = treeSf;
   }
 
   append(newData: [number, number?]): void {
     this.data.push(newData);
     this.data.shift();
     this.idxToTime = this.idxToTime.composeWith(this.idxShift);
-    this.rebuildSegmentTrees();
-  }
-
-  private rebuildSegmentTrees(): void {
-    this.treeNy = new SegmentTree(
+    const { treeNy, treeSf } = rebuildSegmentTrees(
       this.data,
-      this.data.length,
       this.buildSegmentTreeTupleNy,
+      this.buildSegmentTreeTupleSf,
     );
-    this.treeSf = this.buildSegmentTreeTupleSf
-      ? new SegmentTree(
-          this.data,
-          this.data.length,
-          this.buildSegmentTreeTupleSf,
-        )
-      : undefined;
+    this.treeNy = treeNy;
+    this.treeSf = treeSf;
   }
 
   bTemperatureVisible(
