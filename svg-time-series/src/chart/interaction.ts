@@ -81,7 +81,7 @@ export class ChartInteraction {
   };
 
   public drawNewData = () => {
-    renderPaths(this.state, this.data.data);
+    renderPaths(this.state, this.data.toArray());
     this.scheduleRefresh();
     this.legendController.refresh();
   };

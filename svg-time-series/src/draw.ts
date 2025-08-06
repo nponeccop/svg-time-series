@@ -1,11 +1,12 @@
 import { BaseType, Selection } from "d3-selection";
 import { D3ZoomEvent } from "d3-zoom";
 
-import { ChartData, IMinMax } from "./chart/data.ts";
+import { ChartData, type IDataSource } from "./chart/data.ts";
 import { setupRender } from "./chart/render.ts";
 import { ChartInteraction } from "./chart/interaction.ts";
 
-export type { IMinMax } from "./chart/data.ts";
+export type { IMinMax, IDataSource } from "./chart/data.ts";
+export { ArrayDataSource, ConcatUint8ArrayDataSource } from "./chart/data.ts";
 
 export class TimeSeriesChart {
   public zoom: (event: D3ZoomEvent<Element, unknown>) => void;
@@ -17,29 +18,13 @@ export class TimeSeriesChart {
   constructor(
     svg: Selection<BaseType, unknown, HTMLElement, unknown>,
     legend: Selection<BaseType, unknown, HTMLElement, unknown>,
-    startTime: number,
-    timeStep: number,
-    data: Array<[number, number?]>,
-    buildSegmentTreeTupleNy: (
-      index: number,
-      elements: ReadonlyArray<[number, number?]>,
-    ) => IMinMax,
-    buildSegmentTreeTupleSf?: (
-      index: number,
-      elements: ReadonlyArray<[number, number?]>,
-    ) => IMinMax,
+    data: IDataSource,
     zoomHandler: (event: D3ZoomEvent<Element, unknown>) => void = () => {},
     mouseMoveHandler: (event: MouseEvent) => void = () => {},
     formatTime: (timestamp: number) => string = (timestamp) =>
       new Date(timestamp).toLocaleString(),
   ) {
-    this.data = new ChartData(
-      startTime,
-      timeStep,
-      data,
-      buildSegmentTreeTupleNy,
-      buildSegmentTreeTupleSf,
-    );
+    this.data = new ChartData(data);
 
     const renderState = setupRender(svg, this.data);
     const interaction = new ChartInteraction(

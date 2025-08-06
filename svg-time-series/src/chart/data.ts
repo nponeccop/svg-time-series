@@ -1,77 +1,57 @@
 import { AR1, AR1Basis, betweenTBasesAR1, bUnit } from "../math/affine.ts";
 import { IMinMax, SegmentTree } from "../segmentTree.ts";
+import type { IDataSource } from "./datasource.ts";
 
-export type { IMinMax };
+export type { IMinMax, IDataSource };
+export { ArrayDataSource, ConcatUint8ArrayDataSource } from "./datasource.ts";
 
 export class ChartData {
-  public data: Array<[number, number?]>;
+  private data: IDataSource;
   public treeNy!: SegmentTree<[number, number?]>;
   public treeSf?: SegmentTree<[number, number?]>;
   public idxToTime: AR1;
   private idxShift: AR1;
   public bIndexFull: AR1Basis;
-  private buildSegmentTreeTupleNy: (
-    index: number,
-    elements: ReadonlyArray<[number, number?]>,
-  ) => IMinMax;
-  private buildSegmentTreeTupleSf?: (
-    index: number,
-    elements: ReadonlyArray<[number, number?]>,
-  ) => IMinMax;
 
   /**
    * Creates a new ChartData instance.
    * @param data Initial dataset; must contain at least one point.
    * @throws if `data` is empty.
    */
-  constructor(
-    startTime: number,
-    timeStep: number,
-    data: Array<[number, number?]>,
-    buildSegmentTreeTupleNy: (
-      index: number,
-      elements: ReadonlyArray<[number, number?]>,
-    ) => IMinMax,
-    buildSegmentTreeTupleSf?: (
-      index: number,
-      elements: ReadonlyArray<[number, number?]>,
-    ) => IMinMax,
-  ) {
+  constructor(data: IDataSource) {
     if (data.length === 0) {
       throw new Error("ChartData requires a non-empty data array");
     }
     this.data = data;
-    this.buildSegmentTreeTupleNy = buildSegmentTreeTupleNy;
-    this.buildSegmentTreeTupleSf = buildSegmentTreeTupleSf;
     this.idxToTime = betweenTBasesAR1(
       bUnit,
-      new AR1Basis(startTime, startTime + timeStep),
+      new AR1Basis(data.startTime, data.startTime + data.timeStep),
     );
     this.idxShift = betweenTBasesAR1(new AR1Basis(1, 2), bUnit);
-    this.bIndexFull = new AR1Basis(0, data.length - 1);
+    this.bIndexFull = new AR1Basis(0, this.data.length - 1);
     this.rebuildSegmentTrees();
   }
 
   append(newData: [number, number?]): void {
-    this.data.push(newData);
-    this.data.shift();
+    this.data.append(newData);
     this.idxToTime = this.idxToTime.composeWith(this.idxShift);
+    this.bIndexFull = new AR1Basis(0, this.data.length - 1);
     this.rebuildSegmentTrees();
   }
 
   private rebuildSegmentTrees(): void {
-    this.treeNy = new SegmentTree(
-      this.data,
-      this.data.length,
-      this.buildSegmentTreeTupleNy,
-    );
-    this.treeSf = this.buildSegmentTreeTupleSf
-      ? new SegmentTree(
-          this.data,
-          this.data.length,
-          this.buildSegmentTreeTupleSf,
-        )
-      : undefined;
+    this.treeNy = new SegmentTree([], this.data.length, (i) => {
+      const [ny] = this.data.at(i);
+      return { min: ny, max: ny };
+    });
+    const [, sf0] = this.data.at(0);
+    this.treeSf =
+      sf0 !== undefined
+        ? new SegmentTree([], this.data.length, (i) => {
+            const [, sf] = this.data.at(i);
+            return { min: sf!, max: sf! };
+          })
+        : undefined;
   }
 
   bTemperatureVisible(
@@ -89,5 +69,17 @@ export class ChartData {
     }
     const { min, max } = tree.query(startIdx, endIdx);
     return new AR1Basis(min, max);
+  }
+
+  at(index: number): [number, number?] {
+    return this.data.at(index);
+  }
+
+  get length(): number {
+    return this.data.length;
+  }
+
+  toArray(): Array<[number, number?]> {
+    return this.data.toArray();
   }
 }

@@ -20,11 +20,11 @@ vi.mock("./chart/interaction.ts", () => {
       _svg: unknown,
       _legend: unknown,
       _state: unknown,
-      data: { data: Array<[number, number?]> },
+      data: { toArray: () => Array<[number, number?]> },
     ) => {
       drawNewDataMock = vi.fn();
       onHoverMock = vi.fn(() => {
-        onHoverUsedData = data.data.slice();
+        onHoverUsedData = data.toArray().slice();
       });
       return {
         zoom: vi.fn(),
@@ -37,7 +37,7 @@ vi.mock("./chart/interaction.ts", () => {
   return { ChartInteraction: ChartInteractionMock };
 });
 
-import { TimeSeriesChart } from "./draw.ts";
+import { TimeSeriesChart, ArrayDataSource } from "./draw.ts";
 import { ChartData } from "./chart/data.ts";
 
 const appendSpy = vi.spyOn(ChartData.prototype, "append");
@@ -56,16 +56,10 @@ function createChart(initialData: Array<[number, number?]>) {
   const svgSel = select(dom.window.document.querySelector("svg")) as any;
   const legendSel = select(dom.window.document.querySelector("#legend")) as any;
 
-  const buildTuple = () => ({ min: 0, max: 0 });
-
   const chart = new TimeSeriesChart(
     svgSel,
     legendSel,
-    0,
-    1,
-    initialData,
-    buildTuple,
-    buildTuple,
+    new ArrayDataSource(0, 1, initialData),
     vi.fn(),
     vi.fn(),
   );

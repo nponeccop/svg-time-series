@@ -30,38 +30,17 @@ work is possible. Keep watching!
 
 ## Y-axis modes
 
-Charts can display one or two data series. `TimeSeriesChart` accepts `data: Array<[number]>` for a single Y-axis or `data: Array<[number, number]>` for dual axes. Two helpers, `buildSegmentTreeTupleNy` and optionally `buildSegmentTreeTupleSf`, read the first and second values respectively and feed independent segment trees, providing scales for each series.
+Charts can display one or two data series. Provide a data source implementing
+`IDataSource` (for example, `ArrayDataSource`). If tuples contain two values,
+the chart automatically renders dual axes.
 
 ```ts
-import { TimeSeriesChart, IMinMax } from "svg-time-series";
+import { TimeSeriesChart, ArrayDataSource } from "svg-time-series";
 
-function buildSegmentTreeTupleNy(
-  index: number,
-  elements: ReadonlyArray<[number, number]>,
-): IMinMax {
-  const ny = elements[index][0];
-  return { min: ny, max: ny };
-}
+const ds = new ArrayDataSource(startTime, timeStep, data);
 
-function buildSegmentTreeTupleSf(
-  index: number,
-  elements: ReadonlyArray<[number, number]>,
-): IMinMax {
-  const sf = elements[index][1];
-  return { min: sf, max: sf };
-}
-
-const chart = new TimeSeriesChart(
-  svg,
-  legend,
-  startTime,
-  timeStep,
-  data,
-  buildSegmentTreeTupleNy,
-  buildSegmentTreeTupleSf,
-  onZoom,
-  onMouseMove,
-  (ts) => new Date(ts).toISOString(),
+const chart = new TimeSeriesChart(svg, legend, ds, onZoom, onMouseMove, (ts) =>
+  new Date(ts).toISOString(),
 );
 ```
 
@@ -69,24 +48,21 @@ The last argument, `formatTime`, is optional and lets you customize how
 timestamps are displayed in the legend. If omitted, timestamps are formatted
 with `toLocaleString`.
 
-For a single Y-axis, supply data with one value per point and omit the second builder:
+For a single Y-axis, supply data with one value per point:
 
 ```ts
 const chartSingle = new TimeSeriesChart(
   svg,
   legend,
-  startTime,
-  timeStep,
-  singleData,
-  buildSegmentTreeTupleNy,
-  undefined,
+  new ArrayDataSource(startTime, timeStep, singleData),
   onZoom,
   onMouseMove,
   (ts) => new Date(ts).toISOString(),
 );
 ```
 
-The chart will only build the second axis, path, and legend entries when a second series is provided.
+The chart will only build the second axis, path, and legend entries when a
+second series is provided.
 
 ## Secrets of Speed
 

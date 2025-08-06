@@ -2,26 +2,8 @@ import { csv } from "d3-request";
 import { ValueFn, select, selectAll, pointer } from "d3-selection";
 import { D3ZoomEvent } from "d3-zoom";
 
-import { TimeSeriesChart, IMinMax } from "svg-time-series";
+import { TimeSeriesChart, ArrayDataSource } from "svg-time-series";
 import { measure } from "../measure.ts";
-
-function buildSegmentTreeTupleNy(
-  index: number,
-  elements: ReadonlyArray<[number, number]>,
-): IMinMax {
-  const nyMinValue = isNaN(elements[index][0]) ? Infinity : elements[index][0];
-  const nyMaxValue = isNaN(elements[index][0]) ? -Infinity : elements[index][0];
-  return { min: nyMinValue, max: nyMaxValue };
-}
-
-function buildSegmentTreeTupleSf(
-  index: number,
-  elements: ReadonlyArray<[number, number]>,
-): IMinMax {
-  const sfMinValue = isNaN(elements[index][1]) ? Infinity : elements[index][1];
-  const sfMaxValue = isNaN(elements[index][1]) ? -Infinity : elements[index][1];
-  return { min: sfMinValue, max: sfMaxValue };
-}
 
 export function drawCharts(data: [number, number][]) {
   const charts: TimeSeriesChart[] = [];
@@ -43,11 +25,11 @@ export function drawCharts(data: [number, number][]) {
     const chart = new TimeSeriesChart(
       svg,
       legend,
-      Date.now(),
-      86400000,
-      data.map((_) => _),
-      buildSegmentTreeTupleNy,
-      buildSegmentTreeTupleSf,
+      new ArrayDataSource(
+        Date.now(),
+        86400000,
+        data.map((_) => _),
+      ),
       onZoom,
       onMouseMove,
     );

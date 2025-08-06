@@ -1,35 +1,25 @@
 import { describe, it, expect } from "vitest";
-import { ChartData } from "./data.ts";
+import {
+  ChartData,
+  ArrayDataSource,
+  ConcatUint8ArrayDataSource,
+} from "./data.ts";
 import { AR1Basis } from "../math/affine.ts";
 
 describe("ChartData", () => {
-  const buildNy = (i: number, arr: ReadonlyArray<[number, number?]>) => ({
-    min: arr[i][0],
-    max: arr[i][0],
-  });
-  const buildSf = (i: number, arr: ReadonlyArray<[number, number?]>) => ({
-    min: arr[i][1]!,
-    max: arr[i][1]!,
-  });
-
   it("throws if constructed with empty data", () => {
-    expect(() => new ChartData(0, 1, [], buildNy)).toThrow(
-      /non-empty data array/,
-    );
+    const ds = new ArrayDataSource(0, 1, []);
+    expect(() => new ChartData(ds)).toThrow(/non-empty data array/);
   });
 
   it("updates data and time mapping on append", () => {
     const cd = new ChartData(
-      0,
-      1,
-      [
+      new ArrayDataSource(0, 1, [
         [0, 0],
         [1, 1],
-      ],
-      buildNy,
-      buildSf,
+      ]),
     );
-    expect(cd.data).toEqual([
+    expect(cd.toArray()).toEqual([
       [0, 0],
       [1, 1],
     ]);
@@ -37,7 +27,7 @@ describe("ChartData", () => {
 
     cd.append([2, 2]);
 
-    expect(cd.data).toEqual([
+    expect(cd.toArray()).toEqual([
       [1, 1],
       [2, 2],
     ]);
@@ -48,21 +38,17 @@ describe("ChartData", () => {
 
   it("reflects latest window after multiple appends", () => {
     const cd = new ChartData(
-      0,
-      1,
-      [
+      new ArrayDataSource(0, 1, [
         [0, 0],
         [1, 1],
-      ],
-      buildNy,
-      buildSf,
+      ]),
     );
 
     cd.append([2, 2]);
     cd.append([3, 3]);
     cd.append([4, 4]);
 
-    expect(cd.data).toEqual([
+    expect(cd.toArray()).toEqual([
       [3, 3],
       [4, 4],
     ]);
@@ -74,15 +60,11 @@ describe("ChartData", () => {
 
   it("computes visible temperature bounds", () => {
     const cd = new ChartData(
-      0,
-      1,
-      [
+      new ArrayDataSource(0, 1, [
         [10, 20],
         [30, 40],
         [50, 60],
-      ],
-      buildNy,
-      buildSf,
+      ]),
     );
     const range = new AR1Basis(0, 2);
     expect(cd.bTemperatureVisible(range, cd.treeNy).toArr()).toEqual([10, 50]);
@@ -91,15 +73,11 @@ describe("ChartData", () => {
 
   it("floors and ceils fractional bounds when computing temperature visibility", () => {
     const cd = new ChartData(
-      0,
-      1,
-      [
+      new ArrayDataSource(0, 1, [
         [10, 20],
         [30, 40],
         [50, 60],
-      ],
-      buildNy,
-      buildSf,
+      ]),
     );
 
     const fractionalRange = new AR1Basis(0.49, 1.49);
@@ -113,15 +91,11 @@ describe("ChartData", () => {
 
   it("handles fractional bounds in the middle of the dataset", () => {
     const cd = new ChartData(
-      0,
-      1,
-      [
+      new ArrayDataSource(0, 1, [
         [10, 20],
         [30, 40],
         [50, 60],
-      ],
-      buildNy,
-      buildSf,
+      ]),
     );
 
     const fractionalRange = new AR1Basis(1.1, 1.7);
@@ -135,15 +109,11 @@ describe("ChartData", () => {
 
   it("clamps bounds that extend past the data range", () => {
     const cd = new ChartData(
-      0,
-      1,
-      [
+      new ArrayDataSource(0, 1, [
         [10, 20],
         [30, 40],
         [50, 60],
-      ],
-      buildNy,
-      buildSf,
+      ]),
     );
 
     const outOfRange = new AR1Basis(-0.5, 3.5);
@@ -159,15 +129,11 @@ describe("ChartData", () => {
 
   it("clamps bounds completely to the left of the data range", () => {
     const cd = new ChartData(
-      0,
-      1,
-      [
+      new ArrayDataSource(0, 1, [
         [10, 20],
         [30, 40],
         [50, 60],
-      ],
-      buildNy,
-      buildSf,
+      ]),
     );
 
     const leftRange = new AR1Basis(-5, -1);
@@ -183,15 +149,11 @@ describe("ChartData", () => {
 
   it("clamps bounds completely to the right of the data range", () => {
     const cd = new ChartData(
-      0,
-      1,
-      [
+      new ArrayDataSource(0, 1, [
         [10, 20],
         [30, 40],
         [50, 60],
-      ],
-      buildNy,
-      buildSf,
+      ]),
     );
 
     const rightRange = new AR1Basis(5, 10);
@@ -206,18 +168,29 @@ describe("ChartData", () => {
   });
 
   describe("single-axis", () => {
-    const buildNy = (i: number, arr: ReadonlyArray<[number, number?]>) => ({
-      min: arr[i][0],
-      max: arr[i][0],
-    });
-
     it("handles data without second series", () => {
-      const cd = new ChartData(0, 1, [[0], [1]], buildNy);
+      const cd = new ChartData(new ArrayDataSource(0, 1, [[0], [1]]));
       expect(cd.treeSf).toBeUndefined();
-      expect(cd.data).toEqual([[0], [1]]);
+      expect(cd.toArray()).toEqual([[0], [1]]);
       cd.append([2]);
-      expect(cd.data).toEqual([[1], [2]]);
+      expect(cd.toArray()).toEqual([[1], [2]]);
       expect(cd.treeNy.query(0, 1)).toEqual({ min: 1, max: 2 });
     });
+  });
+
+  it("supports concatenated typed array datasource", () => {
+    const raw = new Uint8Array([10, 20, 30, 40, 50, 60]);
+    const cd = new ChartData(new ConcatUint8ArrayDataSource(0, 1, raw));
+    expect(cd.toArray()).toEqual([
+      [10, 40],
+      [20, 50],
+      [30, 60],
+    ]);
+    cd.append([70, 80]);
+    expect(cd.toArray()).toEqual([
+      [20, 50],
+      [30, 60],
+      [70, 80],
+    ]);
   });
 });

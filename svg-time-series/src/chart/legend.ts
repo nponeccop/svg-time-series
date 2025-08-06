@@ -49,10 +49,7 @@ export class LegendController {
   }
 
   public onHover = (idx: number) => {
-    this.highlightedDataIdx = Math.min(
-      Math.max(idx, 0),
-      this.data.data.length - 1,
-    );
+    this.highlightedDataIdx = Math.min(Math.max(idx, 0), this.data.length - 1);
     this.scheduleRefresh();
   };
 
@@ -61,8 +58,9 @@ export class LegendController {
   };
 
   private update() {
-    const [greenData, blueData] =
-      this.data.data[Math.round(this.highlightedDataIdx)];
+    const [greenData, blueData] = this.data.at(
+      Math.round(this.highlightedDataIdx),
+    );
     const timestamp = this.data.idxToTime.applyToPoint(this.highlightedDataIdx);
     this.legendTime.text(this.formatTime(timestamp));
 

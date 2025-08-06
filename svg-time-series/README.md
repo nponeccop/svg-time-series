@@ -18,7 +18,7 @@ import { TimeSeriesChart } from "svg-time-series";
 
 ```ts
 import { select } from "d3-selection";
-import { TimeSeriesChart } from "svg-time-series";
+import { TimeSeriesChart, ArrayDataSource } from "svg-time-series";
 
 const svg = select("#chart").append("svg").append("g").attr("class", "view");
 const legend = select("#legend");
@@ -29,16 +29,13 @@ const data: [number, number][] = [
   [11, 13],
 ];
 
-// The data array must contain at least one entry.
+// Create a datasource with start time and timestep
+const ds = new ArrayDataSource(Date.now(), 1000, data);
 
 const chart = new TimeSeriesChart(
   svg,
   legend,
-  Date.now(),
-  1000, // time step in ms
-  data,
-  (i, arr) => ({ min: arr[i][0], max: arr[i][0] }),
-  (i, arr) => ({ min: arr[i][1], max: arr[i][1] }),
+  ds,
   () => {},
   () => {},
   (ts) => new Date(ts).toISOString(),
