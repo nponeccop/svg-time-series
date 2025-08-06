@@ -58,7 +58,7 @@ export class ChartInteraction {
 
   public drawNewData = () => {
     renderPaths(this.state, this.data.toArray());
-    this.scheduleRefresh();
+    this.zoomState.refresh();
     this.legendController.refresh();
   };
 
