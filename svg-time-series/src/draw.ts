@@ -7,6 +7,23 @@ import { setupInteraction } from "./chart/interaction.ts";
 
 export type { IMinMax } from "./chart/data.ts";
 
+export interface TimeSeriesChartOptions {
+  startTime: number;
+  timeStep: number;
+  data: Array<[number, number?]>;
+  buildSegmentTreeTupleNy: (
+    index: number,
+    elements: ReadonlyArray<[number, number?]>,
+  ) => IMinMax;
+  buildSegmentTreeTupleSf?: (
+    index: number,
+    elements: ReadonlyArray<[number, number?]>,
+  ) => IMinMax;
+  zoomHandler?: (event: D3ZoomEvent<Element, unknown>) => void;
+  mouseMoveHandler?: (event: MouseEvent) => void;
+  formatTime?: (timestamp: number) => string;
+}
+
 export class TimeSeriesChart {
   public zoom: (event: D3ZoomEvent<Element, unknown>) => void;
   public onHover: (x: number) => void;
@@ -17,22 +34,19 @@ export class TimeSeriesChart {
   constructor(
     svg: Selection<BaseType, unknown, HTMLElement, unknown>,
     legend: Selection<BaseType, unknown, HTMLElement, unknown>,
-    startTime: number,
-    timeStep: number,
-    data: Array<[number, number?]>,
-    buildSegmentTreeTupleNy: (
-      index: number,
-      elements: ReadonlyArray<[number, number?]>,
-    ) => IMinMax,
-    buildSegmentTreeTupleSf?: (
-      index: number,
-      elements: ReadonlyArray<[number, number?]>,
-    ) => IMinMax,
-    zoomHandler: (event: D3ZoomEvent<Element, unknown>) => void = () => {},
-    mouseMoveHandler: (event: MouseEvent) => void = () => {},
-    formatTime: (timestamp: number) => string = (timestamp) =>
-      new Date(timestamp).toLocaleString(),
+    options: TimeSeriesChartOptions,
   ) {
+    const {
+      startTime,
+      timeStep,
+      data,
+      buildSegmentTreeTupleNy,
+      buildSegmentTreeTupleSf,
+      zoomHandler = () => {},
+      mouseMoveHandler = () => {},
+      formatTime = (timestamp: number) => new Date(timestamp).toLocaleString(),
+    } = options;
+
     this.data = new ChartData(
       startTime,
       timeStep,

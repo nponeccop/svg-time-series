@@ -305,20 +305,27 @@ describe("chart interaction", () => {
       '<span class="chart-legend__blue_value"></span>';
 
     const mouseMoveHandler = vi.fn();
-
     const chart = new TimeSeriesChart(
       select(svgEl) as any,
       select(legend) as any,
-      0,
-      1,
-      [
-        [0, 0],
-        [1, 1],
-      ],
-      (i, arr) => ({ min: arr[i][0], max: arr[i][0] }),
-      (i, arr) => ({ min: arr[i][1]!, max: arr[i][1]! }),
-      () => {},
-      mouseMoveHandler,
+      {
+        startTime: 0,
+        timeStep: 1,
+        data: [
+          [0, 0],
+          [1, 1],
+        ],
+        buildSegmentTreeTupleNy: (i, arr) => ({
+          min: arr[i][0],
+          max: arr[i][0],
+        }),
+        buildSegmentTreeTupleSf: (i, arr) => ({
+          min: arr[i][1]!,
+          max: arr[i][1]!,
+        }),
+        zoomHandler: () => {},
+        mouseMoveHandler,
+      },
     );
 
     const zoomRect = svgEl.querySelector("rect.zoom") as SVGRectElement;

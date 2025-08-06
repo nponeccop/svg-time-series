@@ -54,17 +54,15 @@ function createChart(initialData: Array<[number, number?]>) {
 
   const buildTuple = () => ({ min: 0, max: 0 });
 
-  const chart = new TimeSeriesChart(
-    svgSel,
-    legendSel,
-    0,
-    1,
-    initialData,
-    buildTuple,
-    buildTuple,
-    vi.fn(),
-    vi.fn(),
-  );
+  const chart = new TimeSeriesChart(svgSel, legendSel, {
+    startTime: 0,
+    timeStep: 1,
+    data: initialData,
+    buildSegmentTreeTupleNy: buildTuple,
+    buildSegmentTreeTupleSf: buildTuple,
+    zoomHandler: vi.fn(),
+    mouseMoveHandler: vi.fn(),
+  });
 
   appendSpy.mockClear();
   drawNewDataMock.mockClear();
