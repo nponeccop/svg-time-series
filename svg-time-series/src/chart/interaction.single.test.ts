@@ -2,11 +2,6 @@
  * @vitest-environment jsdom
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { select } from "d3-selection";
-import { AR1Basis } from "../math/affine.ts";
-import { ChartData } from "./data.ts";
-import { setupRender } from "./render.ts";
-import { setupInteraction } from "./interaction.ts";
 
 class Matrix {
   constructor(
@@ -33,22 +28,44 @@ vi.mock("../viewZoomTransform.ts", () => ({
 
 let currentDataLength = 0;
 const transformInstances: any[] = [];
-vi.mock("../MyTransform.ts", () => ({
-  MyTransform: class {
-    constructor(_svg: SVGSVGElement, _g: SVGGElement) {
-      transformInstances.push(this);
+let applyViewportTransform: any;
+function getApplyViewportTransform() {
+  if (!applyViewportTransform) {
+    applyViewportTransform = vi.fn();
+  }
+  return applyViewportTransform;
+}
+vi.mock("../ViewportTransform.ts", () => {
+  class MockBasis {
+    constructor(
+      public p1: number,
+      public p2: number,
+    ) {}
+    toArr() {
+      return [this.p1, this.p2];
     }
-    onZoomPan = vi.fn();
-    fromScreenToModelX = vi.fn((x: number) => x);
-    fromScreenToModelBasisX = vi.fn(
-      () => new AR1Basis(0, Math.max(currentDataLength - 1, 0)),
-    );
-    dotScaleMatrix = vi.fn(() => new Matrix());
-    onViewPortResize = vi.fn();
-    onReferenceViewWindowResize = vi.fn();
-    updateViewNode = vi.fn();
-  },
-}));
+    transformWith() {
+      return this;
+    }
+  }
+  return {
+    ViewportTransform: class {
+      constructor() {
+        transformInstances.push(this);
+      }
+      onZoomPan = vi.fn();
+      fromScreenToModelX = vi.fn((x: number) => x);
+      fromScreenToModelBasisX = vi.fn(
+        () => new MockBasis(0, Math.max(currentDataLength - 1, 0)),
+      );
+      dotScaleMatrix = vi.fn(() => new Matrix());
+      onViewPortResize = vi.fn();
+      onReferenceViewWindowResize = vi.fn();
+    },
+    applyViewportTransform: (...args: any[]) =>
+      getApplyViewportTransform()(...args),
+  };
+});
 
 const axisInstances: any[] = [];
 vi.mock("../axis.ts", () => ({
@@ -79,6 +96,11 @@ vi.mock("d3-zoom", () => ({
     return behavior;
   },
 }));
+
+import { select } from "d3-selection";
+import { ChartData } from "./data.ts";
+import { setupRender } from "./render.ts";
+import { setupInteraction } from "./interaction.ts";
 
 function createChart(data: Array<[number]>) {
   currentDataLength = data.length;
@@ -126,6 +148,7 @@ beforeEach(() => {
   nodeTransforms.clear();
   transformInstances.length = 0;
   axisInstances.length = 0;
+  getApplyViewportTransform().mockClear();
   (SVGSVGElement.prototype as any).createSVGMatrix = () => new Matrix();
 });
 
@@ -150,7 +173,10 @@ describe("chart interaction single-axis", () => {
 
     expect(mtNy.onZoomPan).toHaveBeenCalledWith({ x: 10, k: 2 });
     expect(transformInstances.length).toBe(1);
-    expect(mtNy.updateViewNode).toHaveBeenCalled();
+    expect(getApplyViewportTransform()).toHaveBeenCalledWith(
+      expect.anything(),
+      mtNy,
+    );
     expect(xAxis.axisUpCalls).toBeGreaterThan(xCalls);
     expect(yAxis.axisUpCalls).toBeGreaterThan(yCalls);
   });

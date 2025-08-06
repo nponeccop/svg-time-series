@@ -3,7 +3,10 @@ import { BaseType, Selection, select } from "d3-selection";
 import { line } from "d3-shape";
 
 import { MyAxis, Orientation } from "../axis.ts";
-import { MyTransform } from "../MyTransform.ts";
+import {
+  ViewportTransform,
+  applyViewportTransform,
+} from "../ViewportTransform.ts";
 import { AR1Basis, bPlaceholder } from "../math/affine.ts";
 import { SegmentTree } from "../segmentTree.ts";
 import type { ChartData } from "./data.ts";
@@ -30,7 +33,7 @@ function updateScaleX(
 function updateScaleY(
   bIndexVisible: AR1Basis,
   tree: SegmentTree,
-  pathTransform: MyTransform,
+  pathTransform: ViewportTransform,
   yScale: ScaleLinear<number, number>,
   data: ChartData,
 ) {
@@ -46,8 +49,8 @@ export interface RenderState {
   x: ScaleTime<number, number>;
   yNy: ScaleLinear<number, number>;
   ySf?: ScaleLinear<number, number>;
-  pathTransformNy: MyTransform;
-  pathTransformSf?: MyTransform;
+  pathTransformNy: ViewportTransform;
+  pathTransformSf?: ViewportTransform;
   xAxis: MyAxis;
   yAxis: MyAxis;
   gX: Selection<SVGGElement, unknown, any, any>;
@@ -101,10 +104,10 @@ export function setupRender(
     ySf = scaleLinear().range(bScreenYVisible.toArr());
   }
 
-  const pathTransformNy = new MyTransform(svg.node() as SVGSVGElement, viewNy);
-  let pathTransformSf: MyTransform | undefined;
+  const pathTransformNy = new ViewportTransform();
+  let pathTransformSf: ViewportTransform | undefined;
   if (hasSf && viewSf) {
-    pathTransformSf = new MyTransform(svg.node() as SVGSVGElement, viewSf);
+    pathTransformSf = new ViewportTransform();
   }
 
   updateScaleX(x, data.bIndexFull, data);
@@ -184,7 +187,7 @@ export function refreshChart(state: RenderState, data: ChartData) {
     state.yNy,
     data,
   );
-  if (state.pathTransformSf && state.ySf && data.treeSf) {
+  if (state.pathTransformSf && state.ySf && data.treeSf && state.viewSf) {
     updateScaleY(
       bIndexVisible,
       data.treeSf,
@@ -192,9 +195,9 @@ export function refreshChart(state: RenderState, data: ChartData) {
       state.ySf,
       data,
     );
-    state.pathTransformSf.updateViewNode();
+    applyViewportTransform(state.viewSf, state.pathTransformSf);
   }
-  state.pathTransformNy.updateViewNode();
+  applyViewportTransform(state.viewNy, state.pathTransformNy);
   state.xAxis.axisUp(state.gX);
   state.yAxis.axisUp(state.gY);
 }

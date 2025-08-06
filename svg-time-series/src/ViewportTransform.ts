@@ -21,29 +21,16 @@ export function composeZoomMatrix(t: ZoomTransform): DOMMatrix {
   return new DOMMatrix().translate(t.x, 0).scale(t.k, 1);
 }
 
-export class MyTransform {
-  private viewPortPointsX: AR1Basis;
-  private viewPortPointsY: AR1Basis;
+export class ViewportTransform {
+  private viewPortPointsX: AR1Basis = bPlaceholder;
+  private viewPortPointsY: AR1Basis = bPlaceholder;
 
-  private referenceViewWindowPointsX: AR1Basis;
-  private referenceViewWindowPointsY: AR1Basis;
+  private referenceViewWindowPointsX: AR1Basis = bPlaceholder;
+  private referenceViewWindowPointsY: AR1Basis = bPlaceholder;
 
-  private zoomTransform: DOMMatrix;
-  private referenceTransform: DOMMatrix;
-  private composedMatrix: DOMMatrix;
-
-  private viewNode: SVGGElement;
-
-  constructor(_svgNode: SVGSVGElement, viewNode: SVGGElement) {
-    this.viewNode = viewNode;
-    this.zoomTransform = new DOMMatrix();
-    this.referenceTransform = new DOMMatrix();
-    this.composedMatrix = new DOMMatrix();
-    this.viewPortPointsX = bPlaceholder;
-    this.viewPortPointsY = bPlaceholder;
-    this.referenceViewWindowPointsX = bPlaceholder;
-    this.referenceViewWindowPointsY = bPlaceholder;
-  }
+  private zoomTransform: DOMMatrix = new DOMMatrix();
+  private referenceTransform: DOMMatrix = new DOMMatrix();
+  private composedMatrix: DOMMatrix = new DOMMatrix();
 
   private updateReferenceTransform() {
     this.referenceTransform = composeReferenceMatrix(
@@ -77,10 +64,6 @@ export class MyTransform {
     this.updateReferenceTransform();
   }
 
-  public updateViewNode() {
-    updateNode(this.viewNode, this.composedMatrix);
-  }
-
   public onZoomPan(t: ZoomTransform): void {
     this.zoomTransform = composeZoomMatrix(t);
     this.updateComposedMatrix();
@@ -112,4 +95,15 @@ export class MyTransform {
     const [p1, p2] = b.toArr().map(transformPoint);
     return new AR1Basis(p1, p2);
   }
+
+  public get matrix(): DOMMatrix {
+    return this.composedMatrix;
+  }
+}
+
+export function applyViewportTransform(
+  node: SVGGraphicsElement,
+  transform: ViewportTransform,
+) {
+  updateNode(node, transform.matrix);
 }
