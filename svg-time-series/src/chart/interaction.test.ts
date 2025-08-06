@@ -254,6 +254,26 @@ describe("chart interaction", () => {
     expect(blueTransform.ty).toBe(60);
   });
 
+  it("handles hover beyond chart width", () => {
+    const data: Array<[number, number]> = [
+      [10, 20],
+      [30, 40],
+      [50, 60],
+    ];
+    const { onHover, legend } = createChart(data);
+    vi.runAllTimers();
+
+    expect(() => onHover(data.length - 1 + 5)).not.toThrow();
+    vi.runAllTimers();
+
+    expect(
+      legend.querySelector(".chart-legend__green_value")!.textContent,
+    ).toBe("50");
+    expect(legend.querySelector(".chart-legend__blue_value")!.textContent).toBe(
+      "60",
+    );
+  });
+
   it("throws on zero-length dataset", () => {
     expect(() => {
       createChart([]);

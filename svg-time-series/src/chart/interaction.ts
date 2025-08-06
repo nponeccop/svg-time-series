@@ -101,7 +101,7 @@ export function setupInteraction(
 
   function onHover(x: number) {
     const idx = state.pathTransformNy.fromScreenToModelX(x);
-    highlightedDataIdx = Math.min(Math.max(idx, 0), data.data.length - 1);
+    highlightedDataIdx = Math.max(0, Math.min(idx, data.data.length - 1));
     schedulePointRefresh();
   }
 
