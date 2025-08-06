@@ -2,7 +2,7 @@
 
 ## Guidelines
 
-- Use Node.js 18 or later.
+- Use Node.js 20 or later.
 - Keep code formatted with `npm run format`.
 - Before committing, run:
   - `npm run lint`
