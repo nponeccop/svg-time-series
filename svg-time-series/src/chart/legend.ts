@@ -1,6 +1,6 @@
 import { BaseType, Selection, select } from "d3-selection";
 import { drawProc } from "../utils/drawProc.ts";
-import { updateNode } from "../utils/domNodeTransform.ts";
+import { fixNaN, updateDot } from "./legendHelpers.ts";
 import type { ChartData } from "./data.ts";
 import type { RenderState } from "./render.ts";
 
@@ -72,37 +72,28 @@ export class LegendController {
     const dotScaleMatrixSf = this.state.transforms.sf?.dotScaleMatrix(
       this.dotRadius,
     );
-    const fixNaN = <T>(n: number, valueForNaN: T): number | T =>
-      isNaN(n) ? valueForNaN : n;
-    const updateDot = (
-      val: number,
-      legendSel: Selection<BaseType, unknown, HTMLElement, unknown>,
-      node: SVGGraphicsElement | null,
-      dotScaleMatrix?: SVGMatrix,
-    ) => {
-      legendSel.text(fixNaN(val, " "));
-      if (node && dotScaleMatrix) {
-        updateNode(
-          node,
-          this.identityMatrix
-            .translate(this.highlightedDataIdx, fixNaN(val, 0))
-            .multiply(dotScaleMatrix),
-        );
-      }
-    };
 
+    const greenText = fixNaN(greenData, " ");
+    const greenVal = fixNaN(greenData, 0);
+    this.legendGreen.text(String(greenText));
     updateDot(
-      greenData,
-      this.legendGreen,
+      greenVal as number,
+      this.highlightedDataIdx,
       this.highlightedGreenDot,
       dotScaleMatrixNy,
+      this.identityMatrix,
     );
+
     if (this.state.transforms.sf) {
+      const blueText = fixNaN(blueData as number, " ");
+      const blueVal = fixNaN(blueData as number, 0);
+      this.legendBlue.text(String(blueText));
       updateDot(
-        blueData as number,
-        this.legendBlue,
+        blueVal,
+        this.highlightedDataIdx,
         this.highlightedBlueDot,
         dotScaleMatrixSf,
+        this.identityMatrix,
       );
     }
   }
