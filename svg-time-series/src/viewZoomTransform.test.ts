@@ -10,8 +10,8 @@ import {
   applyAR1ToMatrixX,
   applyAR1ToMatrixY,
   applyDirectProductToMatrix,
-} from "./utils/domMatrix.ts";
-import { updateNode } from "./utils/domNodeTransform.ts";
+  updateNode,
+} from "./utils/transform.ts";
 
 class Matrix {
   constructor(

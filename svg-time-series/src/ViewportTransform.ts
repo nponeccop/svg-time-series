@@ -1,6 +1,6 @@
 import { ZoomTransform } from "d3-zoom";
 import { AR1Basis, betweenTBasesAR1, bPlaceholder } from "./math/affine.ts";
-import { applyAR1ToMatrixX, applyAR1ToMatrixY } from "./utils/domMatrix.ts";
+import { applyAR1ToMatrixX, applyAR1ToMatrixY } from "./utils/transform.ts";
 
 export class ViewportTransform {
   private viewPortPointsX: AR1Basis = bPlaceholder;

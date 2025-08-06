@@ -26,7 +26,7 @@ class Matrix {
 
 const nodeTransforms = new Map<SVGGraphicsElement, Matrix>();
 let updateNodeCalls = 0;
-vi.mock("../utils/domNodeTransform.ts", () => ({
+vi.mock("../utils/transform.ts", () => ({
   updateNode: (node: SVGGraphicsElement, matrix: Matrix) => {
     updateNodeCalls++;
     nodeTransforms.set(node, matrix);

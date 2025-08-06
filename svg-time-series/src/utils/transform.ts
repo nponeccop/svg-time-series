@@ -16,3 +16,9 @@ export function applyDirectProductToMatrix(
 ): DOMMatrix {
   return applyAR1ToMatrixY(dp.s2, applyAR1ToMatrixX(dp.s1, sm));
 }
+
+export function updateNode(n: SVGGraphicsElement, m: DOMMatrix | SVGMatrix) {
+  const svgTransformList = n.transform.baseVal;
+  const t = svgTransformList.createSVGTransformFromMatrix(m);
+  svgTransformList.initialize(t);
+}

@@ -2,7 +2,7 @@ import { BaseType, Selection } from "d3-selection";
 
 import { MyAxis, Orientation } from "../axis.ts";
 import { ViewportTransform } from "../ViewportTransform.ts";
-import { updateNode } from "../utils/domNodeTransform.ts";
+import { updateNode } from "../utils/transform.ts";
 import { AR1Basis, bPlaceholder } from "../math/affine.ts";
 import type { ChartData } from "./data.ts";
 import { createDimensions } from "./render/dimensions.ts";

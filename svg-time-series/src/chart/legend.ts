@@ -1,6 +1,6 @@
 import { BaseType, Selection, select } from "d3-selection";
 import { drawProc } from "../utils/drawProc.ts";
-import { updateNode } from "../utils/domNodeTransform.ts";
+import { updateNode } from "../utils/transform.ts";
 import type { ChartData } from "./data.ts";
 import type { RenderState } from "./render.ts";
 
