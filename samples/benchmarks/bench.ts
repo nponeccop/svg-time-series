@@ -9,7 +9,8 @@ export function measureAll(): void {
   });
 
   measureOnce(60, (fps) => {
-    alert(`${window.innerWidth}x${window.innerHeight} FPS = ${fps}`);
+    document.getElementById("fps").textContent = fps;
+    console.log(`${window.innerWidth}x${window.innerHeight} FPS = ${fps}`);
   });
 }
 
