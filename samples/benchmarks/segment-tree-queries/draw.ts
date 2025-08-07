@@ -1,15 +1,20 @@
 import { BaseType, Selection } from "d3-selection";
 
 import { SegmentTree } from "segment-tree-rmq";
-import type { IMinMax } from "../../../svg-time-series/src/chart/data.ts";
+import type {
+  IMinMax,
+  TimePoint,
+} from "../../../svg-time-series/src/chart/data.ts";
 import { animateBench, animateCosDown } from "../bench.ts";
 import { ViewWindowTransform } from "../../ViewWindowTransform.ts";
 
-function buildSegmentTreeTuple(index: number, elements: number[][]): IMinMax {
-  const nyMinValue = isNaN(elements[index][0]) ? Infinity : elements[index][0];
-  const nyMaxValue = isNaN(elements[index][0]) ? -Infinity : elements[index][0];
-  const sfMinValue = isNaN(elements[index][1]) ? Infinity : elements[index][1];
-  const sfMaxValue = isNaN(elements[index][1]) ? -Infinity : elements[index][1];
+function buildSegmentTreeTuple(index: number, elements: TimePoint[]): IMinMax {
+  const ny = elements[index].ny;
+  const sf = elements[index].sf!;
+  const nyMinValue = isNaN(ny) ? Infinity : ny;
+  const nyMaxValue = isNaN(ny) ? -Infinity : ny;
+  const sfMinValue = isNaN(sf) ? Infinity : sf;
+  const sfMaxValue = isNaN(sf) ? -Infinity : sf;
   return {
     min: Math.min(nyMinValue, sfMinValue),
     max: Math.max(nyMaxValue, sfMaxValue),
@@ -23,7 +28,7 @@ function buildMinMax(a: IMinMax, b: IMinMax): IMinMax {
 const minMaxIdentity: IMinMax = { min: Infinity, max: -Infinity };
 
 function createSegmentTree(
-  elements: number[][],
+  elements: TimePoint[],
   size: number,
 ): SegmentTree<IMinMax> {
   const data: IMinMax[] = new Array(size);
@@ -36,7 +41,7 @@ function createSegmentTree(
 export class TimeSeriesChart {
   constructor(
     svg: Selection<BaseType, {}, HTMLElement, any>,
-    data: number[][],
+    data: TimePoint[],
   ) {
     const node: SVGSVGElement = svg.node() as SVGSVGElement;
     const div: HTMLElement = node.parentNode as HTMLElement;

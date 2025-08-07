@@ -1,9 +1,9 @@
-import { TimeSeriesChart, IDataSource } from "svg-time-series";
+import { TimeSeriesChart, IDataSource, TimePoint } from "svg-time-series";
 import { LegendController } from "../../LegendController.ts";
 import { measure, measureOnce, onCsv, animateBench } from "../bench.ts";
 import { select, Selection } from "d3-selection";
 
-onCsv((data: [number, number][]) => {
+onCsv((data: TimePoint[]) => {
   const svg = select(".chart-drawing svg") as Selection<
     SVGSVGElement,
     unknown,
@@ -23,7 +23,7 @@ onCsv((data: [number, number][]) => {
     timeStep: 86400000,
     length: data.length,
     seriesCount: 2,
-    getSeries: (i, seriesIdx) => data[i][seriesIdx],
+    getSeries: (i, seriesIdx) => (seriesIdx === 0 ? data[i].ny : data[i].sf!),
   };
   const chart = new TimeSeriesChart(
     svg,
@@ -37,7 +37,7 @@ onCsv((data: [number, number][]) => {
   let j = 0;
   animateBench(() => {
     const point = data[j % data.length];
-    chart.updateChartWithNewData(point[0], point[1]);
+    chart.updateChartWithNewData(point.ny, point.sf);
     j++;
   });
 

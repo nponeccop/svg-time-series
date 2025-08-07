@@ -5,6 +5,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { select } from "d3-selection";
 import { AR1Basis } from "../math/affine.ts";
 import { TimeSeriesChart, IDataSource } from "../draw.ts";
+import type { TimePoint } from "./data.ts";
 import { LegendController } from "../../../samples/LegendController.ts";
 
 class Matrix {
@@ -80,7 +81,7 @@ vi.mock("d3-zoom", () => ({
 }));
 
 function createChart(
-  data: Array<[number, number]>,
+  data: TimePoint[],
   formatTime?: (timestamp: number) => string,
 ) {
   currentDataLength = data.length;
@@ -108,7 +109,7 @@ function createChart(
     timeStep: 1,
     length: data.length,
     seriesCount: 2,
-    getSeries: (i, seriesIdx) => data[i][seriesIdx],
+    getSeries: (i, seriesIdx) => (seriesIdx === 0 ? data[i].ny : data[i].sf!),
   };
   const chart = new TimeSeriesChart(
     select(svgEl) as any,
@@ -146,8 +147,8 @@ afterEach(() => {
 describe("chart interaction", () => {
   it("zoom updates transforms and axes", () => {
     const { zoom } = createChart([
-      [0, 0],
-      [1, 1],
+      { ny: 0, sf: 0 },
+      { ny: 1, sf: 1 },
     ]);
     vi.runAllTimers();
 
@@ -170,9 +171,9 @@ describe("chart interaction", () => {
   });
 
   it("onHover updates legend text and dot positions", () => {
-    const data: Array<[number, number]> = [
-      [10, 20],
-      [30, 40],
+    const data: TimePoint[] = [
+      { ny: 10, sf: 20 },
+      { ny: 30, sf: 40 },
     ];
     const { onHover, svgEl, legend } = createChart(data);
     vi.runAllTimers();
@@ -197,9 +198,9 @@ describe("chart interaction", () => {
   });
 
   it("updates circles after appending data", () => {
-    const data: Array<[number, number]> = [
-      [10, 20],
-      [30, 40],
+    const data: TimePoint[] = [
+      { ny: 10, sf: 20 },
+      { ny: 30, sf: 40 },
     ];
     const { onHover, svgEl, legend, chart } = createChart(data);
     vi.runAllTimers();
@@ -227,9 +228,9 @@ describe("chart interaction", () => {
   });
 
   it("uses custom time formatter when provided", () => {
-    const data: Array<[number, number]> = [
-      [10, 20],
-      [30, 40],
+    const data: TimePoint[] = [
+      { ny: 10, sf: 20 },
+      { ny: 30, sf: 40 },
     ];
     const formatter = vi.fn((ts: number) => `ts:${ts}`);
     const { onHover, legend } = createChart(data, formatter);
@@ -245,7 +246,7 @@ describe("chart interaction", () => {
   });
 
   it("handles NaN data", () => {
-    const { onHover, svgEl, legend } = createChart([[NaN, NaN]]);
+    const { onHover, svgEl, legend } = createChart([{ ny: NaN, sf: NaN }]);
     vi.runAllTimers();
 
     onHover(0);
@@ -266,10 +267,10 @@ describe("chart interaction", () => {
   });
 
   it("clamps hover index to data bounds", () => {
-    const data: Array<[number, number]> = [
-      [10, 20],
-      [30, 40],
-      [50, 60],
+    const data: TimePoint[] = [
+      { ny: 10, sf: 20 },
+      { ny: 30, sf: 40 },
+      { ny: 50, sf: 60 },
     ];
     const { onHover, svgEl, legend } = createChart(data);
     vi.runAllTimers();

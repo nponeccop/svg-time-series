@@ -4,19 +4,19 @@ import { ScaleLinear, ScaleTime, scaleLinear, scaleTime } from "d3-scale";
 import { AR1Basis, DirectProductBasis } from "../../math/affine.ts";
 import { SegmentTree } from "segment-tree-rmq";
 import { ViewportTransform } from "../../ViewportTransform.ts";
-import type { IMinMax } from "../data.ts";
+import type { IMinMax, TimePoint } from "../data.ts";
 import type { ChartData } from "../data.ts";
 import type { RenderState } from "../render.ts";
 
-const lineNy = line<[number, number?]>()
-  .defined((d) => !(isNaN(d[0]!) || d[0] == null))
+const lineNy = line<TimePoint>()
+  .defined((d) => !(isNaN(d.ny) || d.ny == null))
   .x((_, i) => i)
-  .y((d) => d[0]!);
+  .y((d) => d.ny);
 
-const lineSf = line<[number, number?]>()
-  .defined((d) => !(isNaN(d[1]!) || d[1] == null))
+const lineSf = line<TimePoint>()
+  .defined((d) => !(isNaN(d.sf!) || d.sf == null))
   .x((_, i) => i)
-  .y((d) => d[1]!);
+  .y((d) => d.sf!);
 
 const lineGenerators = {
   ny: lineNy,
@@ -116,10 +116,7 @@ export function initPaths(
   return { path, viewNy, viewSf };
 }
 
-export function renderPaths(
-  state: RenderState,
-  dataArr: Array<[number, number?]>,
-) {
+export function renderPaths(state: RenderState, dataArr: TimePoint[]) {
   const paths = state.paths.path.nodes() as SVGPathElement[];
   const pathMap: Record<
     keyof typeof lineGenerators,

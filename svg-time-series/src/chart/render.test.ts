@@ -5,6 +5,7 @@ import { describe, it, expect } from "vitest";
 import { select } from "d3-selection";
 import { renderPaths } from "./render/utils.ts";
 import type { RenderState } from "./render.ts";
+import type { TimePoint } from "./data.ts";
 
 describe("renderPaths", () => {
   it("skips segments for NaN values", () => {
@@ -16,10 +17,10 @@ describe("renderPaths", () => {
       .append("path");
 
     const state = { paths: { path: pathSelection } } as unknown as RenderState;
-    const data: Array<[number, number]> = [
-      [0, 0],
-      [NaN, NaN],
-      [2, 2],
+    const data: TimePoint[] = [
+      { ny: 0, sf: 0 },
+      { ny: NaN, sf: NaN },
+      { ny: 2, sf: 2 },
     ];
 
     renderPaths(state, data);
