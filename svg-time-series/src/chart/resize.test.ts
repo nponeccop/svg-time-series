@@ -63,6 +63,8 @@ class DummyLegendController {
   refresh = vi.fn();
   onHover = vi.fn();
   destroy = vi.fn();
+  highlightIndex = vi.fn();
+  clearHighlight = vi.fn();
 }
 
 function createChart() {
