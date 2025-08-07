@@ -65,6 +65,18 @@ export function createScales(
   return { x, yNy, ySf };
 }
 
+export function updateScaleRanges(
+  scales: ScaleSet,
+  bScreenXVisible: AR1Basis,
+  bScreenYVisible: AR1Basis,
+) {
+  scales.x.range(bScreenXVisible.toArr());
+  scales.yNy.range(bScreenYVisible.toArr());
+  if (scales.ySf) {
+    scales.ySf.range(bScreenYVisible.toArr());
+  }
+}
+
 export function updateScaleX(
   x: ScaleTime<number, number>,
   bIndexVisible: AR1Basis,
