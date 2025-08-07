@@ -102,7 +102,7 @@ describe("TimeSeriesChart.resize", () => {
     const chart = new TimeSeriesChart(svg as any, source, legendFactory, false);
     vi.runAllTimers();
 
-    const refreshSpy = vi.spyOn(render, "refreshChart");
+    const refreshSpy = vi.spyOn(render as any, "refreshChart");
     const nySpy = vi.spyOn(
       (chart as any).state.transforms.ny,
       "onViewPortResize",
