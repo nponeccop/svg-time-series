@@ -2,7 +2,7 @@ import { Selection } from "d3-selection";
 import { D3ZoomEvent } from "d3-zoom";
 
 import { ChartData, IMinMax, IDataSource } from "./chart/data.ts";
-import { setupRender, refreshChart } from "./chart/render.ts";
+import * as render from "./chart/render.ts";
 import type { RenderState } from "./chart/render.ts";
 import { renderPaths } from "./chart/render/utils.ts";
 import type { ILegendController } from "./chart/legend.ts";
@@ -42,7 +42,7 @@ export class TimeSeriesChart {
   ) {
     this.data = new ChartData(data);
 
-    this.state = setupRender(svg, this.data, dualYAxis);
+    this.state = render.setupRender(svg, this.data, dualYAxis);
 
     this.zoomArea = svg
       .append("rect")
@@ -59,7 +59,7 @@ export class TimeSeriesChart {
     this.zoomState = new ZoomState(
       this.zoomArea,
       this.state,
-      () => refreshChart(this.state, this.data),
+      () => render.refreshChart(this.state, this.data),
       (event) => {
         zoomHandler(event);
         this.legendController.refresh();
@@ -114,7 +114,7 @@ export class TimeSeriesChart {
       .attr("width", dimensions.width)
       .attr("height", dimensions.height);
     this.zoomState.updateExtents(dimensions);
-    refreshChart(this.state, this.data);
+    render.refreshChart(this.state, this.data);
   };
 
   public onHover = (x: number) => {
