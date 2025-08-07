@@ -22,7 +22,7 @@ function buildSegmentTreeTupleSf(
   return { min: sfMinValue, max: sfMaxValue };
 }
 
-csv("ny-vs-sf.csv")
+csv("./ny-vs-sf.csv")
   .row((d: { NY: string; SF: string }) => [
     parseFloat(d.NY.split(";")[0]),
     parseFloat(d.SF.split(";")[0]),
