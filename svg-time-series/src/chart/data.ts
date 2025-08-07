@@ -50,7 +50,13 @@ export class ChartData {
     if (source.length === 0) {
       throw new Error("ChartData requires a non-empty data array");
     }
-    this.hasSeriesB = source.seriesCount > 1;
+    this.hasSeriesB = source.seriesCount > 1
+    if (source.seriesCount !== 1 && source.seriesCount !== 2) {
+      throw new Error(
+        `ChartData supports 1 or 2 series, but received ${source.seriesCount}`,
+      );
+    }
+    this.hasSf = source.seriesCount > 1;
     this.data = new Array(source.length);
     for (let i = 0; i < source.length; i++) {
       const seriesA = source.getSeries(i, 0);
@@ -73,6 +79,11 @@ export class ChartData {
       console.warn(
         "ChartData: seriesB parameter provided but data source has only one series. seriesB value will be ignored.",
       );
+    } else if (this.hasSf && sf === undefined) {
+      console.warn(
+        "ChartData: sf parameter missing but data source has two series. Using NaN as fallback.",
+      );
+      sf = NaN;
     }
     this.data.push([seriesA, this.hasSeriesB ? seriesB : undefined]);
     this.data.shift();
