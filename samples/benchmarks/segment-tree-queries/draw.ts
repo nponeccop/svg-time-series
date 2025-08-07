@@ -1,7 +1,7 @@
 import { BaseType, Selection } from "d3-selection";
 
 import { SegmentTree } from "segment-tree-rmq";
-import type { IMinMax } from "../../../svg-time-series/src/chart/data.ts";
+import type { IMinMax } from "../../../svg-time-series/src/chart/TimeSeriesModel.ts";
 import { animateBench, animateCosDown } from "../bench.ts";
 import { ViewWindowTransform } from "../../ViewWindowTransform.ts";
 

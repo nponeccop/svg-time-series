@@ -4,7 +4,7 @@
 import { bench, describe } from "vitest";
 import { select } from "d3-selection";
 import { renderPaths } from "../src/chart/render/utils.ts";
-import type { RenderState } from "../src/chart/render.ts";
+import type { RenderState } from "../src/chart/ChartRenderer.ts";
 import { sizes, datasets } from "./timeSeriesData.ts";
 
 describe("renderPaths performance", () => {

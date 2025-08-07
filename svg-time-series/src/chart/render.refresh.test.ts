@@ -20,8 +20,8 @@ vi.mock("../axis.ts", () => {
 
 import { JSDOM } from "jsdom";
 import { select } from "d3-selection";
-import { ChartData, type IDataSource } from "./data.ts";
-import { setupRender, refreshChart } from "./render.ts";
+import { TimeSeriesModel, type IDataSource } from "./TimeSeriesModel.ts";
+import { ChartRenderer } from "./ChartRenderer.ts";
 import { updateNode } from "../utils/domNodeTransform.ts";
 
 class Matrix {
@@ -101,14 +101,15 @@ describe("refreshChart", () => {
       seriesCount: 2,
       getSeries: (i, s) => (s === 0 ? [1, 2, 3][i] : [10, 20, 30][i]),
     };
-    const data = new ChartData(source);
-    const state = setupRender(svg as any, data, false);
+    const model = new TimeSeriesModel(source);
+    const renderer = new ChartRenderer(svg as any, model, false);
+    const state = renderer.state;
     const updateNodeMock = vi.mocked(updateNode);
     updateNodeMock.mockClear();
 
-    refreshChart(state, data);
+    renderer.refresh(model);
 
-    expect(state.series[0].tree).toBe(data.treeNy);
+    expect(state.series[0].tree).toBe(model.treeNy);
     expect(state.series[0].scale.domain()).toEqual([1, 30]);
     expect(updateNodeMock).toHaveBeenCalledTimes(2);
     expect(updateNodeMock).toHaveBeenNthCalledWith(
@@ -132,15 +133,16 @@ describe("refreshChart", () => {
       seriesCount: 2,
       getSeries: (i, s) => (s === 0 ? [1, 2, 3][i] : [10, 20, 30][i]),
     };
-    const data = new ChartData(source);
-    const state = setupRender(svg as any, data, true);
+    const model = new TimeSeriesModel(source);
+    const renderer = new ChartRenderer(svg as any, model, true);
+    const state = renderer.state;
     const updateNodeMock = vi.mocked(updateNode);
     updateNodeMock.mockClear();
 
-    refreshChart(state, data);
+    renderer.refresh(model);
 
-    expect(state.series[0].tree).toBe(data.treeNy);
-    expect(state.series[1].tree).toBe(data.treeSf);
+    expect(state.series[0].tree).toBe(model.treeNy);
+    expect(state.series[1].tree).toBe(model.treeSf);
     expect(state.series[0].scale.domain()).toEqual([1, 3]);
     expect(state.series[1].scale.domain()).toEqual([10, 30]);
     expect(updateNodeMock).toHaveBeenCalledTimes(2);
@@ -165,9 +167,10 @@ describe("refreshChart", () => {
       seriesCount: 2,
       getSeries: (i, s) => (s === 0 ? [1, 2, 3][i] : [10, 20, 30][i]),
     };
-    const data1 = new ChartData(source1);
-    const state = setupRender(svg as any, data1, true);
-    refreshChart(state, data1);
+    const model1 = new TimeSeriesModel(source1);
+    const renderer = new ChartRenderer(svg as any, model1, true);
+    const state = renderer.state;
+    renderer.refresh(model1);
     const source2: IDataSource = {
       startTime: 0,
       timeStep: 1,
@@ -175,14 +178,14 @@ describe("refreshChart", () => {
       seriesCount: 2,
       getSeries: (i, s) => (s === 0 ? [4, 5, 6][i] : [40, 50, 60][i]),
     };
-    const data2 = new ChartData(source2);
+    const model2 = new TimeSeriesModel(source2);
     const updateNodeMock = vi.mocked(updateNode);
     updateNodeMock.mockClear();
 
-    refreshChart(state, data2);
+    renderer.refresh(model2);
 
-    expect(state.series[0].tree).toBe(data2.treeNy);
-    expect(state.series[1].tree).toBe(data2.treeSf);
+    expect(state.series[0].tree).toBe(model2.treeNy);
+    expect(state.series[1].tree).toBe(model2.treeSf);
     expect(state.series[0].scale.domain()).toEqual([4, 6]);
     expect(state.series[1].scale.domain()).toEqual([40, 60]);
     expect(updateNodeMock).toHaveBeenCalledTimes(2);

@@ -5,7 +5,7 @@ import { describe, it, expect } from "vitest";
 import { select, Selection } from "d3-selection";
 import { scaleLinear, scaleTime } from "d3-scale";
 import { AR1Basis } from "../math/affine.ts";
-import { ChartData, IDataSource } from "./data.ts";
+import { TimeSeriesModel, IDataSource } from "./TimeSeriesModel.ts";
 import type { ViewportTransform } from "../ViewportTransform.ts";
 import { vi } from "vitest";
 import {
@@ -75,7 +75,7 @@ describe("updateScaleX", () => {
   });
 
   it("adjusts domain based on visible index range", () => {
-    const cd = new ChartData(makeSource([[0], [1], [2]]));
+    const cd = new TimeSeriesModel(makeSource([[0], [1], [2]]));
     const x = scaleTime().range([0, 100]);
     updateScaleX(x, new AR1Basis(0, 2), cd);
     const [d0, d1] = x.domain();
@@ -94,7 +94,7 @@ describe("updateScaleY", () => {
   });
 
   it("sets domain from visible data bounds", () => {
-    const cd = new ChartData(makeSource([[10], [20], [40]]));
+    const cd = new TimeSeriesModel(makeSource([[10], [20], [40]]));
     const y = scaleLinear().range([100, 0]);
     const vt = {
       onReferenceViewWindowResize: vi.fn(),

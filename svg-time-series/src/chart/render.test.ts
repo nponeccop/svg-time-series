@@ -4,7 +4,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { select, type Selection } from "d3-selection";
 import { initPaths, renderPaths } from "./render/utils.ts";
-import type { RenderState } from "./render.ts";
+import type { RenderState } from "./ChartRenderer.ts";
 
 describe("renderPaths", () => {
   it("skips segments for NaN values", () => {

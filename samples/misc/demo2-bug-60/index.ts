@@ -8,7 +8,7 @@ import { MyAxis, Orientation } from "../../../svg-time-series/src/axis.ts";
 import { ViewportTransform } from "../../../svg-time-series/src/ViewportTransform.ts";
 import { updateNode } from "../../../svg-time-series/src/utils/domNodeTransform.ts";
 import { SegmentTree } from "segment-tree-rmq";
-import type { IMinMax } from "../../../svg-time-series/src/chart/data.ts";
+import type { IMinMax } from "../../../svg-time-series/src/chart/TimeSeriesModel.ts";
 import {
   AR1Basis,
   AR1,

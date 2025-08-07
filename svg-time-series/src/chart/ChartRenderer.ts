@@ -5,13 +5,14 @@ import { MyAxis, Orientation } from "../axis.ts";
 import { ViewportTransform } from "../ViewportTransform.ts";
 import { updateNode } from "../utils/domNodeTransform.ts";
 import { AR1Basis, DirectProductBasis, bPlaceholder } from "../math/affine.ts";
-import type { ChartData } from "./data.ts";
+import type { TimeSeriesModel } from "./TimeSeriesModel.ts";
 import {
   createDimensions,
   createScales,
   updateScaleX,
   updateScaleY,
   initPaths,
+  renderPaths,
   type ScaleSet,
   type PathSet,
   type TransformPair,
@@ -90,7 +91,7 @@ interface Dimensions {
 }
 
 export interface Series {
-  tree: ChartData["treeNy"];
+  tree: TimeSeriesModel["treeNy"];
   transform: ViewportTransform;
   scale: ScaleLinear<number, number>;
   view: SVGGElement;
@@ -99,7 +100,7 @@ export interface Series {
 }
 
 export function buildSeries(
-  data: ChartData,
+  data: TimeSeriesModel,
   transforms: TransformPair,
   scales: ScaleSet,
   paths: PathSet,
@@ -149,9 +150,9 @@ export interface RenderState {
   series: Series[];
 }
 
-export function setupRender(
+function setupRender(
   svg: Selection<SVGSVGElement, unknown, HTMLElement, unknown>,
-  data: ChartData,
+  data: TimeSeriesModel,
   dualYAxis: boolean,
 ): RenderState {
   const hasSf = data.treeSf != null;
@@ -229,7 +230,7 @@ export function setupRender(
   return { scales, axes, paths, transforms, dimensions, dualYAxis, series };
 }
 
-export function refreshChart(state: RenderState, data: ChartData) {
+function refreshChart(state: RenderState, data: TimeSeriesModel) {
   const bIndexVisible = state.transforms.ny.fromScreenToModelBasisX(
     state.transforms.bScreenXVisible,
   );
@@ -262,4 +263,24 @@ export function refreshChart(state: RenderState, data: ChartData) {
     s.axis!.axisUp(s.gAxis!);
   }
   state.axes.x.axisUp(state.axes.gX);
+}
+
+export class ChartRenderer {
+  public state: RenderState;
+
+  constructor(
+    svg: Selection<SVGSVGElement, unknown, HTMLElement, unknown>,
+    model: TimeSeriesModel,
+    dualYAxis = false,
+  ) {
+    this.state = setupRender(svg, model, dualYAxis);
+  }
+
+  draw(model: TimeSeriesModel) {
+    renderPaths(this.state, model.data);
+  }
+
+  refresh(model: TimeSeriesModel) {
+    refreshChart(this.state, model);
+  }
 }

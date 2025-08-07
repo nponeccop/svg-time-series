@@ -1,5 +1,5 @@
 import * as draw from "./draw.ts";
-import type { IMinMax } from "../../../svg-time-series/src/chart/data.ts";
+import type { IMinMax } from "../../../svg-time-series/src/chart/TimeSeriesModel.ts";
 import { D3ZoomEvent } from "d3-zoom";
 import { select, selectAll } from "d3-selection";
 

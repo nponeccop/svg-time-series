@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import { JSDOM } from "jsdom";
 import { select } from "d3-selection";
-import { ChartData, IDataSource } from "./data.ts";
-import { setupRender } from "./render.ts";
+import { TimeSeriesModel, IDataSource } from "./TimeSeriesModel.ts";
+import { ChartRenderer } from "./ChartRenderer.ts";
 
 class Matrix {
   constructor(
@@ -87,8 +87,9 @@ describe("setupRender Y-axis modes", () => {
       getSeries: (i, seriesIdx) =>
         seriesIdx === 0 ? [1, 2, 3][i] : [10, 20, 30][i],
     };
-    const data = new ChartData(source);
-    const state = setupRender(svg as any, data, false);
+    const model = new TimeSeriesModel(source);
+    const renderer = new ChartRenderer(svg as any, model, false);
+    const state = renderer.state;
     expect(state.scales.yNy.domain()).toEqual([1, 30]);
     expect(state.scales.ySf).toBeUndefined();
   });
@@ -103,8 +104,9 @@ describe("setupRender Y-axis modes", () => {
       getSeries: (i, seriesIdx) =>
         seriesIdx === 0 ? [1, 2, 3][i] : [10, 20, 30][i],
     };
-    const data = new ChartData(source);
-    const state = setupRender(svg as any, data, true);
+    const model = new TimeSeriesModel(source);
+    const renderer = new ChartRenderer(svg as any, model, true);
+    const state = renderer.state;
     expect(state.scales.yNy.domain()).toEqual([1, 3]);
     expect(state.scales.ySf!.domain()).toEqual([10, 30]);
   });

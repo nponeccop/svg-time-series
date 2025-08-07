@@ -204,7 +204,7 @@ describe("chart interaction", () => {
     const { onHover, svgEl, legend, chart } = createChart(data);
     vi.runAllTimers();
 
-    chart.updateChartWithNewData(50, 60);
+    chart.append(50, 60);
     vi.runAllTimers();
 
     onHover(1);

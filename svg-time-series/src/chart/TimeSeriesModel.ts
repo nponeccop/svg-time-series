@@ -32,7 +32,7 @@ export interface IDataSource {
   getSeries(index: number, seriesIdx: number): number;
 }
 
-export class ChartData {
+export class TimeSeriesModel {
   public data: Array<[number, number?]>;
   public treeNy!: SegmentTree<IMinMax>;
   public treeSf?: SegmentTree<IMinMax>;
@@ -42,17 +42,17 @@ export class ChartData {
   private hasSf: boolean;
 
   /**
-   * Creates a new ChartData instance.
+   * Creates a new TimeSeriesModel instance.
    * @param source Data source; must contain at least one point.
    * @throws if the source has length 0.
    */
   constructor(source: IDataSource) {
     if (source.length === 0) {
-      throw new Error("ChartData requires a non-empty data array");
+      throw new Error("TimeSeriesModel requires a non-empty data array");
     }
     if (source.seriesCount !== 1 && source.seriesCount !== 2) {
       throw new Error(
-        `ChartData supports 1 or 2 series, but received ${source.seriesCount}`,
+        `TimeSeriesModel supports 1 or 2 series, but received ${source.seriesCount}`,
       );
     }
     this.hasSf = source.seriesCount > 1;
@@ -76,11 +76,11 @@ export class ChartData {
   append(ny: number, sf?: number): void {
     if (!this.hasSf && sf !== undefined) {
       console.warn(
-        "ChartData: sf parameter provided but data source has only one series. sf value will be ignored.",
+        "TimeSeriesModel: sf parameter provided but data source has only one series. sf value will be ignored.",
       );
     } else if (this.hasSf && sf === undefined) {
       console.warn(
-        "ChartData: sf parameter missing but data source has two series. Using NaN as fallback.",
+        "TimeSeriesModel: sf parameter missing but data source has two series. Using NaN as fallback.",
       );
       sf = NaN;
     }

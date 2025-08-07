@@ -1,8 +1,8 @@
 import { Selection, select } from "d3-selection";
 import { drawProc } from "../svg-time-series/src/utils/drawProc.ts";
 import { updateNode } from "../svg-time-series/src/utils/domNodeTransform.ts";
-import type { ChartData } from "../svg-time-series/src/chart/data.ts";
-import type { RenderState } from "../svg-time-series/src/chart/render.ts";
+import type { TimeSeriesModel } from "../svg-time-series/src/chart/TimeSeriesModel.ts";
+import type { RenderState } from "../svg-time-series/src/chart/ChartRenderer.ts";
 import type { ILegendController } from "../svg-time-series/src/chart/legend.ts";
 
 export class LegendController implements ILegendController {
@@ -25,7 +25,7 @@ export class LegendController implements ILegendController {
   constructor(
     legend: Selection<HTMLElement, unknown, HTMLElement, unknown>,
     private state: RenderState,
-    private data: ChartData,
+    private data: TimeSeriesModel,
     private formatTime: (timestamp: number) => string = (timestamp) =>
       new Date(timestamp).toLocaleString(),
   ) {

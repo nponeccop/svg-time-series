@@ -7,7 +7,7 @@ import {
   zoomIdentity,
 } from "d3-zoom";
 import { drawProc } from "../utils/drawProc.ts";
-import type { RenderState } from "./render.ts";
+import type { RenderState } from "./ChartRenderer.ts";
 
 export class ZoomState {
   public zoomBehavior: ZoomBehavior<SVGRectElement, unknown>;

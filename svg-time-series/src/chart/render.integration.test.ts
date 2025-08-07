@@ -4,8 +4,8 @@
 import { describe, it, expect, beforeAll, vi } from "vitest";
 import { JSDOM } from "jsdom";
 import { select } from "d3-selection";
-import { ChartData, IDataSource } from "./data.ts";
-import { setupRender, refreshChart } from "./render.ts";
+import { TimeSeriesModel, IDataSource } from "./TimeSeriesModel.ts";
+import { ChartRenderer } from "./ChartRenderer.ts";
 import * as domNode from "../utils/domNodeTransform.ts";
 
 class Matrix {
@@ -91,8 +91,9 @@ describe("refreshChart integration", () => {
       getSeries: (i, seriesIdx) =>
         seriesIdx === 0 ? [1, 2, 3][i] : [10, 20, 30][i],
     };
-    const data = new ChartData(source);
-    const state = setupRender(svg as any, data, true);
+    const model = new TimeSeriesModel(source);
+    const renderer = new ChartRenderer(svg as any, model, true);
+    const state = renderer.state;
     const updateNodeSpy = vi
       .spyOn(domNode, "updateNode")
       .mockImplementation(() => {});
@@ -101,8 +102,8 @@ describe("refreshChart integration", () => {
     const yNyBefore = state.scales.yNy.domain().slice();
     const ySfBefore = state.scales.ySf!.domain().slice();
 
-    data.append(100, 200);
-    refreshChart(state, data);
+    model.append(100, 200);
+    renderer.refresh(model);
 
     const xAfter = state.scales.x.domain();
     const yNyAfter = state.scales.yNy.domain();

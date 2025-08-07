@@ -1,6 +1,6 @@
 import { D3ZoomEvent, zoom } from "d3-zoom";
 import { SegmentTree } from "segment-tree-rmq";
-import type { IMinMax } from "../../../svg-time-series/src/chart/data.ts";
+import type { IMinMax } from "../../../svg-time-series/src/chart/TimeSeriesModel.ts";
 import { timeout as runTimeout } from "d3-timer";
 import { selectAll } from "d3-selection";
 import { scaleLinear, scaleOrdinal, scaleTime } from "d3-scale";

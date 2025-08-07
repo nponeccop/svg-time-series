@@ -49,7 +49,7 @@ export function drawCharts(data: [number, number][], dualYAxis = false) {
   let j = 0;
   setInterval(function () {
     const newData = data[j % data.length];
-    charts.forEach((c) => c.updateChartWithNewData(newData[0], newData[1]));
+    charts.forEach((c) => c.append(newData[0], newData[1]));
     j++;
   }, 5000);
   measure(3, ({ fps }) => {

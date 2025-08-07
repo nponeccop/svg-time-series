@@ -4,9 +4,9 @@ import { ScaleLinear, ScaleTime, scaleLinear, scaleTime } from "d3-scale";
 import { AR1Basis, DirectProductBasis } from "../../math/affine.ts";
 import { SegmentTree } from "segment-tree-rmq";
 import { ViewportTransform } from "../../ViewportTransform.ts";
-import type { IMinMax } from "../data.ts";
-import type { ChartData } from "../data.ts";
-import type { RenderState } from "../render.ts";
+import type { IMinMax } from "../TimeSeriesModel.ts";
+import type { TimeSeriesModel } from "../TimeSeriesModel.ts";
+import type { RenderState } from "../ChartRenderer.ts";
 
 const lineNy = line<[number, number?]>()
   .defined((d) => !(isNaN(d[0]!) || d[0] == null))
@@ -68,7 +68,7 @@ export function createScales(
 export function updateScaleX(
   x: ScaleTime<number, number>,
   bIndexVisible: AR1Basis,
-  data: ChartData,
+  data: TimeSeriesModel,
 ) {
   const bTimeVisible = bIndexVisible.transformWith(data.idxToTime);
   x.domain(bTimeVisible.toArr());
@@ -79,7 +79,7 @@ export function updateScaleY(
   tree: SegmentTree<IMinMax>,
   pathTransform: ViewportTransform,
   yScale: ScaleLinear<number, number>,
-  data: ChartData,
+  data: TimeSeriesModel,
 ) {
   const bTemperatureVisible = data.bTemperatureVisible(bIndexVisible, tree);
   pathTransform.onReferenceViewWindowResize(

@@ -3,7 +3,7 @@
  */
 
 import { SegmentTree } from "segment-tree-rmq";
-import type { IMinMax } from "../../../svg-time-series/src/chart/data.ts";
+import type { IMinMax } from "../../../svg-time-series/src/chart/TimeSeriesModel.ts";
 
 interface IElement {
   values: number[];

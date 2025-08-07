@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import { SegmentTree } from "segment-tree-rmq";
-import type { IMinMax } from "./chart/data.ts";
+import type { IMinMax } from "./chart/TimeSeriesModel.ts";
 
 function buildMinMax(a: IMinMax, b: IMinMax): IMinMax {
   return { min: Math.min(a.min, b.min), max: Math.max(a.max, b.max) };

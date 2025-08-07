@@ -37,7 +37,7 @@ onCsv((data: [number, number][]) => {
   let j = 0;
   animateBench(() => {
     const point = data[j % data.length];
-    chart.updateChartWithNewData(point[0], point[1]);
+    chart.append(point[0], point[1]);
     j++;
   });
 

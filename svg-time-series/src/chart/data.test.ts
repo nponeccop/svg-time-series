@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
-import { ChartData, IDataSource } from "./data.ts";
+import { TimeSeriesModel, IDataSource } from "./TimeSeriesModel.ts";
 import { AR1Basis } from "../math/affine.ts";
 
-describe("ChartData", () => {
+describe("TimeSeriesModel", () => {
   const makeSource = (data: Array<[number, number?]>): IDataSource => ({
     startTime: 0,
     timeStep: 1,
@@ -19,7 +19,7 @@ describe("ChartData", () => {
       seriesCount: 1,
       getSeries: () => 0,
     };
-    expect(() => new ChartData(source)).toThrow(/non-empty data array/);
+    expect(() => new TimeSeriesModel(source)).toThrow(/non-empty data array/);
   });
 
   it("throws if seriesCount is not 1 or 2", () => {
@@ -30,7 +30,7 @@ describe("ChartData", () => {
       seriesCount: 3,
       getSeries: () => 0,
     };
-    expect(() => new ChartData(source)).toThrow(/1 or 2 series/);
+    expect(() => new TimeSeriesModel(source)).toThrow(/1 or 2 series/);
   });
 
   it("updates data and time mapping on append", () => {
@@ -38,7 +38,7 @@ describe("ChartData", () => {
       [0, 0],
       [1, 1],
     ]);
-    const cd = new ChartData(source);
+    const cd = new TimeSeriesModel(source);
     expect(cd.data).toEqual([
       [0, 0],
       [1, 1],
@@ -57,7 +57,7 @@ describe("ChartData", () => {
   });
 
   it("provides clamped point data and timestamp", () => {
-    const cd = new ChartData(
+    const cd = new TimeSeriesModel(
       makeSource([
         [10, 20],
         [30, 40],
@@ -70,7 +70,7 @@ describe("ChartData", () => {
   });
 
   it("reflects latest window after multiple appends", () => {
-    const cd = new ChartData(
+    const cd = new TimeSeriesModel(
       makeSource([
         [0, 0],
         [1, 1],
@@ -96,7 +96,7 @@ describe("ChartData", () => {
       [0, 0],
       [1, 1],
     ]);
-    const cd = new ChartData(source);
+    const cd = new TimeSeriesModel(source);
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
     cd.append(2);
@@ -110,7 +110,7 @@ describe("ChartData", () => {
   });
 
   it("computes visible temperature bounds", () => {
-    const cd = new ChartData(
+    const cd = new TimeSeriesModel(
       makeSource([
         [10, 20],
         [30, 40],
@@ -123,7 +123,7 @@ describe("ChartData", () => {
   });
 
   it("floors and ceils fractional bounds when computing temperature visibility", () => {
-    const cd = new ChartData(
+    const cd = new TimeSeriesModel(
       makeSource([
         [10, 20],
         [30, 40],
@@ -141,7 +141,7 @@ describe("ChartData", () => {
   });
 
   it("handles fractional bounds in the middle of the dataset", () => {
-    const cd = new ChartData(
+    const cd = new TimeSeriesModel(
       makeSource([
         [10, 20],
         [30, 40],
@@ -159,7 +159,7 @@ describe("ChartData", () => {
   });
 
   it("clamps bounds that extend past the data range", () => {
-    const cd = new ChartData(
+    const cd = new TimeSeriesModel(
       makeSource([
         [10, 20],
         [30, 40],
@@ -179,7 +179,7 @@ describe("ChartData", () => {
   });
 
   it("clamps bounds completely to the left of the data range", () => {
-    const cd = new ChartData(
+    const cd = new TimeSeriesModel(
       makeSource([
         [10, 20],
         [30, 40],
@@ -199,7 +199,7 @@ describe("ChartData", () => {
   });
 
   it("clamps bounds completely to the right of the data range", () => {
-    const cd = new ChartData(
+    const cd = new TimeSeriesModel(
       makeSource([
         [10, 20],
         [30, 40],
@@ -219,7 +219,7 @@ describe("ChartData", () => {
   });
 
   it("computes combined temperature basis and direct product", () => {
-    const cd = new ChartData(
+    const cd = new TimeSeriesModel(
       makeSource([
         [0, 10],
         [5, 2],
@@ -241,7 +241,7 @@ describe("ChartData", () => {
         seriesCount: 1,
         getSeries: (i) => [0, 1][i],
       };
-      const cd = new ChartData(source);
+      const cd = new TimeSeriesModel(source);
       expect(cd.treeSf).toBeUndefined();
       expect(cd.data).toEqual([
         [0, undefined],
