@@ -1,3 +1,6 @@
+/* eslint-env browser */
+/* global SVGPathElement, window */
+/* eslint-disable no-redeclare */
 // @info
 //   Polyfill for SVG 2 getPathData() and setPathData() methods. Based on:
 //   - SVGPathSeg polyfill by Philip Rogers (MIT License)
@@ -588,8 +591,8 @@ if (
         var type = seg.type;
 
         if (type === "M") {
-          var x = seg.values[0];
-          var y = seg.values[1];
+          let x = seg.values[0];
+          let y = seg.values[1];
 
           absolutizedPathData.push({ type: "M", values: [x, y] });
 
@@ -599,8 +602,8 @@ if (
           currentX = x;
           currentY = y;
         } else if (type === "m") {
-          var x = currentX + seg.values[0];
-          var y = currentY + seg.values[1];
+          let x = currentX + seg.values[0];
+          let y = currentY + seg.values[1];
 
           absolutizedPathData.push({ type: "M", values: [x, y] });
 
@@ -610,16 +613,16 @@ if (
           currentX = x;
           currentY = y;
         } else if (type === "L") {
-          var x = seg.values[0];
-          var y = seg.values[1];
+          let x = seg.values[0];
+          let y = seg.values[1];
 
           absolutizedPathData.push({ type: "L", values: [x, y] });
 
           currentX = x;
           currentY = y;
         } else if (type === "l") {
-          var x = currentX + seg.values[0];
-          var y = currentY + seg.values[1];
+          let x = currentX + seg.values[0];
+          let y = currentY + seg.values[1];
 
           absolutizedPathData.push({ type: "L", values: [x, y] });
 
