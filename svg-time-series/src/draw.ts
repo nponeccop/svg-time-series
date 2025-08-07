@@ -7,6 +7,7 @@ import type { RenderState } from "./chart/render.ts";
 import { renderPaths } from "./chart/render/utils.ts";
 import type { ILegendController } from "./chart/legend.ts";
 import { ZoomState, IZoomStateOptions } from "./chart/zoomState.ts";
+import { AR1Basis, DirectProductBasis } from "./math/affine.ts";
 
 export type { IMinMax, IDataSource } from "./chart/data.ts";
 export type { ILegendController } from "./chart/legend.ts";
@@ -101,10 +102,19 @@ export class TimeSeriesChart {
   public resize = (dimensions: { width: number; height: number }) => {
     this.state.dimensions.width = dimensions.width;
     this.state.dimensions.height = dimensions.height;
+    this.state.transforms.bScreenXVisible = new AR1Basis(0, dimensions.width);
+    const bScreenYVisible = new AR1Basis(dimensions.height, 0);
+    const bScreenVisibleDp = DirectProductBasis.fromProjections(
+      this.state.transforms.bScreenXVisible,
+      bScreenYVisible,
+    );
+    this.state.transforms.ny.onViewPortResize(bScreenVisibleDp);
+    this.state.transforms.sf?.onViewPortResize(bScreenVisibleDp);
     this.zoomArea
       .attr("width", dimensions.width)
       .attr("height", dimensions.height);
     this.zoomState.updateExtents(dimensions);
+    refreshChart(this.state, this.data);
   };
 
   public onHover = (x: number) => {
