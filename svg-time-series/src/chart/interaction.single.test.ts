@@ -146,7 +146,7 @@ describe("chart interaction single-axis", () => {
 
     const xAxis = axisInstances[0];
     const yAxis = axisInstances[1];
-    const mtNy = transformInstances[0];
+    const mtSeriesA = transformInstances[0];
     const xCalls = xAxis.axisUpCalls;
     const yCalls = yAxis.axisUpCalls;
     const callCount = updateNodeCalls;
@@ -154,7 +154,7 @@ describe("chart interaction single-axis", () => {
     zoom({ transform: { x: 10, k: 2 } } as any);
     vi.runAllTimers();
 
-    expect(mtNy.onZoomPan).toHaveBeenCalledWith({ x: 10, k: 2 });
+    expect(mtSeriesA.onZoomPan).toHaveBeenCalledWith({ x: 10, k: 2 });
     expect(transformInstances.length).toBe(1);
     expect(updateNodeCalls).toBeGreaterThan(callCount);
     expect(xAxis.axisUpCalls).toBeGreaterThan(xCalls);

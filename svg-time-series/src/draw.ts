@@ -72,8 +72,8 @@ export class TimeSeriesChart {
     };
   }
 
-  public updateChartWithNewData(ny: number, sf?: number) {
-    this.data.append(ny, sf);
+  public updateChartWithNewData(seriesA: number, seriesB?: number) {
+    this.data.append(seriesA, seriesB);
     this.drawNewData();
   }
 
@@ -93,7 +93,7 @@ export class TimeSeriesChart {
   };
 
   public onHover = (x: number) => {
-    const idx = this.state.transforms.ny.fromScreenToModelX(x);
+    const idx = this.state.transforms.seriesA.fromScreenToModelX(x);
     this.legendController.onHover(idx);
   };
 

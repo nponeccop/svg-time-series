@@ -153,8 +153,8 @@ describe("chart interaction", () => {
 
     const xAxis = axisInstances[0];
     const yAxis = axisInstances[1];
-    const mtNy = transformInstances[0];
-    const mtSf = transformInstances[1];
+    const mtSeriesA = transformInstances[0];
+    const mtSeriesB = transformInstances[1];
     const xCalls = xAxis.axisUpCalls;
     const yCalls = yAxis.axisUpCalls;
     const callCount = updateNodeCalls;
@@ -162,8 +162,8 @@ describe("chart interaction", () => {
     zoom({ transform: { x: 10, k: 2 } } as any);
     vi.runAllTimers();
 
-    expect(mtNy.onZoomPan).toHaveBeenCalledWith({ x: 10, k: 2 });
-    expect(mtSf.onZoomPan).toHaveBeenCalledWith({ x: 10, k: 2 });
+    expect(mtSeriesA.onZoomPan).toHaveBeenCalledWith({ x: 10, k: 2 });
+    expect(mtSeriesB.onZoomPan).toHaveBeenCalledWith({ x: 10, k: 2 });
     expect(updateNodeCalls).toBeGreaterThan(callCount);
     expect(xAxis.axisUpCalls).toBeGreaterThan(xCalls);
     expect(yAxis.axisUpCalls).toBeGreaterThan(yCalls);

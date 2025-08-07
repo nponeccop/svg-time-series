@@ -34,12 +34,12 @@ export interface IDataSource {
 
 export class ChartData {
   public data: Array<[number, number?]>;
-  public treeNy!: SegmentTree<IMinMax>;
-  public treeSf?: SegmentTree<IMinMax>;
+  public primaryTree!: SegmentTree<IMinMax>;
+  public secondaryTree?: SegmentTree<IMinMax>;
   public idxToTime: AR1;
   private idxShift: AR1;
   public bIndexFull: AR1Basis;
-  private hasSf: boolean;
+  private hasSeriesB: boolean;
 
   /**
    * Creates a new ChartData instance.
@@ -50,12 +50,12 @@ export class ChartData {
     if (source.length === 0) {
       throw new Error("ChartData requires a non-empty data array");
     }
-    this.hasSf = source.seriesCount > 1;
+    this.hasSeriesB = source.seriesCount > 1;
     this.data = new Array(source.length);
     for (let i = 0; i < source.length; i++) {
-      const ny = source.getSeries(i, 0);
-      const sf = this.hasSf ? source.getSeries(i, 1) : undefined;
-      this.data[i] = [ny, sf];
+      const seriesA = source.getSeries(i, 0);
+      const seriesB = this.hasSeriesB ? source.getSeries(i, 1) : undefined;
+      this.data[i] = [seriesA, seriesB];
     }
     this.idxToTime = betweenTBasesAR1(
       bUnit,
@@ -68,13 +68,13 @@ export class ChartData {
     this.rebuildSegmentTrees();
   }
 
-  append(ny: number, sf?: number): void {
-    if (!this.hasSf && sf !== undefined) {
+  append(seriesA: number, seriesB?: number): void {
+    if (!this.hasSeriesB && seriesB !== undefined) {
       console.warn(
-        "ChartData: sf parameter provided but data source has only one series. sf value will be ignored.",
+        "ChartData: seriesB parameter provided but data source has only one series. seriesB value will be ignored.",
       );
     }
-    this.data.push([ny, this.hasSf ? sf : undefined]);
+    this.data.push([seriesA, this.hasSeriesB ? seriesB : undefined]);
     this.data.shift();
     this.idxToTime = this.idxShift.composeWith(this.idxToTime);
     this.rebuildSegmentTrees();
@@ -85,15 +85,15 @@ export class ChartData {
   }
 
   getPoint(idx: number): {
-    ny: number;
-    sf?: number;
+    seriesA: number;
+    seriesB?: number;
     timestamp: number;
   } {
     const clamped = this.clampIndex(Math.round(idx));
-    const [ny, sf] = this.data[clamped];
+    const [seriesA, seriesB] = this.data[clamped];
     return {
-      ny,
-      sf,
+      seriesA,
+      seriesB,
       timestamp: this.idxToTime.applyToPoint(clamped),
     };
   }
@@ -103,26 +103,34 @@ export class ChartData {
   }
 
   private rebuildSegmentTrees(): void {
-    const nyData: IMinMax[] = new Array(this.data.length);
+    const seriesAData: IMinMax[] = new Array(this.data.length);
     for (let i = 0; i < this.data.length; i++) {
       const val = this.data[i][0];
       const minVal = isNaN(val) ? Infinity : val;
       const maxVal = isNaN(val) ? -Infinity : val;
-      nyData[i] = { min: minVal, max: maxVal } as IMinMax;
+      seriesAData[i] = { min: minVal, max: maxVal } as IMinMax;
     }
-    this.treeNy = new SegmentTree(nyData, buildMinMax, minMaxIdentity);
+    this.primaryTree = new SegmentTree(
+      seriesAData,
+      buildMinMax,
+      minMaxIdentity,
+    );
 
-    if (this.hasSf) {
-      const sfData: IMinMax[] = new Array(this.data.length);
+    if (this.hasSeriesB) {
+      const seriesBData: IMinMax[] = new Array(this.data.length);
       for (let i = 0; i < this.data.length; i++) {
         const val = this.data[i][1]!;
         const minVal = isNaN(val) ? Infinity : val;
         const maxVal = isNaN(val) ? -Infinity : val;
-        sfData[i] = { min: minVal, max: maxVal } as IMinMax;
+        seriesBData[i] = { min: minVal, max: maxVal } as IMinMax;
       }
-      this.treeSf = new SegmentTree(sfData, buildMinMax, minMaxIdentity);
+      this.secondaryTree = new SegmentTree(
+        seriesBData,
+        buildMinMax,
+        minMaxIdentity,
+      );
     } else {
-      this.treeSf = undefined;
+      this.secondaryTree = undefined;
     }
   }
 
@@ -146,16 +154,19 @@ export class ChartData {
     combined: AR1Basis;
     dp: DirectProductBasis;
   } {
-    if (!this.treeSf) {
+    if (!this.secondaryTree) {
       throw new Error("Second series data is unavailable");
     }
-    const bNy = this.bTemperatureVisible(bIndexVisible, this.treeNy);
-    const bSf = this.bTemperatureVisible(bIndexVisible, this.treeSf);
-    const [nyMin, nyMax] = bNy.toArr();
-    const [sfMin, sfMax] = bSf.toArr();
+    const bSeriesA = this.bTemperatureVisible(bIndexVisible, this.primaryTree);
+    const bSeriesB = this.bTemperatureVisible(
+      bIndexVisible,
+      this.secondaryTree,
+    );
+    const [seriesAMin, seriesAMax] = bSeriesA.toArr();
+    const [seriesBMin, seriesBMax] = bSeriesB.toArr();
     const combined = new AR1Basis(
-      Math.min(nyMin, sfMin),
-      Math.max(nyMax, sfMax),
+      Math.min(seriesAMin, seriesBMin),
+      Math.max(seriesAMax, seriesBMax),
     );
     const dp = DirectProductBasis.fromProjections(this.bIndexFull, combined);
     return { combined, dp };

@@ -102,10 +102,10 @@ describe("buildSeries", () => {
     );
     expect(series.length).toBe(1);
     expect(series[0]).toMatchObject({
-      tree: data.treeNy,
-      transform: state.transforms.ny,
-      scale: state.scales.yNy,
-      view: state.paths.viewNy,
+      tree: data.primaryTree,
+      transform: state.transforms.seriesA,
+      scale: state.scales.ySeriesA,
+      view: state.paths.viewSeriesA,
       axis: state.axes.y,
       gAxis: state.axes.gY,
     });
@@ -133,18 +133,18 @@ describe("buildSeries", () => {
     );
     expect(series.length).toBe(2);
     expect(series[0]).toMatchObject({
-      tree: data.treeNy,
-      transform: state.transforms.ny,
-      scale: state.scales.yNy,
-      view: state.paths.viewNy,
+      tree: data.primaryTree,
+      transform: state.transforms.seriesA,
+      scale: state.scales.ySeriesA,
+      view: state.paths.viewSeriesA,
       axis: state.axes.y,
       gAxis: state.axes.gY,
     });
     expect(series[1]).toMatchObject({
-      tree: data.treeSf,
-      transform: state.transforms.sf,
-      scale: state.scales.ySf,
-      view: state.paths.viewSf,
+      tree: data.secondaryTree,
+      transform: state.transforms.seriesB,
+      scale: state.scales.ySeriesB,
+      view: state.paths.viewSeriesB,
       axis: state.axes.yRight,
       gAxis: state.axes.gYRight,
     });

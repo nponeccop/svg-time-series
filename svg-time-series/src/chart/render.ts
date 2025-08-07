@@ -36,7 +36,7 @@ function setupAxes(
   scales: ScaleSet,
   width: number,
   height: number,
-  hasSf: boolean,
+  hasSeriesB: boolean,
   dualYAxis: boolean,
 ): AxisSet {
   const xAxis = new MyAxis(Orientation.Bottom, scales.x)
@@ -47,9 +47,9 @@ function setupAxes(
   xAxis.setScale(scales.x);
   const gX = svg.append("g").attr("class", "axis").call(xAxis.axis.bind(xAxis));
 
-  if (hasSf && dualYAxis && scales.ySf) {
-    const yLeft = createYAxis(Orientation.Left, scales.yNy, width);
-    const yRight = createYAxis(Orientation.Right, scales.ySf, width);
+  if (hasSeriesB && dualYAxis && scales.ySeriesB) {
+    const yLeft = createYAxis(Orientation.Left, scales.ySeriesA, width);
+    const yRight = createYAxis(Orientation.Right, scales.ySeriesB, width);
 
     const gY = svg
       .append("g")
@@ -63,7 +63,7 @@ function setupAxes(
     return { x: xAxis, y: yLeft, gX, gY, yRight, gYRight };
   }
 
-  const yAxis = createYAxis(Orientation.Right, scales.yNy, width);
+  const yAxis = createYAxis(Orientation.Right, scales.ySeriesA, width);
   const gY = svg.append("g").attr("class", "axis").call(yAxis.axis.bind(yAxis));
 
   return { x: xAxis, y: yAxis, gX, gY };
@@ -79,8 +79,8 @@ interface AxisSet {
 }
 
 interface TransformSet {
-  ny: ViewportTransform;
-  sf?: ViewportTransform;
+  seriesA: ViewportTransform;
+  seriesB?: ViewportTransform;
   bScreenXVisible: AR1Basis;
 }
 
@@ -90,7 +90,7 @@ interface Dimensions {
 }
 
 export interface Series {
-  tree: ChartData["treeNy"];
+  tree: ChartData["primaryTree"];
   transform: ViewportTransform;
   scale: ScaleLinear<number, number>;
   view: SVGGElement;
@@ -106,31 +106,31 @@ export function buildSeries(
   axes?: AxisSet,
   dualYAxis = false,
 ): Series[] {
-  const hasSf = data.treeSf != null;
+  const hasSeriesB = data.secondaryTree != null;
   const series: Series[] = [
     {
-      tree: data.treeNy,
-      transform: transforms.ny,
-      scale: scales.yNy,
-      view: paths.viewNy,
+      tree: data.primaryTree,
+      transform: transforms.seriesA,
+      scale: scales.ySeriesA,
+      view: paths.viewSeriesA,
       axis: axes?.y,
       gAxis: axes?.gY,
     },
   ];
 
   if (
-    hasSf &&
+    hasSeriesB &&
     dualYAxis &&
-    data.treeSf &&
-    transforms.sf &&
-    scales.ySf &&
-    paths.viewSf
+    data.secondaryTree &&
+    transforms.seriesB &&
+    scales.ySeriesB &&
+    paths.viewSeriesB
   ) {
     series.push({
-      tree: data.treeSf,
-      transform: transforms.sf,
-      scale: scales.ySf,
-      view: paths.viewSf,
+      tree: data.secondaryTree,
+      transform: transforms.seriesB,
+      scale: scales.ySeriesB,
+      view: paths.viewSeriesB,
       axis: axes?.yRight,
       gAxis: axes?.gYRight,
     });
@@ -154,20 +154,20 @@ export function setupRender(
   data: ChartData,
   dualYAxis: boolean,
 ): RenderState {
-  const hasSf = data.treeSf != null;
+  const hasSeriesB = data.secondaryTree != null;
 
   const { width, height, bScreenXVisible, bScreenYVisible } =
     createDimensions(svg);
-  const paths = initPaths(svg, hasSf);
+  const paths = initPaths(svg, hasSeriesB);
   const scales = createScales(
     bScreenXVisible,
     bScreenYVisible,
-    hasSf && dualYAxis,
+    hasSeriesB && dualYAxis,
   );
   const sharedTransform = new ViewportTransform();
   const transformsInner: TransformPair = {
-    ny: sharedTransform,
-    sf: hasSf
+    seriesA: sharedTransform,
+    seriesB: hasSeriesB
       ? dualYAxis
         ? new ViewportTransform()
         : sharedTransform
@@ -184,7 +184,7 @@ export function setupRender(
     dualYAxis,
   );
 
-  if (series.length === 1 && hasSf && data.treeSf) {
+  if (series.length === 1 && hasSeriesB && data.secondaryTree) {
     const { combined, dp } = data.combinedTemperatureDp(data.bIndexFull);
     for (const s of series) {
       s.transform.onReferenceViewWindowResize(dp);
@@ -196,7 +196,7 @@ export function setupRender(
     }
   }
 
-  const axes = setupAxes(svg, scales, width, height, hasSf, dualYAxis);
+  const axes = setupAxes(svg, scales, width, height, hasSeriesB, dualYAxis);
 
   // Attach axes to series after scales have been initialized
   series[0].axis = axes.y;
@@ -210,18 +210,18 @@ export function setupRender(
     bScreenXVisible,
     bScreenYVisible,
   );
-  transformsInner.ny.onViewPortResize(bScreenVisibleDp);
-  transformsInner.sf?.onViewPortResize(bScreenVisibleDp);
-  transformsInner.ny.onReferenceViewWindowResize(
+  transformsInner.seriesA.onViewPortResize(bScreenVisibleDp);
+  transformsInner.seriesB?.onViewPortResize(bScreenVisibleDp);
+  transformsInner.seriesA.onReferenceViewWindowResize(
     DirectProductBasis.fromProjections(data.bIndexFull, bPlaceholder),
   );
-  transformsInner.sf?.onReferenceViewWindowResize(
+  transformsInner.seriesB?.onReferenceViewWindowResize(
     DirectProductBasis.fromProjections(data.bIndexFull, bPlaceholder),
   );
 
   const transforms: TransformSet = {
-    ny: transformsInner.ny,
-    sf: transformsInner.sf,
+    seriesA: transformsInner.seriesA,
+    seriesB: transformsInner.seriesB,
     bScreenXVisible,
   };
   const dimensions: Dimensions = { width, height };
@@ -230,26 +230,26 @@ export function setupRender(
 }
 
 export function refreshChart(state: RenderState, data: ChartData) {
-  const bIndexVisible = state.transforms.ny.fromScreenToModelBasisX(
+  const bIndexVisible = state.transforms.seriesA.fromScreenToModelBasisX(
     state.transforms.bScreenXVisible,
   );
   updateScaleX(state.scales.x, bIndexVisible, data);
   const series = state.series;
 
   // Update tree references in case data has changed
-  series[0].tree = data.treeNy;
-  if (series[1] && data.treeSf) {
-    series[1].tree = data.treeSf;
+  series[0].tree = data.primaryTree;
+  if (series[1] && data.secondaryTree) {
+    series[1].tree = data.secondaryTree;
   }
 
-  if (state.series.length === 1 && data.treeSf) {
+  if (state.series.length === 1 && data.secondaryTree) {
     const { combined, dp } = data.combinedTemperatureDp(bIndexVisible);
     for (const s of series) {
       s.transform.onReferenceViewWindowResize(dp);
       s.scale.domain(combined.toArr());
     }
-    if (state.paths.viewSf) {
-      updateNode(state.paths.viewSf, state.transforms.ny.matrix);
+    if (state.paths.viewSeriesB) {
+      updateNode(state.paths.viewSeriesB, state.transforms.seriesA.matrix);
     }
   } else {
     for (const s of series) {

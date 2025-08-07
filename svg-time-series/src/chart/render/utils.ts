@@ -8,19 +8,19 @@ import type { IMinMax } from "../data.ts";
 import type { ChartData } from "../data.ts";
 import type { RenderState } from "../render.ts";
 
-const lineNy = line<[number, number?]>()
+const lineSeriesA = line<[number, number?]>()
   .defined((d) => !(isNaN(d[0]!) || d[0] == null))
   .x((_, i) => i)
   .y((d) => d[0]!);
 
-const lineSf = line<[number, number?]>()
+const lineSeriesB = line<[number, number?]>()
   .defined((d) => !(isNaN(d[1]!) || d[1] == null))
   .x((_, i) => i)
   .y((d) => d[1]!);
 
 const lineGenerators = {
-  ny: lineNy,
-  sf: lineSf,
+  seriesA: lineSeriesA,
+  seriesB: lineSeriesB,
 } as const;
 
 export function createDimensions(
@@ -43,8 +43,8 @@ export function createDimensions(
 
 export interface ScaleSet {
   x: ScaleTime<number, number>;
-  yNy: ScaleLinear<number, number>;
-  ySf?: ScaleLinear<number, number>;
+  ySeriesA: ScaleLinear<number, number>;
+  ySeriesB?: ScaleLinear<number, number>;
 }
 
 export function createScales(
@@ -55,14 +55,14 @@ export function createScales(
   const x: ScaleTime<number, number> = scaleTime().range(
     bScreenXVisible.toArr(),
   );
-  const yNy: ScaleLinear<number, number> = scaleLinear().range(
+  const ySeriesA: ScaleLinear<number, number> = scaleLinear().range(
     bScreenYVisible.toArr(),
   );
-  let ySf: ScaleLinear<number, number> | undefined;
+  let ySeriesB: ScaleLinear<number, number> | undefined;
   if (dualAxis) {
-    ySf = scaleLinear().range(bScreenYVisible.toArr());
+    ySeriesB = scaleLinear().range(bScreenYVisible.toArr());
   }
-  return { x, yNy, ySf };
+  return { x, ySeriesA, ySeriesB };
 }
 
 export function updateScaleX(
@@ -90,30 +90,30 @@ export function updateScaleY(
 
 export interface PathSet {
   path: Selection<SVGPathElement, number, SVGGElement, unknown>;
-  viewNy: SVGGElement;
-  viewSf?: SVGGElement;
+  viewSeriesA: SVGGElement;
+  viewSeriesB?: SVGGElement;
 }
 
 export interface TransformPair {
-  ny: ViewportTransform;
-  sf?: ViewportTransform;
+  seriesA: ViewportTransform;
+  seriesB?: ViewportTransform;
 }
 
 export function initPaths(
   svg: Selection<SVGSVGElement, unknown, HTMLElement, unknown>,
-  hasSf: boolean,
+  hasSeriesB: boolean,
 ): PathSet {
   const views = svg
     .selectAll("g")
-    .data(hasSf ? [0, 1] : [0])
+    .data(hasSeriesB ? [0, 1] : [0])
     .enter()
     .append("g")
     .attr("class", "view");
   const nodes = views.nodes() as SVGGElement[];
-  const viewNy = nodes[0];
-  const viewSf = hasSf ? nodes[1] : undefined;
+  const viewSeriesA = nodes[0];
+  const viewSeriesB = hasSeriesB ? nodes[1] : undefined;
   const path = views.append("path");
-  return { path, viewNy, viewSf };
+  return { path, viewSeriesA, viewSeriesB };
 }
 
 export function renderPaths(
@@ -125,8 +125,8 @@ export function renderPaths(
     keyof typeof lineGenerators,
     SVGPathElement | undefined
   > = {
-    ny: paths[0],
-    sf: paths[1],
+    seriesA: paths[0],
+    seriesB: paths[1],
   };
 
   for (const [seriesKey, generator] of Object.entries(lineGenerators)) {

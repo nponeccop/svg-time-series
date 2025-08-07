@@ -33,7 +33,9 @@ export class LegendController implements ILegendController {
     this.legendGreen = legend.select(".chart-legend__green_value");
     this.legendBlue = legend.select(".chart-legend__blue_value");
 
-    const svg = state.paths.viewNy.ownerSVGElement!;
+    const viewNy = state.paths.viewSeriesA;
+    const viewSf = state.paths.viewSeriesB;
+    const svg = viewNy.ownerSVGElement!;
     const makeDot = () =>
       select(svg)
         .append("circle")
@@ -42,7 +44,7 @@ export class LegendController implements ILegendController {
         .attr("r", this.dotRadius)
         .node() as SVGCircleElement;
     this.highlightedGreenDot = makeDot();
-    this.highlightedBlueDot = state.paths.viewSf ? makeDot() : null;
+    this.highlightedBlueDot = viewSf ? makeDot() : null;
 
     const { wrapped, cancel } = drawProc(() => {
       this.update();
@@ -62,8 +64,8 @@ export class LegendController implements ILegendController {
 
   private update() {
     const {
-      ny: greenData,
-      sf: blueData,
+      seriesA: ny,
+      seriesB: sf,
       timestamp,
     } = this.data.getPoint(this.highlightedDataIdx);
     this.legendTime.text(this.formatTime(timestamp));
@@ -71,6 +73,8 @@ export class LegendController implements ILegendController {
     const fixNaN = <T>(n: number, valueForNaN: T): number | T =>
       isNaN(n) ? valueForNaN : n;
     const screenX = this.state.scales.x(timestamp);
+    const yNy = this.state.scales.ySeriesA;
+    const ySf = this.state.scales.ySeriesB ?? yNy;
     const updateDot = (
       val: number,
       legendSel: Selection<HTMLElement, unknown, HTMLElement, unknown>,
@@ -85,19 +89,9 @@ export class LegendController implements ILegendController {
       }
     };
 
-    updateDot(
-      greenData,
-      this.legendGreen,
-      this.highlightedGreenDot,
-      this.state.scales.yNy,
-    );
+    updateDot(ny, this.legendGreen, this.highlightedGreenDot, yNy);
     if (this.highlightedBlueDot) {
-      updateDot(
-        blueData as number,
-        this.legendBlue,
-        this.highlightedBlueDot,
-        this.state.scales.ySf ?? this.state.scales.yNy,
-      );
+      updateDot(sf as number, this.legendBlue, this.highlightedBlueDot, ySf);
     }
   }
 

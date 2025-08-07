@@ -89,8 +89,8 @@ describe("setupRender Y-axis modes", () => {
     };
     const data = new ChartData(source);
     const state = setupRender(svg as any, data, false);
-    expect(state.scales.yNy.domain()).toEqual([1, 30]);
-    expect(state.scales.ySf).toBeUndefined();
+    expect(state.scales.ySeriesA.domain()).toEqual([1, 30]);
+    expect(state.scales.ySeriesB).toBeUndefined();
   });
 
   it("separates scales when dualYAxis is true", () => {
@@ -105,7 +105,7 @@ describe("setupRender Y-axis modes", () => {
     };
     const data = new ChartData(source);
     const state = setupRender(svg as any, data, true);
-    expect(state.scales.yNy.domain()).toEqual([1, 3]);
-    expect(state.scales.ySf!.domain()).toEqual([10, 30]);
+    expect(state.scales.ySeriesA.domain()).toEqual([1, 3]);
+    expect(state.scales.ySeriesB!.domain()).toEqual([10, 30]);
   });
 });
