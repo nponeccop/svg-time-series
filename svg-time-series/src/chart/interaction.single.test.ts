@@ -5,6 +5,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { select } from "d3-selection";
 import { AR1Basis } from "../math/affine.ts";
 import { TimeSeriesChart, IDataSource } from "../draw.ts";
+import type { TimePoint } from "./data.ts";
 import { LegendController } from "../../../samples/LegendController.ts";
 
 class Matrix {
@@ -79,7 +80,7 @@ vi.mock("d3-zoom", () => ({
   },
 }));
 
-function createChart(data: Array<[number]>) {
+function createChart(data: TimePoint[]) {
   currentDataLength = data.length;
   const parent = document.createElement("div");
   const w = Math.max(currentDataLength - 1, 0);
@@ -104,7 +105,7 @@ function createChart(data: Array<[number]>) {
     timeStep: 1,
     length: data.length,
     seriesCount: 1,
-    getSeries: (i) => data[i][0],
+    getSeries: (i) => data[i].ny,
   };
   const chart = new TimeSeriesChart(
     select(svgEl) as any,
@@ -141,7 +142,7 @@ afterEach(() => {
 
 describe("chart interaction single-axis", () => {
   it("zoom updates transform and axes", () => {
-    const { zoom } = createChart([[0], [1]]);
+    const { zoom } = createChart([{ ny: 0 }, { ny: 1 }]);
     vi.runAllTimers();
 
     const xAxis = axisInstances[0];
@@ -162,7 +163,7 @@ describe("chart interaction single-axis", () => {
   });
 
   it("onHover updates legend text and dot position", () => {
-    const data: Array<[number]> = [[10], [30]];
+    const data: TimePoint[] = [{ ny: 10 }, { ny: 30 }];
     const { onHover, svgEl, legend } = createChart(data);
     vi.runAllTimers();
 
@@ -180,7 +181,7 @@ describe("chart interaction single-axis", () => {
   });
 
   it("updates circle after appending data", () => {
-    const data: Array<[number]> = [[10], [30]];
+    const data: TimePoint[] = [{ ny: 10 }, { ny: 30 }];
     const { onHover, svgEl, legend, chart } = createChart(data);
     vi.runAllTimers();
 
@@ -201,7 +202,7 @@ describe("chart interaction single-axis", () => {
   });
 
   it("handles NaN data", () => {
-    const { onHover, svgEl, legend } = createChart([[NaN]]);
+    const { onHover, svgEl, legend } = createChart([{ ny: NaN }]);
     vi.runAllTimers();
 
     onHover(0);

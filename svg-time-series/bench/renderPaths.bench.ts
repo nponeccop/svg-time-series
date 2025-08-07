@@ -5,6 +5,7 @@ import { bench, describe } from "vitest";
 import { select } from "d3-selection";
 import { renderPaths } from "../src/chart/render/utils.ts";
 import type { RenderState } from "../src/chart/render.ts";
+import type { TimePoint } from "../src/chart/data.ts";
 
 describe("renderPaths performance", () => {
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -17,8 +18,8 @@ describe("renderPaths performance", () => {
   const state = { paths: { path: pathSelection } } as unknown as RenderState;
 
   const sizes = [100, 1_000, 10_000];
-  const datasets = sizes.map((n) =>
-    Array.from({ length: n }, (_, i) => [i, i] as [number, number]),
+  const datasets = sizes.map<TimePoint[]>((n) =>
+    Array.from({ length: n }, (_, i) => ({ ny: i, sf: i })),
   );
 
   sizes.forEach((size, idx) => {

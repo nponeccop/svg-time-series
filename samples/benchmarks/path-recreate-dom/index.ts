@@ -1,15 +1,16 @@
 ﻿import { select, selectAll } from "d3-selection";
 import { measure, measureOnce, onCsv } from "../bench.ts";
 import { TimeSeriesChart } from "./draw.ts";
+import type { TimePoint } from "svg-time-series";
 
-onCsv((data) => {
+onCsv((data: TimePoint[]) => {
   const dataLength = data.length;
 
   const pathsData: any[][] = [[], []];
   let previousPointIsValid = [true, true];
-  data.forEach((d: number[], i: number, arr: number[][]) => {
-    const y0 = arr[i][0];
-    const y1 = arr[i][1];
+  data.forEach((d: TimePoint, i: number, arr: TimePoint[]) => {
+    const y0 = arr[i].ny;
+    const y1 = arr[i].sf!;
     const currentPointIsValid = [!isNaN(y0), !isNaN(y1)];
 
     if (!previousPointIsValid[0] && currentPointIsValid[0]) {

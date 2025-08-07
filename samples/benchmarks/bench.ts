@@ -1,15 +1,16 @@
 import { csv } from "d3-request";
 import { timer as runTimer } from "d3-timer";
+import type { TimePoint } from "svg-time-series";
 
 export { measure, measureOnce } from "../measure.ts";
 
-export function onCsv(f: (csv: number[][]) => void): void {
+export function onCsv(f: (csv: TimePoint[]) => void): void {
   csv("../../demos/ny-vs-sf.csv")
-    .row((d: { NY: string; SF: string }) => [
-      parseFloat(d.NY.split(";")[0]),
-      parseFloat(d.SF.split(";")[0]),
-    ])
-    .get((error: null, data: number[][]) => {
+    .row((d: { NY: string; SF: string }) => ({
+      ny: parseFloat(d.NY.split(";")[0]),
+      sf: parseFloat(d.SF.split(";")[0]),
+    }))
+    .get((error: null, data: TimePoint[]) => {
       if (error != null) {
         alert("Data can't be downloaded or parsed");
         return;

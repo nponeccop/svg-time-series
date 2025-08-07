@@ -1,14 +1,14 @@
 import { Selection } from "d3-selection";
 import { D3ZoomEvent } from "d3-zoom";
 
-import { ChartData, IMinMax, IDataSource } from "./chart/data.ts";
+import { ChartData, IMinMax, IDataSource, TimePoint } from "./chart/data.ts";
 import { setupRender, refreshChart } from "./chart/render.ts";
 import type { RenderState } from "./chart/render.ts";
 import { renderPaths } from "./chart/render/utils.ts";
 import type { ILegendController } from "./chart/legend.ts";
 import { ZoomState } from "./chart/zoomState.ts";
 
-export type { IMinMax, IDataSource } from "./chart/data.ts";
+export type { IMinMax, IDataSource, TimePoint } from "./chart/data.ts";
 export type { ILegendController } from "./chart/legend.ts";
 
 export interface IPublicInteraction {

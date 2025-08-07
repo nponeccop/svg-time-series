@@ -2,11 +2,11 @@ import { csv } from "d3-request";
 import { ValueFn, select, selectAll, pointer } from "d3-selection";
 import { D3ZoomEvent } from "d3-zoom";
 
-import { TimeSeriesChart, IDataSource } from "svg-time-series";
+import { TimeSeriesChart, IDataSource, TimePoint } from "svg-time-series";
 import { LegendController } from "../LegendController.ts";
 import { measure } from "../measure.ts";
 
-export function drawCharts(data: [number, number][], dualYAxis = false) {
+export function drawCharts(data: TimePoint[], dualYAxis = false) {
   const charts: TimeSeriesChart[] = [];
 
   const onZoom = (event: D3ZoomEvent<SVGRectElement, unknown>) =>
@@ -31,7 +31,7 @@ export function drawCharts(data: [number, number][], dualYAxis = false) {
       timeStep: 86400000,
       length: data.length,
       seriesCount: 2,
-      getSeries: (i, seriesIdx) => data[i][seriesIdx],
+      getSeries: (i, seriesIdx) => (seriesIdx === 0 ? data[i].ny : data[i].sf!),
     };
     const chart = new TimeSeriesChart(
       svg,
@@ -49,7 +49,7 @@ export function drawCharts(data: [number, number][], dualYAxis = false) {
   let j = 0;
   setInterval(function () {
     const newData = data[j % data.length];
-    charts.forEach((c) => c.updateChartWithNewData(newData[0], newData[1]));
+    charts.forEach((c) => c.updateChartWithNewData(newData.ny, newData.sf));
     j++;
   }, 5000);
   measure(3, ({ fps }) => {
@@ -57,13 +57,13 @@ export function drawCharts(data: [number, number][], dualYAxis = false) {
   });
 }
 
-export function onCsv(f: (csv: [number, number][]) => void): void {
+export function onCsv(f: (csv: TimePoint[]) => void): void {
   csv("./ny-vs-sf.csv")
-    .row((d: { NY: string; SF: string }) => [
-      parseFloat(d.NY.split(";")[0]),
-      parseFloat(d.SF.split(";")[0]),
-    ])
-    .get((error: null, data: [number, number][]) => {
+    .row((d: { NY: string; SF: string }) => ({
+      ny: parseFloat(d.NY.split(";")[0]),
+      sf: parseFloat(d.SF.split(";")[0]),
+    }))
+    .get((error: null, data: TimePoint[]) => {
       if (error != null) {
         alert("Data can't be downloaded or parsed");
         return;
@@ -82,7 +82,7 @@ interface Resize {
 const resize: Resize = { interval: 60, request: null, timer: null, eval: null };
 
 export function loadAndDraw(dualYAxis = false) {
-  onCsv((data: [number, number][]) => {
+  onCsv((data: TimePoint[]) => {
     drawCharts(data, dualYAxis);
 
     resize.request = function () {

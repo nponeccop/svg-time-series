@@ -12,6 +12,11 @@ export interface IMinMax {
   readonly max: number;
 }
 
+export interface TimePoint {
+  ny: number;
+  sf?: number;
+}
+
 function buildMinMax(fst: Readonly<IMinMax>, snd: Readonly<IMinMax>): IMinMax {
   return {
     min: Math.min(fst.min, snd.min),
@@ -33,7 +38,7 @@ export interface IDataSource {
 }
 
 export class ChartData {
-  public data: Array<[number, number?]>;
+  public data: TimePoint[];
   public treeNy!: SegmentTree<IMinMax>;
   public treeSf?: SegmentTree<IMinMax>;
   public idxToTime: AR1;
@@ -55,7 +60,7 @@ export class ChartData {
     for (let i = 0; i < source.length; i++) {
       const ny = source.getSeries(i, 0);
       const sf = this.hasSf ? source.getSeries(i, 1) : undefined;
-      this.data[i] = [ny, sf];
+      this.data[i] = { ny, sf };
     }
     this.idxToTime = betweenTBasesAR1(
       bUnit,
@@ -74,7 +79,7 @@ export class ChartData {
         "ChartData: sf parameter provided but data source has only one series. sf value will be ignored.",
       );
     }
-    this.data.push([ny, this.hasSf ? sf : undefined]);
+    this.data.push({ ny, sf: this.hasSf ? sf : undefined });
     this.data.shift();
     this.idxToTime = this.idxShift.composeWith(this.idxToTime);
     this.rebuildSegmentTrees();
@@ -90,12 +95,8 @@ export class ChartData {
     timestamp: number;
   } {
     const clamped = this.clampIndex(Math.round(idx));
-    const [ny, sf] = this.data[clamped];
-    return {
-      ny,
-      sf,
-      timestamp: this.idxToTime.applyToPoint(clamped),
-    };
+    const { ny, sf } = this.data[clamped];
+    return { ny, sf, timestamp: this.idxToTime.applyToPoint(clamped) };
   }
 
   private clampIndex(idx: number): number {
@@ -105,7 +106,7 @@ export class ChartData {
   private rebuildSegmentTrees(): void {
     const nyData: IMinMax[] = new Array(this.data.length);
     for (let i = 0; i < this.data.length; i++) {
-      const val = this.data[i][0];
+      const val = this.data[i].ny;
       const minVal = isNaN(val) ? Infinity : val;
       const maxVal = isNaN(val) ? -Infinity : val;
       nyData[i] = { min: minVal, max: maxVal } as IMinMax;
@@ -115,7 +116,7 @@ export class ChartData {
     if (this.hasSf) {
       const sfData: IMinMax[] = new Array(this.data.length);
       for (let i = 0; i < this.data.length; i++) {
-        const val = this.data[i][1]!;
+        const val = this.data[i].sf!;
         const minVal = isNaN(val) ? Infinity : val;
         const maxVal = isNaN(val) ? -Infinity : val;
         sfData[i] = { min: minVal, max: maxVal } as IMinMax;

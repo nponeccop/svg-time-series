@@ -8,7 +8,10 @@ import { MyAxis, Orientation } from "../../../svg-time-series/src/axis.ts";
 import { ViewportTransform } from "../../../svg-time-series/src/ViewportTransform.ts";
 import { updateNode } from "../../../svg-time-series/src/utils/domNodeTransform.ts";
 import { SegmentTree } from "segment-tree-rmq";
-import type { IMinMax } from "../../../svg-time-series/src/chart/data.ts";
+import type {
+  IMinMax,
+  TimePoint,
+} from "../../../svg-time-series/src/chart/data.ts";
 import {
   AR1Basis,
   AR1,
@@ -19,11 +22,13 @@ import {
 } from "../../../svg-time-series/src/math/affine.ts";
 import { onCsv } from "../../demos/common.ts";
 
-function buildSegmentTreeTuple(index: number, elements: number[][]): IMinMax {
-  const nyMinValue = isNaN(elements[index][0]) ? Infinity : elements[index][0];
-  const nyMaxValue = isNaN(elements[index][0]) ? -Infinity : elements[index][0];
-  const sfMinValue = isNaN(elements[index][1]) ? Infinity : elements[index][1];
-  const sfMaxValue = isNaN(elements[index][1]) ? -Infinity : elements[index][1];
+function buildSegmentTreeTuple(index: number, elements: TimePoint[]): IMinMax {
+  const ny = elements[index].ny;
+  const sf = elements[index].sf!;
+  const nyMinValue = isNaN(ny) ? Infinity : ny;
+  const nyMaxValue = isNaN(ny) ? -Infinity : ny;
+  const sfMinValue = isNaN(sf) ? Infinity : sf;
+  const sfMaxValue = isNaN(sf) ? -Infinity : sf;
   return {
     min: Math.min(nyMinValue, sfMinValue),
     max: Math.max(nyMaxValue, sfMaxValue),
@@ -37,7 +42,7 @@ function buildMinMax(a: IMinMax, b: IMinMax): IMinMax {
 const minMaxIdentity: IMinMax = { min: Infinity, max: -Infinity };
 
 function createSegmentTree(
-  elements: number[][],
+  elements: TimePoint[],
   size: number,
 ): SegmentTree<IMinMax> {
   const data: IMinMax[] = new Array(size);
@@ -47,7 +52,7 @@ function createSegmentTree(
   return new SegmentTree(data, buildMinMax, minMaxIdentity);
 }
 
-export function drawCharts(data: [number, number][]) {
+export function drawCharts(data: TimePoint[]) {
   const charts: TimeSeriesChart[] = [];
 
   const onZoom = (event: any) => charts.forEach((c) => c.zoom(event));
@@ -71,7 +76,7 @@ export function drawCharts(data: [number, number][]) {
   selectAll("svg").each(onSelectChart);
 }
 
-onCsv((data: [number, number][]) => {
+onCsv((data: TimePoint[]) => {
   drawCharts(data);
 });
 
@@ -101,7 +106,7 @@ function bindAxisToDom(
 export class TimeSeriesChart {
   public zoom: (event: any) => void;
   private drawNewData: () => void;
-  private data: Array<[number, number]>;
+  private data: TimePoint[];
 
   // updated when a new point is added
   private tree: SegmentTree<IMinMax>;
@@ -141,7 +146,7 @@ export class TimeSeriesChart {
     svg: Selection<BaseType, {}, HTMLElement, any>,
     startTime: number,
     timeStep: number,
-    data: Array<[number, number]>,
+    data: TimePoint[],
     buildSegmentTreeTuple: (index: number, elements: any) => IMinMax,
     zoomHandler: (event: any) => void,
   ) {
@@ -168,7 +173,7 @@ export class TimeSeriesChart {
 
   private drawChart(
     svg: Selection<BaseType, {}, HTMLElement, any>,
-    data: Array<[number, number]>,
+    data: TimePoint[],
   ) {
     this.data = data;
 
@@ -308,12 +313,13 @@ export class TimeSeriesChart {
       // ������������� ��� �������� �����
       this.tree = createSegmentTree(this.data, this.data.length);
       const drawLine = (cityIdx: number) =>
-        line()
-          .defined((d: [number, number]) => {
-            return !(isNaN(d[cityIdx]) || d[cityIdx] == null);
+        line<TimePoint>()
+          .defined((d) => {
+            const val = cityIdx === 0 ? d.ny : d.sf!;
+            return !(isNaN(val) || val == null);
           })
-          .x((d: [number, number], i: number) => i)
-          .y((d: [number, number]) => d[cityIdx]);
+          .x((_, i) => i)
+          .y((d) => (cityIdx === 0 ? d.ny : d.sf!));
 
       path.attr("d", (cityIndex: number) =>
         drawLine(cityIndex).call(null, this.data),

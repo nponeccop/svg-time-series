@@ -3,18 +3,19 @@ import { line } from "d3-shape";
 
 import { measure, measureOnce, onCsv } from "../bench.ts";
 import { TimeSeriesChart } from "./draw.ts";
+import type { TimePoint } from "svg-time-series";
 
-onCsv((data: number[][]) => {
+onCsv((data: TimePoint[]) => {
   const path = selectAll("g.view")
     .selectAll("path")
     .data([0, 1])
     .enter()
     .append("path")
     .attr("d", (cityIdx: number) =>
-      line<number[]>()
-        .defined((d) => !isNaN(d[cityIdx]))
-        .x((d, i) => i)
-        .y((d) => d[cityIdx])
+      line<TimePoint>()
+        .defined((d) => !isNaN(cityIdx === 0 ? d.ny : d.sf!))
+        .x((_, i) => i)
+        .y((d) => (cityIdx === 0 ? d.ny : d.sf!))
         .call(null, data),
     );
 

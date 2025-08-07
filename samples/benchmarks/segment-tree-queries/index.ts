@@ -3,8 +3,9 @@ import { line } from "d3-shape";
 
 import { measure, measureOnce, onCsv } from "../bench.ts";
 import { TimeSeriesChart } from "./draw.ts";
+import type { TimePoint } from "svg-time-series";
 
-onCsv((data: number[][]) => {
+onCsv((data: TimePoint[]) => {
   const filteredData = data.filter((_, i) => i % 10 == 0);
   const path = selectAll("g.view")
     .selectAll("path")
@@ -12,10 +13,10 @@ onCsv((data: number[][]) => {
     .enter()
     .append("path")
     .attr("d", (cityIdx: number) =>
-      line<number[]>()
-        .defined((d) => !isNaN(d[cityIdx]))
-        .x((d, i) => i * 10)
-        .y((d) => d[cityIdx])
+      line<TimePoint>()
+        .defined((d) => !isNaN(cityIdx === 0 ? d.ny : d.sf!))
+        .x((_, i) => i * 10)
+        .y((d) => (cityIdx === 0 ? d.ny : d.sf!))
         .call(null, filteredData),
     );
 

@@ -1,14 +1,14 @@
 import { describe, it, expect } from "vitest";
-import { ChartData, IDataSource } from "./data.ts";
+import { ChartData, IDataSource, TimePoint } from "./data.ts";
 import { AR1Basis } from "../math/affine.ts";
 
 describe("ChartData", () => {
-  const makeSource = (data: Array<[number, number?]>): IDataSource => ({
+  const makeSource = (data: TimePoint[]): IDataSource => ({
     startTime: 0,
     timeStep: 1,
     length: data.length,
-    seriesCount: data.some((d) => d[1] !== undefined) ? 2 : 1,
-    getSeries: (i, seriesIdx) => data[i][seriesIdx]!,
+    seriesCount: data.some((d) => d.sf !== undefined) ? 2 : 1,
+    getSeries: (i, seriesIdx) => (seriesIdx === 0 ? data[i].ny : data[i].sf!),
   });
 
   it("throws if constructed with empty data", () => {
@@ -24,21 +24,21 @@ describe("ChartData", () => {
 
   it("updates data and time mapping on append", () => {
     const source = makeSource([
-      [0, 0],
-      [1, 1],
+      { ny: 0, sf: 0 },
+      { ny: 1, sf: 1 },
     ]);
     const cd = new ChartData(source);
     expect(cd.data).toEqual([
-      [0, 0],
-      [1, 1],
+      { ny: 0, sf: 0 },
+      { ny: 1, sf: 1 },
     ]);
     expect(cd.idxToTime.applyToPoint(0)).toBe(0);
 
     cd.append(2, 2);
 
     expect(cd.data).toEqual([
-      [1, 1],
-      [2, 2],
+      { ny: 1, sf: 1 },
+      { ny: 2, sf: 2 },
     ]);
     // appending shifts the index-to-time mapping one step forward
     expect(cd.idxToTime.applyToPoint(0)).toBe(1);
@@ -48,9 +48,9 @@ describe("ChartData", () => {
   it("provides clamped point data and timestamp", () => {
     const cd = new ChartData(
       makeSource([
-        [10, 20],
-        [30, 40],
-        [50, 60],
+        { ny: 10, sf: 20 },
+        { ny: 30, sf: 40 },
+        { ny: 50, sf: 60 },
       ]),
     );
     expect(cd.getPoint(1)).toEqual({ ny: 30, sf: 40, timestamp: 1 });
@@ -61,8 +61,8 @@ describe("ChartData", () => {
   it("reflects latest window after multiple appends", () => {
     const cd = new ChartData(
       makeSource([
-        [0, 0],
-        [1, 1],
+        { ny: 0, sf: 0 },
+        { ny: 1, sf: 1 },
       ]),
     );
 
@@ -71,8 +71,8 @@ describe("ChartData", () => {
     cd.append(4, 4);
 
     expect(cd.data).toEqual([
-      [3, 3],
-      [4, 4],
+      { ny: 3, sf: 3 },
+      { ny: 4, sf: 4 },
     ]);
     expect(cd.idxToTime.applyToPoint(0)).toBe(3);
     expect(cd.idxToTime.applyToPoint(1)).toBe(4);
@@ -83,9 +83,9 @@ describe("ChartData", () => {
   it("computes visible temperature bounds", () => {
     const cd = new ChartData(
       makeSource([
-        [10, 20],
-        [30, 40],
-        [50, 60],
+        { ny: 10, sf: 20 },
+        { ny: 30, sf: 40 },
+        { ny: 50, sf: 60 },
       ]),
     );
     const range = new AR1Basis(0, 2);
@@ -96,9 +96,9 @@ describe("ChartData", () => {
   it("floors and ceils fractional bounds when computing temperature visibility", () => {
     const cd = new ChartData(
       makeSource([
-        [10, 20],
-        [30, 40],
-        [50, 60],
+        { ny: 10, sf: 20 },
+        { ny: 30, sf: 40 },
+        { ny: 50, sf: 60 },
       ]),
     );
 
@@ -114,9 +114,9 @@ describe("ChartData", () => {
   it("handles fractional bounds in the middle of the dataset", () => {
     const cd = new ChartData(
       makeSource([
-        [10, 20],
-        [30, 40],
-        [50, 60],
+        { ny: 10, sf: 20 },
+        { ny: 30, sf: 40 },
+        { ny: 50, sf: 60 },
       ]),
     );
 
@@ -132,9 +132,9 @@ describe("ChartData", () => {
   it("clamps bounds that extend past the data range", () => {
     const cd = new ChartData(
       makeSource([
-        [10, 20],
-        [30, 40],
-        [50, 60],
+        { ny: 10, sf: 20 },
+        { ny: 30, sf: 40 },
+        { ny: 50, sf: 60 },
       ]),
     );
 
@@ -152,9 +152,9 @@ describe("ChartData", () => {
   it("clamps bounds completely to the left of the data range", () => {
     const cd = new ChartData(
       makeSource([
-        [10, 20],
-        [30, 40],
-        [50, 60],
+        { ny: 10, sf: 20 },
+        { ny: 30, sf: 40 },
+        { ny: 50, sf: 60 },
       ]),
     );
 
@@ -172,9 +172,9 @@ describe("ChartData", () => {
   it("clamps bounds completely to the right of the data range", () => {
     const cd = new ChartData(
       makeSource([
-        [10, 20],
-        [30, 40],
-        [50, 60],
+        { ny: 10, sf: 20 },
+        { ny: 30, sf: 40 },
+        { ny: 50, sf: 60 },
       ]),
     );
 
@@ -192,9 +192,9 @@ describe("ChartData", () => {
   it("computes combined temperature basis and direct product", () => {
     const cd = new ChartData(
       makeSource([
-        [0, 10],
-        [5, 2],
-        [-3, 7],
+        { ny: 0, sf: 10 },
+        { ny: 5, sf: 2 },
+        { ny: -3, sf: 7 },
       ]),
     );
     const { combined, dp } = cd.combinedTemperatureDp(cd.bIndexFull);
@@ -214,15 +214,9 @@ describe("ChartData", () => {
       };
       const cd = new ChartData(source);
       expect(cd.treeSf).toBeUndefined();
-      expect(cd.data).toEqual([
-        [0, undefined],
-        [1, undefined],
-      ]);
+      expect(cd.data).toEqual([{ ny: 0 }, { ny: 1 }]);
       cd.append(2);
-      expect(cd.data).toEqual([
-        [1, undefined],
-        [2, undefined],
-      ]);
+      expect(cd.data).toEqual([{ ny: 1 }, { ny: 2 }]);
       expect(cd.treeNy.query(0, 1)).toEqual({ min: 1, max: 2 });
     });
   });
