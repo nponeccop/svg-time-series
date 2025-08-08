@@ -1,5 +1,6 @@
 {
   "name": "svg-time-series-monorepo",
+  "version": "0.0.0",
   "private": true,
   "scripts": {
     "build": "npm run build --workspaces --if-present",
