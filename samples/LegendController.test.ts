@@ -108,9 +108,7 @@ describe("LegendController", () => {
       .spyOn(domNode, "updateNode")
       .mockImplementation(() => {});
 
-    vi.useFakeTimers();
     lc.highlightIndex(1);
-    vi.runAllTimers();
 
     const lastCall = updateSpy.mock.calls[updateSpy.mock.calls.length - 1];
     const matrix = lastCall[1] as Matrix;
@@ -124,7 +122,6 @@ describe("LegendController", () => {
     expect(circle.getAttribute("stroke")).toBe("green");
     expect(circle.getAttribute("r")).toBe("2");
 
-    vi.useRealTimers();
     updateSpy.mockRestore();
     lc.destroy();
   });
@@ -153,12 +150,9 @@ describe("LegendController", () => {
       .spyOn(domNode, "updateNode")
       .mockImplementation(() => {});
 
-    vi.useFakeTimers();
     expect(() => {
       lc.highlightIndex(1);
-      vi.runAllTimers();
     }).not.toThrow();
-    vi.useRealTimers();
     updateSpy.mockRestore();
     lc.destroy();
   });
@@ -183,12 +177,9 @@ describe("LegendController", () => {
     select(state.paths.viewNy).select("path").attr("stroke", "green");
     const lc = new LegendController(legendDiv as any, state, data);
 
-    vi.useFakeTimers();
     expect(() => {
       lc.highlightIndex(1);
-      vi.runAllTimers();
     }).not.toThrow();
-    vi.useRealTimers();
     lc.destroy();
   });
 });
