@@ -33,7 +33,7 @@ export class LegendController implements ILegendController {
     this.legendGreen = legend.select(".chart-legend__green_value");
     this.legendBlue = legend.select(".chart-legend__blue_value");
 
-    const svg = state.paths.viewNy.ownerSVGElement!;
+    const svg = state.paths.viewNy.ownerSVGElement as SVGSVGElement;
     const makeDot = (path: SVGPathElement) => {
       const color =
         path.getAttribute("stroke") || getComputedStyle(path).stroke || "black";
@@ -81,11 +81,9 @@ export class LegendController implements ILegendController {
   }
 
   private update() {
-    const {
-      ny: greenData,
-      sf: blueData,
-      timestamp,
-    } = this.data.getPoint(this.highlightedDataIdx);
+    const { values, timestamp } = this.data.getPoint(this.highlightedDataIdx);
+    const greenData = values[0];
+    const blueData = values[1];
     this.legendTime.text(this.formatTime(timestamp));
 
     const fixNaN = <T>(n: number, valueForNaN: T): number | T =>

@@ -1,6 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-non-null-assertion */
 import { describe, it, expect, vi, beforeAll } from "vitest";
 import { JSDOM } from "jsdom";
 import { select } from "d3-selection";
@@ -113,7 +114,7 @@ describe("LegendController", () => {
 
     const lastCall = updateSpy.mock.calls[updateSpy.mock.calls.length - 1];
     const matrix = lastCall[1] as Matrix;
-    const modelPoint = new Point(1, data.getPoint(1).ny);
+    const modelPoint = new Point(1, data.getPoint(1).values[0]);
     const expected = modelPoint.matrixTransform(
       state.transforms.ny.matrix as any,
     );
