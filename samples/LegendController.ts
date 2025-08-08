@@ -82,17 +82,25 @@ export class LegendController implements ILegendController {
 
   private update() {
     const rawPoint = this.data.getPoint(this.highlightedDataIdx) as unknown;
-    let values: number[];
-    let timestamp: number;
+    let values: number[] | undefined;
+    let timestamp: number | undefined;
     if (Array.isArray(rawPoint)) {
       const arr = rawPoint as number[];
       timestamp = arr[0];
       values = arr.slice(1);
-    } else {
+    } else if (
+      rawPoint &&
+      typeof rawPoint === "object" &&
+      "values" in (rawPoint as Record<string, unknown>) &&
+      "timestamp" in (rawPoint as Record<string, unknown>)
+    ) {
       ({ values, timestamp } = rawPoint as {
         values: number[];
         timestamp: number;
       });
+    }
+    if (!values || timestamp === undefined) {
+      return;
     }
     const greenData = values[0];
     const blueData = values[1];

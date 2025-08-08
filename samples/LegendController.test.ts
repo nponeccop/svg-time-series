@@ -162,4 +162,33 @@ describe("LegendController", () => {
     updateSpy.mockRestore();
     lc.destroy();
   });
+
+  it("ignores results missing values array", () => {
+    const { svg, legendDiv } = createSvgAndLegend();
+    const source: IDataSource = {
+      startTime: 0,
+      timeStep: 1,
+      length: 2,
+      seriesCount: 1,
+      getSeries: (i) => [10, 20][i],
+    };
+    const data = new ChartData(source);
+    const originalGetPoint = data.getPoint.bind(data);
+    // mimic buggy API returning only a timestamp
+    data.getPoint = ((idx: number) => {
+      const { timestamp } = originalGetPoint(idx);
+      return { timestamp } as any;
+    }) as any;
+    const state = setupRender(svg as any, data, false);
+    select(state.paths.viewNy).select("path").attr("stroke", "green");
+    const lc = new LegendController(legendDiv as any, state, data);
+
+    vi.useFakeTimers();
+    expect(() => {
+      lc.highlightIndex(1);
+      vi.runAllTimers();
+    }).not.toThrow();
+    vi.useRealTimers();
+    lc.destroy();
+  });
 });
