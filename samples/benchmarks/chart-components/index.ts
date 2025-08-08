@@ -31,8 +31,11 @@ onCsv((data: [number, number][]) => {
     (state, chartData) => new LegendController(legend, state, chartData),
   );
   const renderMs = performance.now() - start;
-  document.getElementById("render-time")!.textContent =
-    `render: ${renderMs.toFixed(1)}ms`;
+  const renderTimeEl = document.getElementById("render-time");
+  if (!renderTimeEl) {
+    throw new Error("missing element with id render-time");
+  }
+  renderTimeEl.textContent = `render: ${renderMs.toFixed(1)}ms`;
 
   let j = 0;
   animateBench(() => {
@@ -42,7 +45,11 @@ onCsv((data: [number, number][]) => {
   });
 
   measure(3, ({ fps }) => {
-    document.getElementById("fps").textContent = fps.toFixed(2);
+    const fpsEl = document.getElementById("fps");
+    if (!fpsEl) {
+      throw new Error("missing element with id fps");
+    }
+    fpsEl.textContent = fps.toFixed(2);
   });
 
   measureOnce(60, ({ fps }) => {
