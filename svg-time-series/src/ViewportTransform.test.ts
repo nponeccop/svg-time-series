@@ -23,11 +23,11 @@ class Matrix {
   }
 
   translate(tx: number, ty: number) {
-    return new Matrix(1, 0, 0, 1, tx, ty).multiply(this);
+    return this.multiply(new Matrix(1, 0, 0, 1, tx, ty));
   }
 
   scale(sx: number, sy: number) {
-    return new Matrix(sx, 0, 0, sy, 0, 0).multiply(this);
+    return this.multiply(new Matrix(sx, 0, 0, sy, 0, 0));
   }
 
   inverse() {
@@ -146,5 +146,12 @@ describe("ViewportTransform", () => {
     const t2 = vt.matrix.e;
     expect(t1).toBeCloseTo(50);
     expect(t2).toBeCloseTo(50);
+  });
+
+  it("applies translation after scaling", () => {
+    const vt = new ViewportTransform();
+    vt.onZoomPan({ x: 10, k: 2 } as any);
+    expect(vt.matrix.a).toBeCloseTo(2);
+    expect(vt.matrix.e).toBeCloseTo(10);
   });
 });
