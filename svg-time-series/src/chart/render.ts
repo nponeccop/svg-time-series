@@ -13,12 +13,8 @@ import { updateNode } from "../utils/domNodeTransform.ts";
 import { AR1Basis, DirectProductBasis, bPlaceholder } from "../math/affine.ts";
 import type { ChartData, IMinMax } from "./data.ts";
 import { SegmentTree } from "segment-tree-rmq";
-import {
-  createDimensions,
-  updateScaleX,
-  initSeriesNode,
-  createLine,
-} from "./render/utils.ts";
+import { createDimensions, updateScaleX } from "./render/utils.ts";
+import { SeriesRenderer } from "./seriesRenderer.ts";
 
 function createYAxis(
   orientation: Orientation,
@@ -101,6 +97,7 @@ export interface RenderState {
   bScreenXVisible: AR1Basis;
   dimensions: Dimensions;
   series: Series[];
+  seriesRenderer: SeriesRenderer;
   refresh: (data: ChartData) => void;
 }
 
@@ -180,12 +177,8 @@ export function setupRender(
     a.transform.onReferenceViewWindowResize(refDp);
   }
 
-  const series: Series[] = [];
-  for (let i = 0; i < seriesCount; i++) {
-    const { view, path } = initSeriesNode(svg);
-    const axisIdx = data.seriesAxes[i] ?? 0;
-    series.push({ axisIdx, view, path, line: createLine(i) });
-  }
+  const seriesRenderer = new SeriesRenderer();
+  const series = seriesRenderer.init(svg, seriesCount, data.seriesAxes);
 
   const axes: Axes = { x: xAxisData, y: axesY };
   const dimensions: Dimensions = { width, height };
@@ -195,6 +188,7 @@ export function setupRender(
     bScreenXVisible,
     dimensions,
     series,
+    seriesRenderer,
     refresh(this: RenderState, data: ChartData) {
       const bIndexVisible = this.axes.y[0].transform.fromScreenToModelBasisX(
         this.bScreenXVisible,
