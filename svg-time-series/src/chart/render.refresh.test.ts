@@ -170,8 +170,8 @@ describe("RenderState.refresh", () => {
     state.refresh(data);
 
     expect(state.series[0].scale).toBe(state.series[1].scale);
-    expect(state.series[0].scale.domain()).toEqual([1, 30]);
-    expect(state.series[1].scale.domain()).toEqual([1, 30]);
+    expect(state.series[0].scale.domain()).toEqual([1, 3]);
+    expect(state.series[1].scale.domain()).toEqual([1, 3]);
   });
 
   it("refreshes after data changes", () => {

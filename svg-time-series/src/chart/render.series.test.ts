@@ -104,6 +104,7 @@ describe("buildSeries", () => {
     );
     expect(series.length).toBe(1);
     expect(series[0]).toMatchObject({
+      axisIdx: 0,
       tree: data.treeAxis0,
       transform: state.transforms[0],
       scale: state.scales.y[0],
@@ -136,6 +137,7 @@ describe("buildSeries", () => {
     );
     expect(series.length).toBe(2);
     expect(series[0]).toMatchObject({
+      axisIdx: 0,
       tree: data.treeAxis0,
       transform: state.transforms[0],
       scale: state.scales.y[0],
@@ -144,6 +146,7 @@ describe("buildSeries", () => {
       gAxis: state.axes.y[0].g,
     });
     expect(series[1]).toMatchObject({
+      axisIdx: 1,
       tree: data.treeAxis1,
       transform: state.transforms[0],
       scale: state.scales.y[0],
@@ -176,6 +179,7 @@ describe("buildSeries", () => {
     );
     expect(series.length).toBe(2);
     expect(series[0]).toMatchObject({
+      axisIdx: 0,
       tree: data.treeAxis0,
       transform: state.transforms[0],
       scale: state.scales.y[0],
@@ -184,6 +188,7 @@ describe("buildSeries", () => {
       gAxis: state.axes.y[0].g,
     });
     expect(series[1]).toMatchObject({
+      axisIdx: 1,
       tree: data.treeAxis1,
       transform: state.transforms[1]!,
       scale: state.scales.y[1],

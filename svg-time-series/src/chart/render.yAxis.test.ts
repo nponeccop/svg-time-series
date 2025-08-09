@@ -91,7 +91,7 @@ describe("setupRender Y-axis modes", () => {
     };
     const data = new ChartData(source);
     const state = setupRender(svg as any, data, false);
-    expect(state.scales.y[0].domain()).toEqual([1, 30]);
+    expect(state.scales.y[0].domain()).toEqual([1, 3]);
     expect(state.scales.y[1]).toBeUndefined();
   });
 

@@ -75,6 +75,14 @@ interface AxisData {
   g: Selection<SVGGElement, unknown, HTMLElement, unknown>;
 }
 
+interface AxisState {
+  tree?: SegmentTree<IMinMax>;
+  transform: ViewportTransform;
+  scale: ScaleLinear<number, number>;
+  axis?: MyAxis;
+  gAxis?: Selection<SVGGElement, unknown, HTMLElement, unknown>;
+}
+
 interface AxisSet {
   x: AxisData;
   y: AxisData[];
@@ -86,6 +94,7 @@ interface Dimensions {
 }
 
 export interface Series {
+  axisIdx: number;
   tree?: SegmentTree<IMinMax>;
   transform: ViewportTransform;
   scale: ScaleLinear<number, number>;
@@ -106,29 +115,27 @@ export function buildSeries(
 ): Series[] {
   const pathNodes = paths.path.nodes() as SVGPathElement[];
   const views = paths.nodes;
-  const series: Series[] = [
-    {
-      tree: data.treeAxis0,
-      transform: transforms[0],
-      scale: scales.y[0],
-      view: views[0],
-      path: pathNodes[0],
-      axis: axes?.y?.[0]?.axis,
-      gAxis: axes?.y?.[0]?.g,
-      line: lineNy,
-    },
-  ];
-
-  if (hasSf && data.treeAxis1 && pathNodes[1] && views[1]) {
+  const series: Series[] = [];
+  for (let i = 0; i < data.seriesCount; i++) {
+    if (!pathNodes[i] || !views[i]) {
+      continue;
+    }
+    const axisIdx = data.seriesAxes[i] ?? 0;
+    const tree = axisIdx === 0 ? data.treeAxis0 : data.treeAxis1;
+    const transform = transforms[axisIdx] ?? transforms[0];
+    const scale = scales.y[axisIdx] ?? scales.y[0];
+    const axisData = axes?.y?.[axisIdx] ?? axes?.y?.[0];
+    const line = i === 0 ? lineNy : lineSf;
     series.push({
-      tree: data.treeAxis1,
-      transform: transforms[1] ?? transforms[0],
-      scale: scales.y[1] ?? scales.y[0],
-      view: views[1],
-      path: pathNodes[1],
-      axis: axes?.y?.[1]?.axis ?? axes?.y?.[0]?.axis,
-      gAxis: axes?.y?.[1]?.g ?? axes?.y?.[0]?.g,
-      line: lineSf,
+      axisIdx,
+      tree,
+      transform,
+      scale,
+      view: views[i],
+      path: pathNodes[i],
+      axis: axisData?.axis,
+      gAxis: axisData?.g,
+      line,
     });
   }
 
@@ -137,7 +144,7 @@ export function buildSeries(
 
 export interface RenderState {
   scales: ScaleSet;
-  axes: AxisSet;
+  axes: { x: AxisData; y: AxisState[] };
   paths: PathSet;
   transforms: ViewportTransform[];
   bScreenXVisible: AR1Basis;
@@ -147,24 +154,12 @@ export interface RenderState {
   refresh: (data: ChartData) => void;
 }
 
-function updateYScales(series: Series[], bIndex: AR1Basis, data: ChartData) {
-  if (
-    series.length > 1 &&
-    series[0].scale === series[1].scale &&
-    data.treeAxis1
-  ) {
-    const { combined, dp } = data.combinedAxisDp(bIndex);
-    for (const s of series) {
-      s.transform.onReferenceViewWindowResize(dp);
-      s.scale.domain(combined.toArr());
-    }
-  } else {
-    for (const s of series) {
-      if (s.tree) {
-        const dp = data.updateScaleY(bIndex, s.tree);
-        s.transform.onReferenceViewWindowResize(dp);
-        s.scale.domain(dp.y().toArr());
-      }
+function updateYScales(axes: AxisState[], bIndex: AR1Basis, data: ChartData) {
+  for (const a of axes) {
+    if (a.tree) {
+      const dp = data.updateScaleY(bIndex, a.tree);
+      a.transform.onReferenceViewWindowResize(dp);
+      a.scale.domain(dp.y().toArr());
     }
   }
 }
@@ -194,15 +189,39 @@ export function setupRender(
   updateScaleX(scales.x, data.bIndexFull, data);
   const series = buildSeries(data, transformsInner, scales, paths, hasSf);
 
-  updateYScales(series, data.bIndexFull, data);
+  const axesState: AxisState[] = [
+    {
+      tree: data.treeAxis0,
+      transform: transformsInner[0],
+      scale: scales.y[0],
+    },
+  ];
+
+  if (axisCount > 1 && data.treeAxis1 && transformsInner[1] && scales.y[1]) {
+    axesState.push({
+      tree: data.treeAxis1,
+      transform: transformsInner[1],
+      scale: scales.y[1],
+    });
+  }
+
+  updateYScales(axesState, data.bIndexFull, data);
 
   const axes = setupAxes(svg, scales, width, height, hasSf, dualYAxis);
 
-  // Attach axes to series after scales have been initialized
-  series.forEach((s, i) => {
+  axesState.forEach((a, i) => {
     const axisData = axes.y[i] ?? axes.y[0];
-    s.axis = axisData.axis;
-    s.gAxis = axisData.g;
+    a.axis = axisData.axis;
+    a.gAxis = axisData.g;
+  });
+
+  series.forEach((s) => {
+    const axis = axesState[s.axisIdx] ?? axesState[0];
+    s.axis = axis.axis;
+    s.gAxis = axis.gAxis;
+    s.tree = axis.tree;
+    s.transform = axis.transform;
+    s.scale = axis.scale;
   });
 
   const refDp = DirectProductBasis.fromProjections(
@@ -218,7 +237,7 @@ export function setupRender(
 
   const state: RenderState = {
     scales,
-    axes,
+    axes: { x: axes.x, y: axesState },
     paths,
     transforms: transformsInner,
     bScreenXVisible,
@@ -230,22 +249,26 @@ export function setupRender(
         this.bScreenXVisible,
       );
       updateScaleX(this.scales.x, bIndexVisible, data);
-      const series = this.series;
 
-      // Update tree references in case data has changed
-      series[0].tree = data.treeAxis0;
-      if (series.length > 1) {
-        series[1].tree = data.treeAxis1;
+      const axes = this.axes.y;
+      if (axes[0]) axes[0].tree = data.treeAxis0;
+      if (axes[1]) axes[1].tree = data.treeAxis1;
+
+      updateYScales(axes, bIndexVisible, data);
+
+      for (const s of this.series) {
+        const axis = axes[s.axisIdx] ?? axes[0];
+        s.tree = axis.tree;
+        s.transform = axis.transform;
+        s.scale = axis.scale;
+        if (s.view) {
+          updateNode(s.view, axis.transform.matrix);
+        }
       }
 
-      updateYScales(series, bIndexVisible, data);
-
-      for (const s of series) {
-        if (s.view) {
-          updateNode(s.view, s.transform.matrix);
-        }
-        if (s.axis && s.gAxis) {
-          s.axis.axisUp(s.gAxis);
+      for (const a of axes) {
+        if (a.axis && a.gAxis) {
+          a.axis.axisUp(a.gAxis);
         }
       }
       this.axes.x.axis.axisUp(this.axes.x.g);
