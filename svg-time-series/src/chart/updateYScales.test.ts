@@ -1,9 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, beforeAll } from "vitest";
-import { scaleLinear } from "d3-scale";
 import { AR1Basis, DirectProductBasis } from "../math/affine.ts";
-import { ViewportTransform } from "../ViewportTransform.ts";
-import { updateYScales } from "./render.ts";
+import { AxisManager } from "./axisManager.ts";
 
 class Matrix {
   constructor(
@@ -68,12 +66,6 @@ beforeAll(() => {
 
 describe("updateYScales", () => {
   it("updates domains for multiple axes", () => {
-    const axes = Array.from({ length: 3 }, () => ({
-      transform: new ViewportTransform(),
-      scale: scaleLinear().range([0, 1]),
-      tree: undefined as any,
-    }));
-
     const ranges: Record<number, { min: number; max: number }> = {
       0: { min: 1, max: 3 },
       1: { min: 10, max: 30 },
@@ -95,21 +87,18 @@ describe("updateYScales", () => {
       },
     };
 
-    const bIndexVisible = new AR1Basis(0, 10);
-    updateYScales(axes as any, bIndexVisible, data as any);
+    const axisManager = new AxisManager([0, 1]);
+    axisManager.create(3, data as any);
 
-    expect(axes[0].scale.domain()).toEqual([1, 3]);
-    expect(axes[1].scale.domain()).toEqual([10, 30]);
-    expect(axes[2].scale.domain()).toEqual([-5, 5]);
+    const bIndexVisible = new AR1Basis(0, 10);
+    axisManager.updateScales(bIndexVisible, data as any);
+
+    expect(axisManager.axes[0].scale.domain()).toEqual([1, 3]);
+    expect(axisManager.axes[1].scale.domain()).toEqual([10, 30]);
+    expect(axisManager.axes[2].scale.domain()).toEqual([-5, 5]);
   });
 
   it("merges extra axes into the last scale", () => {
-    const axes = Array.from({ length: 2 }, () => ({
-      transform: new ViewportTransform(),
-      scale: scaleLinear().range([0, 1]),
-      tree: undefined as any,
-    }));
-
     const ranges: Record<number, { min: number; max: number }> = {
       0: { min: 0, max: 1 },
       1: { min: 10, max: 20 },
@@ -131,10 +120,13 @@ describe("updateYScales", () => {
       },
     };
 
-    const bIndexVisible = new AR1Basis(0, 5);
-    updateYScales(axes as any, bIndexVisible, data as any);
+    const axisManager = new AxisManager([0, 1]);
+    axisManager.create(2, data as any);
 
-    expect(axes[0].scale.domain()).toEqual([0, 1]);
-    expect(axes[1].scale.domain()).toEqual([-5, 20]);
+    const bIndexVisible = new AR1Basis(0, 5);
+    axisManager.updateScales(bIndexVisible, data as any);
+
+    expect(axisManager.axes[0].scale.domain()).toEqual([0, 1]);
+    expect(axisManager.axes[1].scale.domain()).toEqual([-5, 20]);
   });
 });

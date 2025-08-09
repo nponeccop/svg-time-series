@@ -6,23 +6,12 @@ import {
 } from "../math/affine.ts";
 import { SegmentTree } from "segment-tree-rmq";
 import { SlidingWindow } from "./slidingWindow.ts";
+import { buildAxisTree as buildAxisTreeImpl } from "./axisManager.ts";
 
 export interface IMinMax {
   readonly min: number;
   readonly max: number;
 }
-
-function buildMinMax(fst: Readonly<IMinMax>, snd: Readonly<IMinMax>): IMinMax {
-  return {
-    min: Math.min(fst.min, snd.min),
-    max: Math.max(fst.max, snd.max),
-  } as const;
-}
-
-const minMaxIdentity: IMinMax = {
-  min: Infinity,
-  max: -Infinity,
-};
 
 export interface IDataSource {
   readonly startTime: number;
@@ -147,28 +136,8 @@ export class ChartData {
     return Math.min(Math.max(idx, 0), this.window.length - 1);
   }
 
-  private buildAxisMinMax(axis: number): Array<IMinMax | undefined> {
-    const idxs = this.seriesByAxis[axis];
-    return this.window.data.map((row) => {
-      let min = Infinity;
-      let max = -Infinity;
-      for (const j of idxs) {
-        const val = row[j];
-        if (Number.isFinite(val)) {
-          if (val < min) min = val;
-          if (val > max) max = val;
-        }
-      }
-      return min !== Infinity ? ({ min, max } as IMinMax) : undefined;
-    });
-  }
-
   buildAxisTree(axis: number): SegmentTree<IMinMax> {
-    const arr = Array.from(
-      this.buildAxisMinMax(axis),
-      (v) => v ?? minMaxIdentity,
-    );
-    return new SegmentTree(arr, buildMinMax, minMaxIdentity);
+    return buildAxisTreeImpl(this, axis);
   }
 
   bAxisVisible(bIndexVisible: AR1Basis, tree: SegmentTree<IMinMax>): AR1Basis {
