@@ -58,7 +58,9 @@ export class ZoomState {
 
   public zoom = (event: D3ZoomEvent<SVGRectElement, unknown>) => {
     this.currentPanZoomTransformState = event.transform;
-    this.state.transforms.forEach((t) => t.onZoomPan(event.transform));
+    this.state.axisStates.forEach((a) =>
+      a.transform.onZoomPan(event.transform),
+    );
     if (event.sourceEvent) {
       this.scheduleRefresh();
     }

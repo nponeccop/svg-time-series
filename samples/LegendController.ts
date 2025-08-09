@@ -124,10 +124,12 @@ export class LegendController implements ILegendController {
       greenData,
       this.legendGreen,
       this.highlightedGreenDot,
-      this.state.transforms[0].matrix,
+      this.state.axisStates[0].transform.matrix,
     );
     if (this.highlightedBlueDot) {
-      const tf = this.state.transforms[1] ?? this.state.transforms[0];
+      const tf =
+        this.state.axisStates[1]?.transform ??
+        this.state.axisStates[0].transform;
       updateDot(
         blueData as number,
         this.legendBlue,

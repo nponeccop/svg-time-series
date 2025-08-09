@@ -51,11 +51,11 @@ describe("ZoomState", () => {
   it("updates transforms and triggers refresh on zoom", () => {
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     const rect = select(svg).append("rect");
-    const y = { onZoomPan: vi.fn<(t: unknown) => void>() };
-    const y2 = { onZoomPan: vi.fn<(t: unknown) => void>() };
+    const y = { transform: { onZoomPan: vi.fn<(t: unknown) => void>() } };
+    const y2 = { transform: { onZoomPan: vi.fn<(t: unknown) => void>() } };
     const state = {
       dimensions: { width: 10, height: 10 },
-      transforms: [y, y2],
+      axisStates: [y, y2],
     } as unknown as RenderState;
     const refresh = vi.fn();
     const zoomCb = vi.fn();
@@ -73,8 +73,8 @@ describe("ZoomState", () => {
     zs.zoom(event);
     vi.runAllTimers();
 
-    expect(y.onZoomPan).toHaveBeenCalledWith({ x: 5, k: 2 });
-    expect(y2.onZoomPan).toHaveBeenCalledWith({ x: 5, k: 2 });
+    expect(y.transform.onZoomPan).toHaveBeenCalledWith({ x: 5, k: 2 });
+    expect(y2.transform.onZoomPan).toHaveBeenCalledWith({ x: 5, k: 2 });
     expect(refresh).toHaveBeenCalledTimes(1);
     expect(zoomCb).toHaveBeenCalledTimes(2);
     expect(zoomCb).toHaveBeenNthCalledWith(1, event);
@@ -86,10 +86,10 @@ describe("ZoomState", () => {
   it("does not reschedule for programmatic transform", () => {
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     const rect = select(svg).append("rect");
-    const y = { onZoomPan: vi.fn<(t: unknown) => void>() };
+    const y = { transform: { onZoomPan: vi.fn<(t: unknown) => void>() } };
     const state = {
       dimensions: { width: 10, height: 10 },
-      transforms: [y],
+      axisStates: [y],
     } as unknown as RenderState;
     const refresh = vi.fn();
     const zoomCb = vi.fn();
@@ -117,10 +117,10 @@ describe("ZoomState", () => {
   it("refresh re-applies transform and triggers refresh callback", () => {
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     const rect = select(svg).append("rect");
-    const y = { onZoomPan: vi.fn<(t: unknown) => void>() };
+    const y = { transform: { onZoomPan: vi.fn<(t: unknown) => void>() } };
     const state = {
       dimensions: { width: 10, height: 10 },
-      transforms: [y],
+      axisStates: [y],
     } as unknown as RenderState;
     const refresh = vi.fn();
     const zs = new ZoomState(
@@ -148,10 +148,10 @@ describe("ZoomState", () => {
   it("reset sets transform to identity and triggers zoom event", () => {
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     const rect = select(svg).append("rect");
-    const y = { onZoomPan: vi.fn<(t: unknown) => void>() };
+    const y = { transform: { onZoomPan: vi.fn<(t: unknown) => void>() } };
     const state = {
       dimensions: { width: 10, height: 10 },
-      transforms: [y],
+      axisStates: [y],
     } as unknown as RenderState;
     const refresh = vi.fn();
     const zs = new ZoomState(
@@ -162,7 +162,7 @@ describe("ZoomState", () => {
 
     const transformSpy = zs.zoomBehavior.transform as unknown as vi.Mock;
     transformSpy.mockClear();
-    y.onZoomPan.mockClear();
+    y.transform.onZoomPan.mockClear();
     refresh.mockClear();
 
     zs.reset();
@@ -172,7 +172,7 @@ describe("ZoomState", () => {
       rect,
       expect.objectContaining({ k: 1, x: 0, y: 0 }),
     );
-    expect(y.onZoomPan).toHaveBeenCalledWith(
+    expect(y.transform.onZoomPan).toHaveBeenCalledWith(
       expect.objectContaining({ k: 1, x: 0, y: 0 }),
     );
     expect(
@@ -185,10 +185,10 @@ describe("ZoomState", () => {
   it("updates zoom extents on resize", () => {
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     const rect = select(svg).append("rect");
-    const y = { onZoomPan: vi.fn<(t: unknown) => void>() };
+    const y = { transform: { onZoomPan: vi.fn<(t: unknown) => void>() } };
     const state = {
       dimensions: { width: 10, height: 10 },
-      transforms: [y],
+      axisStates: [y],
     } as unknown as RenderState;
     const zs = new ZoomState(
       rect as Selection<SVGRectElement, unknown, HTMLElement, unknown>,
@@ -217,10 +217,10 @@ describe("ZoomState", () => {
   it("uses provided scale extents", () => {
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     const rect = select(svg).append("rect");
-    const y = { onZoomPan: vi.fn<(t: unknown) => void>() };
+    const y = { transform: { onZoomPan: vi.fn<(t: unknown) => void>() } };
     const state = {
       dimensions: { width: 10, height: 10 },
-      transforms: [y],
+      axisStates: [y],
     } as unknown as RenderState;
     const zs = new ZoomState(
       rect as Selection<SVGRectElement, unknown, HTMLElement, unknown>,
@@ -246,10 +246,10 @@ describe("ZoomState", () => {
   it("updates scale extent at runtime", () => {
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     const rect = select(svg).append("rect");
-    const y = { onZoomPan: vi.fn<(t: unknown) => void>() };
+    const y = { transform: { onZoomPan: vi.fn<(t: unknown) => void>() } };
     const state = {
       dimensions: { width: 10, height: 10 },
-      transforms: [y],
+      axisStates: [y],
     } as unknown as RenderState;
     const zs = new ZoomState(
       rect as Selection<SVGRectElement, unknown, HTMLElement, unknown>,
