@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * @vitest-environment jsdom
  */
@@ -5,6 +6,42 @@ import { describe, it, expect } from "vitest";
 import { select, Selection } from "d3-selection";
 import { scaleLinear, scaleTime } from "d3-scale";
 import { AR1Basis } from "../math/affine.ts";
+import { AxisManager } from "./axisManager.ts";
+
+class Matrix {
+  constructor(
+    public a = 1,
+    public b = 0,
+    public c = 0,
+    public d = 1,
+    public e = 0,
+    public f = 0,
+  ) {}
+  multiply() {
+    return this;
+  }
+  translate() {
+    return this;
+  }
+  scale() {
+    return this;
+  }
+  inverse() {
+    return this;
+  }
+}
+class Point {
+  constructor(
+    public x = 0,
+    public y = 0,
+  ) {}
+  matrixTransform() {
+    return this;
+  }
+}
+(globalThis as any).DOMMatrix = Matrix;
+(globalThis as any).DOMPoint = Point;
+
 import { ChartData, IDataSource } from "./data.ts";
 import type { ViewportTransform } from "../ViewportTransform.ts";
 import { vi } from "vitest";
@@ -74,7 +111,9 @@ describe("updateScaleY", () => {
     const vt = {
       onReferenceViewWindowResize: vi.fn(),
     } as unknown as ViewportTransform;
-    const tree = cd.buildAxisTree(0);
+    const am = new AxisManager([100, 0]);
+    am.create(1, cd);
+    const tree = am.axes[0].tree;
     const dp = cd.updateScaleY(new AR1Basis(0, 2), tree);
     vt.onReferenceViewWindowResize(dp);
     y.domain(dp.y().toArr());
