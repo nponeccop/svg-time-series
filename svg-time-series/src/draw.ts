@@ -4,7 +4,6 @@ import { D3ZoomEvent } from "d3-zoom";
 import { ChartData, IDataSource } from "./chart/data.ts";
 import { setupRender } from "./chart/render.ts";
 import type { RenderState } from "./chart/render.ts";
-import { renderPaths } from "./chart/render/utils.ts";
 import type { ILegendController, LegendContext } from "./chart/legend.ts";
 import { ZoomState, IZoomStateOptions } from "./chart/zoomState.ts";
 
@@ -115,7 +114,7 @@ export class TimeSeriesChart {
       .attr("height", dimensions.height);
     this.zoomState.updateExtents(dimensions);
     this.state.refresh(this.data);
-    renderPaths(this.state, this.data.data);
+    this.state.seriesRenderer.draw(this.data.data);
     this.legendController.refresh();
   };
 
@@ -126,7 +125,7 @@ export class TimeSeriesChart {
   };
 
   private drawNewData = () => {
-    renderPaths(this.state, this.data.data);
+    this.state.seriesRenderer.draw(this.data.data);
     this.zoomState.refresh();
     this.legendController.refresh();
   };

@@ -8,11 +8,8 @@ import { AR1Basis } from "../math/affine.ts";
 import { ChartData, IDataSource } from "./data.ts";
 import type { ViewportTransform } from "../ViewportTransform.ts";
 import { vi } from "vitest";
-import {
-  createDimensions,
-  updateScaleX,
-  initSeriesNode,
-} from "./render/utils.ts";
+import { createDimensions, updateScaleX } from "./render/utils.ts";
+import { SeriesRenderer } from "./seriesRenderer.ts";
 
 describe("createDimensions", () => {
   it("sets width and height and returns screen basis", () => {
@@ -83,7 +80,7 @@ describe("updateScaleY", () => {
   });
 });
 
-describe("initSeriesNode", () => {
+describe("SeriesRenderer.init", () => {
   it("creates a view and path", () => {
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     const selection = select(svg) as unknown as Selection<
@@ -92,9 +89,10 @@ describe("initSeriesNode", () => {
       HTMLElement,
       unknown
     >;
-    const { view, path } = initSeriesNode(selection);
-    expect(view.tagName).toBe("g");
-    expect(path.tagName).toBe("path");
+    const renderer = new SeriesRenderer();
+    const [series] = renderer.init(selection, 1, [0]);
+    expect(series.view?.tagName).toBe("g");
+    expect(series.path?.tagName).toBe("path");
     expect(svg.querySelectorAll("g.view")).toHaveLength(1);
     expect(svg.querySelectorAll("path")).toHaveLength(1);
   });
