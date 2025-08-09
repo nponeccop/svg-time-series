@@ -17,7 +17,6 @@ import {
   lineSf,
   type ScaleSet,
   type PathSet,
-  type TransformPair,
 } from "./render/utils.ts";
 
 function createYAxis(
@@ -81,12 +80,6 @@ interface AxisSet {
   gYRight?: Selection<SVGGElement, unknown, HTMLElement, unknown>;
 }
 
-interface TransformSet {
-  ny: ViewportTransform;
-  sf?: ViewportTransform;
-  bScreenXVisible: AR1Basis;
-}
-
 interface Dimensions {
   width: number;
   height: number;
@@ -105,19 +98,18 @@ export interface Series {
 
 export function buildSeries(
   data: ChartData,
-  transforms: TransformPair,
+  transforms: ViewportTransform[],
   scales: ScaleSet,
   paths: PathSet,
   hasSf: boolean,
   axes?: AxisSet,
-  dualYAxis = false,
 ): Series[] {
   const pathNodes = paths.path.nodes() as SVGPathElement[];
   const views = paths.nodes;
   const series: Series[] = [
     {
       tree: data.treeAxis0,
-      transform: transforms.ny,
+      transform: transforms[0],
       scale: scales.y[0],
       view: views[0],
       path: pathNodes[0],
@@ -130,8 +122,8 @@ export function buildSeries(
   if (hasSf && data.treeAxis1 && pathNodes[1] && views[1]) {
     series.push({
       tree: data.treeAxis1,
-      transform: dualYAxis && transforms.sf ? transforms.sf : transforms.ny,
-      scale: dualYAxis && scales.y[1] ? scales.y[1] : scales.y[0],
+      transform: transforms[1] ?? transforms[0],
+      scale: scales.y[1] ?? scales.y[0],
       view: views[1],
       path: pathNodes[1],
       axis: axes?.yRight ?? axes?.y,
@@ -147,7 +139,8 @@ export interface RenderState {
   scales: ScaleSet;
   axes: AxisSet;
   paths: PathSet;
-  transforms: TransformSet;
+  transforms: ViewportTransform[];
+  bScreenXVisible: AR1Basis;
   dimensions: Dimensions;
   dualYAxis: boolean;
   series: Series[];
@@ -192,23 +185,15 @@ export function setupRender(
     bScreenYVisible,
   );
   const paths = initPaths(svg, seriesCount);
-  const scales = createScales(bScreenVisibleDp, hasSf && dualYAxis ? 2 : 1);
-  const sharedTransform = new ViewportTransform();
-  const transformsInner: TransformPair = {
-    ny: sharedTransform,
-    sf: hasSf && dualYAxis ? new ViewportTransform() : sharedTransform,
-  };
+  const axisCount = hasSf && dualYAxis ? 2 : 1;
+  const scales = createScales(bScreenVisibleDp, axisCount);
+  const transformsInner = Array.from(
+    { length: axisCount },
+    () => new ViewportTransform(),
+  );
 
   updateScaleX(scales.x, data.bIndexFull, data);
-  const series = buildSeries(
-    data,
-    transformsInner,
-    scales,
-    paths,
-    hasSf,
-    undefined,
-    dualYAxis,
-  );
+  const series = buildSeries(data, transformsInner, scales, paths, hasSf);
 
   updateYScales(series, data.bIndexFull, data);
 
@@ -226,33 +211,29 @@ export function setupRender(
     s.gAxis = gAxisArr[i];
   });
 
-  transformsInner.ny.onViewPortResize(bScreenVisibleDp);
-  transformsInner.sf?.onViewPortResize(bScreenVisibleDp);
   const refDp = DirectProductBasis.fromProjections(
     data.bIndexFull,
     bPlaceholder,
   );
-  transformsInner.ny.onReferenceViewWindowResize(refDp);
-  transformsInner.sf?.onReferenceViewWindowResize(refDp);
+  for (const t of transformsInner) {
+    t.onViewPortResize(bScreenVisibleDp);
+    t.onReferenceViewWindowResize(refDp);
+  }
 
-  const transforms: TransformSet = {
-    ny: transformsInner.ny,
-    sf: transformsInner.sf,
-    bScreenXVisible,
-  };
   const dimensions: Dimensions = { width, height };
 
   const state: RenderState = {
     scales,
     axes,
     paths,
-    transforms,
+    transforms: transformsInner,
+    bScreenXVisible,
     dimensions,
     dualYAxis,
     series,
     refresh(this: RenderState, data: ChartData) {
-      const bIndexVisible = this.transforms.ny.fromScreenToModelBasisX(
-        this.transforms.bScreenXVisible,
+      const bIndexVisible = this.transforms[0].fromScreenToModelBasisX(
+        this.bScreenXVisible,
       );
       updateScaleX(this.scales.x, bIndexVisible, data);
       const series = this.series;

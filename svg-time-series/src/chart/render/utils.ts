@@ -72,11 +72,6 @@ export interface PathSet {
   nodes: SVGGElement[];
 }
 
-export interface TransformPair {
-  ny: ViewportTransform;
-  sf?: ViewportTransform;
-}
-
 export function initPaths(
   svg: Selection<SVGSVGElement, unknown, HTMLElement, unknown>,
   seriesCount: number,
