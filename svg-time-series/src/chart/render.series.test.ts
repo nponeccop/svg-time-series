@@ -1,13 +1,13 @@
 /**
  * @vitest-environment jsdom
  */
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-non-null-assertion */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, beforeAll } from "vitest";
 import { JSDOM } from "jsdom";
 import { select, type Selection } from "d3-selection";
-import { ChartData, IDataSource } from "./data.ts";
-import { setupRender, buildSeries } from "./render.ts";
-import { initPaths } from "./render/utils.ts";
+import { ChartData, type IDataSource } from "./data.ts";
+import { buildSeries } from "./render.ts";
+import { initPaths, lineNy, lineSf } from "./render/utils.ts";
 
 class Matrix {
   constructor(
@@ -18,7 +18,6 @@ class Matrix {
     public e = 0,
     public f = 0,
   ) {}
-
   multiply(m: Matrix) {
     return new Matrix(
       this.a * m.a + this.c * m.b,
@@ -29,15 +28,12 @@ class Matrix {
       this.b * m.e + this.d * m.f + this.f,
     );
   }
-
   translate(tx: number, ty: number) {
     return this.multiply(new Matrix(1, 0, 0, 1, tx, ty));
   }
-
   scale(sx: number, sy: number) {
     return this.multiply(new Matrix(sx, 0, 0, sy, 0, 0));
   }
-
   inverse() {
     const det = this.a * this.d - this.b * this.c;
     return new Matrix(
@@ -56,7 +52,6 @@ class Point {
     public x = 0,
     public y = 0,
   ) {}
-
   matrixTransform(m: Matrix) {
     return new Point(
       this.x * m.a + this.y * m.c + m.e,
@@ -82,7 +77,7 @@ function createSvg() {
 }
 
 describe("buildSeries", () => {
-  it("returns single series when hasSf is false", () => {
+  it("returns single series", () => {
     const svg = createSvg();
     const source: IDataSource = {
       startTime: 0,
@@ -93,27 +88,19 @@ describe("buildSeries", () => {
       getSeries: (i) => [1, 2, 3][i],
     };
     const data = new ChartData(source);
-    const state = setupRender(svg as any, data, false);
-    const series = buildSeries(
-      data,
-      state.transforms,
-      state.scales,
-      state.paths,
-      false,
-      state.axes,
-    );
-    expect(series.length).toBe(1);
+    const paths = initPaths(svg as any, data.seriesCount);
+    const series = buildSeries(data, paths);
+    const pathNodes = paths.path.nodes() as SVGPathElement[];
+    expect(series).toHaveLength(1);
     expect(series[0]).toMatchObject({
-      tree: data.treeAxis0,
-      transform: state.transforms[0],
-      scale: state.scales.y[0],
-      view: state.paths.nodes[0],
-      axis: state.axes.y[0].axis,
-      gAxis: state.axes.y[0].g,
+      view: paths.nodes[0],
+      path: pathNodes[0],
+      line: lineNy,
+      axisIdx: 0,
     });
   });
 
-  it("returns two series for combined axis", () => {
+  it("assigns axis index for multiple datasets", () => {
     const svg = createSvg();
     const source: IDataSource = {
       startTime: 0,
@@ -125,36 +112,26 @@ describe("buildSeries", () => {
         seriesIdx === 0 ? [1, 2, 3][i] : [10, 20, 30][i],
     };
     const data = new ChartData(source);
-    const state = setupRender(svg as any, data, false);
-    const series = buildSeries(
-      data,
-      state.transforms,
-      state.scales,
-      state.paths,
-      true,
-      state.axes,
-    );
-    expect(series.length).toBe(2);
+    const paths = initPaths(svg as any, data.seriesCount);
+    const series = buildSeries(data, paths);
+    const pathNodes = paths.path.nodes() as SVGPathElement[];
+    expect(series).toHaveLength(2);
     expect(series[0]).toMatchObject({
-      tree: data.treeAxis0,
-      transform: state.transforms[0],
-      scale: state.scales.y[0],
-      view: state.paths.nodes[0],
-      axis: state.axes.y[0].axis,
-      gAxis: state.axes.y[0].g,
+      view: paths.nodes[0],
+      path: pathNodes[0],
+      line: lineNy,
+      axisIdx: 0,
     });
     expect(series[1]).toMatchObject({
-      tree: data.treeAxis1,
-      transform: state.transforms[0],
-      scale: state.scales.y[0],
-      view: state.paths.nodes[1],
-      axis: state.axes.y[0].axis,
-      gAxis: state.axes.y[0].g,
+      view: paths.nodes[1],
+      path: pathNodes[1],
+      line: lineSf,
+      axisIdx: 1,
     });
   });
 
-  it("returns two series for dualYAxis", () => {
-    const svg = createSvg();
+  it("omits series when path is missing", () => {
+    createSvg();
     const source: IDataSource = {
       startTime: 0,
       timeStep: 1,
@@ -165,59 +142,11 @@ describe("buildSeries", () => {
         seriesIdx === 0 ? [1, 2, 3][i] : [10, 20, 30][i],
     };
     const data = new ChartData(source);
-    const state = setupRender(svg as any, data, true);
-    const series = buildSeries(
-      data,
-      state.transforms,
-      state.scales,
-      state.paths,
-      true,
-      state.axes,
-    );
-    expect(series.length).toBe(2);
-    expect(series[0]).toMatchObject({
-      tree: data.treeAxis0,
-      transform: state.transforms[0],
-      scale: state.scales.y[0],
-      view: state.paths.nodes[0],
-      axis: state.axes.y[0].axis,
-      gAxis: state.axes.y[0].g,
-    });
-    expect(series[1]).toMatchObject({
-      tree: data.treeAxis1,
-      transform: state.transforms[1]!,
-      scale: state.scales.y[1],
-      view: state.paths.nodes[1],
-      axis: state.axes.y[1].axis,
-      gAxis: state.axes.y[1].g,
-    });
-  });
-
-  it("omits secondary series when path is missing", () => {
-    const svg = createSvg();
-    const source: IDataSource = {
-      startTime: 0,
-      timeStep: 1,
-      length: 3,
-      seriesCount: 2,
-      seriesAxes: [0, 1],
-      getSeries: (i, seriesIdx) =>
-        seriesIdx === 0 ? [1, 2, 3][i] : [10, 20, 30][i],
-    };
-    const data = new ChartData(source);
-    const state = setupRender(svg as any, data, false);
     const svg2 = select(document.createElement("div")).append(
       "svg",
     ) as unknown as Selection<SVGSVGElement, unknown, HTMLElement, unknown>;
     const singlePaths = initPaths(svg2, 1);
-    const series = buildSeries(
-      data,
-      state.transforms,
-      state.scales,
-      singlePaths,
-      true,
-      state.axes,
-    );
-    expect(series.length).toBe(1);
+    const series = buildSeries(data, singlePaths);
+    expect(series).toHaveLength(1);
   });
 });
