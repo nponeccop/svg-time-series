@@ -11,7 +11,7 @@ import {
 import { updateNode } from "../utils/domNodeTransform.ts";
 import { AR1Basis, DirectProductBasis, bPlaceholder } from "../math/affine.ts";
 import type { ChartData } from "./data.ts";
-import { createDimensions, updateScaleX } from "./render/utils.ts";
+import { createDimensions } from "./render/utils.ts";
 import { SeriesRenderer } from "./seriesRenderer.ts";
 import { SeriesManager } from "./series.ts";
 
@@ -50,8 +50,8 @@ interface Dimensions {
 
 export interface Series {
   axisIdx: number;
-  view?: SVGGElement;
-  path?: SVGPathElement;
+  view: SVGGElement;
+  path: SVGPathElement;
   line: Line<number[]>;
 }
 
@@ -75,13 +75,20 @@ export function setupRender(
   const bScreenXVisible = bScreenVisibleDp.x();
   const width = bScreenXVisible.getRange();
   const height = bScreenVisibleDp.y().getRange();
-  const axisCount = dualYAxis && data.seriesAxes.includes(1) ? 2 : 1;
+  const maxAxisIdx = data.seriesAxes.reduce(
+    (max, idx) => Math.max(max, idx),
+    0,
+  );
+  if (maxAxisIdx > 0 && !dualYAxis) {
+    throw new Error("axes.y must contain an entry for every series.axisIdx");
+  }
+  const axisCount = dualYAxis ? maxAxisIdx + 1 : 1;
 
   const [xRange, yRange] = bScreenVisibleDp.toArr();
   const xScale: ScaleTime<number, number> = scaleTime().range(xRange);
-  updateScaleX(xScale, data.bIndexFull, data);
 
   const axisManager = new AxisManager();
+  axisManager.setXAxis(xScale);
   const axesY = axisManager.create(axisCount);
   for (const a of axesY) {
     a.scale.range(yRange);
@@ -133,16 +140,12 @@ export function setupRender(
       const bIndexVisible = this.axes.y[0].transform.fromScreenToModelBasisX(
         this.bScreenXVisible,
       );
-      updateScaleX(this.axes.x.scale, bIndexVisible, data);
 
       this.axisManager.updateScales(bIndexVisible, data);
 
       for (const s of this.series) {
-        if (s.view) {
-          const t =
-            this.axes.y[s.axisIdx]?.transform ?? this.axes.y[0].transform;
-          updateNode(s.view, t.matrix);
-        }
+        const t = this.axes.y[s.axisIdx].transform;
+        updateNode(s.view, t.matrix);
       }
       this.axisRenders.forEach((r) => r.axis.axisUp(r.g));
       this.axes.x.axis.axisUp(this.axes.x.g);

@@ -37,7 +37,7 @@ export class TimeSeriesChart {
       event: D3ZoomEvent<SVGRectElement, unknown>,
     ) => void = () => {},
     mouseMoveHandler: (event: MouseEvent) => void = () => {},
-    zoomOptions: IZoomStateOptions = {},
+    zoomOptions?: IZoomStateOptions,
   ) {
     this.svg = svg;
     this.data = new ChartData(data);
@@ -56,10 +56,8 @@ export class TimeSeriesChart {
       getPoint: (idx) => this.data.getPoint(idx),
       length: this.data.length,
       series: this.state.series.map((s) => ({
-        path: s.path as SVGPathElement,
-        transform:
-          this.state.axes.y[s.axisIdx]?.transform ??
-          this.state.axes.y[0].transform,
+        path: s.path,
+        transform: this.state.axes.y[s.axisIdx].transform,
       })),
     };
     this.legendController.init(context);
@@ -104,10 +102,8 @@ export class TimeSeriesChart {
     this.legendController.destroy();
 
     for (const s of this.state.series) {
-      s.path?.remove();
-      s.view?.remove();
-      s.path = undefined;
-      s.view = undefined;
+      s.path.remove();
+      s.view.remove();
     }
     this.state.series.length = 0;
     const axisX = this.state.axes.x;
@@ -133,28 +129,18 @@ export class TimeSeriesChart {
     this.zoomState.setScaleExtent(extent);
   };
 
-  public resize = (dimensions?: { width?: number; height?: number }) => {
-    let width: number;
-    let height: number;
-    let bScreenVisible: DirectProductBasis;
+  public resize = (dimensions: { width: number; height: number }) => {
+    const { width, height } = dimensions;
+    this.svg.attr("width", width).attr("height", height);
 
-    if (dimensions?.width != null && dimensions?.height != null) {
-      width = dimensions.width;
-      height = dimensions.height;
-      this.svg.attr("width", width).attr("height", height);
-      const bScreenXVisible = new AR1Basis(0, width);
-      const bScreenYVisible = new AR1Basis(height, 0);
-      bScreenVisible = DirectProductBasis.fromProjections(
-        bScreenXVisible,
-        bScreenYVisible,
-      );
-      this.state.bScreenXVisible = bScreenXVisible;
-    } else {
-      bScreenVisible = createDimensions(this.svg);
-      this.state.bScreenXVisible = bScreenVisible.x();
-      width = this.state.bScreenXVisible.getRange();
-      height = bScreenVisible.y().getRange();
-    }
+    const bScreenXVisible = new AR1Basis(0, width);
+    const bScreenYVisible = new AR1Basis(height, 0);
+    const bScreenVisible = DirectProductBasis.fromProjections(
+      bScreenXVisible,
+      bScreenYVisible,
+    );
+
+    this.state.bScreenXVisible = bScreenXVisible;
 
     this.state.dimensions.width = width;
     this.state.dimensions.height = height;
@@ -165,12 +151,6 @@ export class TimeSeriesChart {
     for (const a of this.state.axes.y) {
       a.transform.onViewPortResize(bScreenVisible);
     }
-
-    const bIndexVisible =
-      this.state.axes.y[0].transform.fromScreenToModelBasisX(
-        this.state.bScreenXVisible,
-      );
-    updateScaleX(this.state.axes.x.scale, bIndexVisible, this.data);
 
     this.state.refresh(this.data);
     this.state.seriesRenderer.draw(this.data.data);
