@@ -80,23 +80,21 @@ export class ChartData {
         `ChartData requires seriesAxes length to match seriesCount (${this.seriesCount})`,
       );
     }
-    for (let i = 0; i < this.seriesAxes.length; i++) {
-      const axis = this.seriesAxes[i];
+    let axisIdx = 0;
+    for (const axis of this.seriesAxes) {
       if (axis !== 0 && axis !== 1) {
         throw new Error(
-          `ChartData seriesAxes[${i}] must be 0 or 1; received ${axis}`,
+          `ChartData seriesAxes[${axisIdx}] must be 0 or 1; received ${axis}`,
         );
       }
-      this.seriesByAxis[axis as 0 | 1].push(i);
+      this.seriesByAxis[axis as 0 | 1].push(axisIdx);
+      axisIdx++;
     }
-    this.data = new Array(source.length);
-    for (let i = 0; i < source.length; i++) {
-      const point: number[] = new Array(this.seriesCount);
-      for (let j = 0; j < this.seriesCount; j++) {
-        point[j] = source.getSeries(i, j);
-      }
-      this.data[i] = point;
-    }
+    this.data = Array.from({ length: source.length }).map((_, i) =>
+      Array.from({ length: this.seriesCount }).map((_, j) =>
+        source.getSeries(i, j),
+      ),
+    );
     this.startTime = source.startTime;
     this.timeStep = source.timeStep;
     this.startIndex = 0;
@@ -112,13 +110,14 @@ export class ChartData {
         `ChartData.append requires ${this.seriesCount} values, received ${values.length}`,
       );
     }
-    for (let i = 0; i < values.length; i++) {
-      const val = values[i];
+    let valueIdx = 0;
+    for (const val of values) {
       if (val == null || !Number.isFinite(val)) {
         throw new Error(
-          `ChartData.append requires series ${i} value to be a finite number`,
+          `ChartData.append requires series ${valueIdx} value to be a finite number`,
         );
       }
+      valueIdx++;
     }
     this.data.push(values);
     this.data.shift();
@@ -159,24 +158,19 @@ export class ChartData {
   }
 
   private buildAxisMinMax(axis: number): Array<IMinMax | undefined> {
-    const result: Array<IMinMax | undefined> = new Array(this.data.length);
     const idxs = this.seriesByAxis[axis];
-
-    for (let i = 0; i < this.data.length; i++) {
+    return this.data.map((row) => {
       let min = Infinity;
       let max = -Infinity;
       for (const j of idxs) {
-        const val = this.data[i][j];
+        const val = row[j];
         if (Number.isFinite(val)) {
           if (val < min) min = val;
           if (val > max) max = val;
         }
       }
-      if (min !== Infinity) {
-        result[i] = { min, max } as IMinMax;
-      }
-    }
-    return result;
+      return min !== Infinity ? ({ min, max } as IMinMax) : undefined;
+    });
   }
 
   private rebuildSegmentTrees(): void {
