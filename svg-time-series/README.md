@@ -18,7 +18,7 @@ import { TimeSeriesChart } from "svg-time-series";
 
 ```ts
 import { select } from "d3-selection";
-import { TimeSeriesChart, IDataSource } from "svg-time-series";
+import { TimeSeriesChart, IDataSource, ChartOptions } from "svg-time-series";
 import { LegendController } from "../samples/LegendController"; // example
 
 const svg = select("#chart").append("svg").append("g").attr("class", "view");
@@ -29,11 +29,15 @@ const ny = [10, 11];
 const sf = [12, 13];
 
 const source: IDataSource = {
+  length: ny.length,
+  getSeries: (i, seriesIdx) => (seriesIdx === 0 ? ny[i] : sf[i]),
+};
+const options: ChartOptions = {
   startTime: Date.now(),
   timeStep: 1000, // time step in ms
-  length: ny.length,
   seriesCount: 2,
-  getSeries: (i, seriesIdx) => (seriesIdx === 0 ? ny[i] : sf[i]),
+  seriesAxes: [0, 1],
+  dualYAxis: true,
 };
 
 const chart = new TimeSeriesChart(
@@ -43,7 +47,7 @@ const chart = new TimeSeriesChart(
     new LegendController(legend, state, data, (ts) =>
       new Date(ts).toISOString(),
     ),
-  true, // enable dual Y axes
+  options,
   () => {},
   () => {},
 );

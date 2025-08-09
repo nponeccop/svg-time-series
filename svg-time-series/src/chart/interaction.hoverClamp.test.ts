@@ -5,7 +5,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { select } from "d3-selection";
 import { AR1Basis } from "../math/affine.ts";
-import { TimeSeriesChart, IDataSource } from "../draw.ts";
+import { TimeSeriesChart, IDataSource, ChartOptions } from "../draw.ts";
 import type { ILegendController, LegendContext } from "./legend.ts";
 
 class Matrix {
@@ -88,19 +88,22 @@ function createChart(data: Array<[number]>) {
   parent.appendChild(svgEl);
 
   const source: IDataSource = {
+    length: data.length,
+    getSeries: (i) => data[i][0],
+  };
+  const options: ChartOptions = {
     startTime: 0,
     timeStep: 1,
-    length: data.length,
     seriesCount: 1,
     seriesAxes: [0],
-    getSeries: (i) => data[i][0],
+    dualYAxis: false,
   };
   const legendController = new StubLegendController();
   const chart = new TimeSeriesChart(
     select(svgEl) as any,
     source,
     legendController,
-    false,
+    options,
     () => {},
     () => {},
   );

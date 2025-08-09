@@ -5,7 +5,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { select } from "d3-selection";
 import { AR1Basis } from "../math/affine.ts";
-import { TimeSeriesChart, IDataSource } from "../draw.ts";
+import { TimeSeriesChart, IDataSource, ChartOptions } from "../draw.ts";
 import { LegendController } from "../../../samples/LegendController.ts";
 
 class Matrix {
@@ -118,12 +118,15 @@ function createChart(
     '<span class="chart-legend__blue_value"></span>';
 
   const source: IDataSource = {
+    length: data.length,
+    getSeries: (i, seriesIdx) => data[i][seriesIdx],
+  };
+  const options: ChartOptions = {
     startTime: 0,
     timeStep: 1,
-    length: data.length,
     seriesCount: 2,
     seriesAxes: [0, 1],
-    getSeries: (i, seriesIdx) => data[i][seriesIdx],
+    dualYAxis: true,
   };
   const legendController = new LegendController(
     select(legend) as any,
@@ -133,7 +136,7 @@ function createChart(
     select(svgEl) as any,
     source,
     legendController,
-    true,
+    options,
     () => {},
     () => {},
   );
@@ -353,19 +356,22 @@ describe("chart interaction", () => {
     const mouseMoveHandler = vi.fn();
 
     const source: IDataSource = {
+      length: 2,
+      getSeries: (i) => [0, 1][i],
+    };
+    const options: ChartOptions = {
       startTime: 0,
       timeStep: 1,
-      length: 2,
       seriesCount: 2,
       seriesAxes: [0, 1],
-      getSeries: (i) => [0, 1][i],
+      dualYAxis: true,
     };
     const legendController = new LegendController(select(legend) as any);
     const chart = new TimeSeriesChart(
       select(svgEl) as any,
       source,
       legendController,
-      true,
+      options,
       () => {},
       mouseMoveHandler,
     );

@@ -23,6 +23,7 @@ import { JSDOM } from "jsdom";
 import { select } from "d3-selection";
 import { ChartData, type IDataSource } from "./data.ts";
 import { setupRender } from "./render.ts";
+import type { ChartOptions } from "./types.ts";
 import { updateNode } from "../utils/domNodeTransform.ts";
 
 class Matrix {
@@ -95,16 +96,17 @@ function createSvg() {
 describe("RenderState.refresh", () => {
   it("handles single series", () => {
     const svg = createSvg();
-    const source: IDataSource = {
+    const source: IDataSource & ChartOptions = {
       startTime: 0,
       timeStep: 1,
       length: 3,
       seriesCount: 1,
       seriesAxes: [0],
       getSeries: (i) => [1, 2, 3][i],
+      dualYAxis: false,
     };
-    const data = new ChartData(source);
-    const state = setupRender(svg as any, data, false);
+    const data = new ChartData(source, source);
+    const state = setupRender(svg as any, data, source);
     const updateNodeMock = vi.mocked(updateNode);
     updateNodeMock.mockClear();
 
@@ -123,16 +125,17 @@ describe("RenderState.refresh", () => {
 
   it("updates dual-axis series independently", () => {
     const svg = createSvg();
-    const source: IDataSource = {
+    const source: IDataSource & ChartOptions = {
       startTime: 0,
       timeStep: 1,
       length: 3,
       seriesCount: 2,
       seriesAxes: [0, 1],
       getSeries: (i, s) => (s === 0 ? [1, 2, 3][i] : [10, 20, 30][i]),
+      dualYAxis: true,
     };
-    const data = new ChartData(source);
-    const state = setupRender(svg as any, data, true);
+    const data = new ChartData(source, source);
+    const state = setupRender(svg as any, data, source);
     const updateNodeMock = vi.mocked(updateNode);
     updateNodeMock.mockClear();
 
@@ -153,16 +156,17 @@ describe("RenderState.refresh", () => {
 
   it("updates combined series on shared scale", () => {
     const svg = createSvg();
-    const source: IDataSource = {
+    const source: IDataSource & ChartOptions = {
       startTime: 0,
       timeStep: 1,
       length: 3,
       seriesCount: 2,
       seriesAxes: [0, 1],
       getSeries: (i, s) => (s === 0 ? [1, 2, 3][i] : [10, 20, 30][i]),
+      dualYAxis: false,
     };
-    const data = new ChartData(source);
-    const state = setupRender(svg as any, data, false);
+    const data = new ChartData(source, source);
+    const state = setupRender(svg as any, data, source);
 
     state.refresh(data);
 
@@ -172,26 +176,28 @@ describe("RenderState.refresh", () => {
 
   it("refreshes after data changes", () => {
     const svg = createSvg();
-    const source1: IDataSource = {
+    const source1: IDataSource & ChartOptions = {
       startTime: 0,
       timeStep: 1,
       length: 3,
       seriesCount: 2,
       seriesAxes: [0, 1],
       getSeries: (i, s) => (s === 0 ? [1, 2, 3][i] : [10, 20, 30][i]),
+      dualYAxis: true,
     };
-    const data1 = new ChartData(source1);
-    const state = setupRender(svg as any, data1, true);
+    const data1 = new ChartData(source1, source1);
+    const state = setupRender(svg as any, data1, source1);
     state.refresh(data1);
-    const source2: IDataSource = {
+    const source2: IDataSource & ChartOptions = {
       startTime: 0,
       timeStep: 1,
       length: 3,
       seriesCount: 2,
       seriesAxes: [0, 1],
       getSeries: (i, s) => (s === 0 ? [4, 5, 6][i] : [40, 50, 60][i]),
+      dualYAxis: true,
     };
-    const data2 = new ChartData(source2);
+    const data2 = new ChartData(source2, source2);
     const updateNodeMock = vi.mocked(updateNode);
     updateNodeMock.mockClear();
 
@@ -204,16 +210,17 @@ describe("RenderState.refresh", () => {
 
   it("rebuilds axis trees after data append", () => {
     const svg = createSvg();
-    const source: IDataSource = {
+    const source: IDataSource & ChartOptions = {
       startTime: 0,
       timeStep: 1,
       length: 3,
       seriesCount: 1,
       seriesAxes: [0],
       getSeries: (i) => [1, 2, 3][i],
+      dualYAxis: false,
     };
-    const data = new ChartData(source);
-    const state = setupRender(svg as any, data, false);
+    const data = new ChartData(source, source);
+    const state = setupRender(svg as any, data, source);
 
     expect(state.axes.y[0].tree.query(0, 2)).toEqual({ min: 1, max: 3 });
 
@@ -225,32 +232,34 @@ describe("RenderState.refresh", () => {
 
   it("produces finite domain when series is all NaN", () => {
     const svg = createSvg();
-    const source: IDataSource = {
+    const source: IDataSource & ChartOptions = {
       startTime: 0,
       timeStep: 1,
       length: 2,
       seriesCount: 1,
       seriesAxes: [0],
       getSeries: () => NaN,
+      dualYAxis: false,
     };
-    const data = new ChartData(source);
-    const state = setupRender(svg as any, data, false);
+    const data = new ChartData(source, source);
+    const state = setupRender(svg as any, data, source);
     state.refresh(data);
     expect(state.axes.y[0].scale.domain()).toEqual([Infinity, -Infinity]);
   });
 
   it("produces finite domains for dual-axis all NaN data", () => {
     const svg = createSvg();
-    const source: IDataSource = {
+    const source: IDataSource & ChartOptions = {
       startTime: 0,
       timeStep: 1,
       length: 2,
       seriesCount: 2,
       seriesAxes: [0, 1],
       getSeries: () => NaN,
+      dualYAxis: true,
     };
-    const data = new ChartData(source);
-    const state = setupRender(svg as any, data, true);
+    const data = new ChartData(source, source);
+    const state = setupRender(svg as any, data, source);
     state.refresh(data);
     expect(state.axes.y[0].scale.domain()).toEqual([Infinity, -Infinity]);
     expect(state.axes.y[1].scale.domain()).toEqual([Infinity, -Infinity]);

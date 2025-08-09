@@ -6,6 +6,7 @@ import { select, Selection } from "d3-selection";
 import { scaleLinear, scaleTime } from "d3-scale";
 import { AR1Basis } from "../math/affine.ts";
 import { ChartData, IDataSource } from "./data.ts";
+import type { ChartOptions } from "./types.ts";
 import { createDimensions, updateScaleX } from "./render/utils.ts";
 
 describe("createDimensions", () => {
@@ -33,7 +34,7 @@ describe("createDimensions", () => {
 });
 
 describe("updateScaleX", () => {
-  const makeSource = (data: number[][]): IDataSource => ({
+  const makeSource = (data: number[][]): IDataSource & ChartOptions => ({
     startTime: 0,
     timeStep: 1,
     length: data.length,
@@ -43,7 +44,8 @@ describe("updateScaleX", () => {
   });
 
   it("adjusts domain based on visible index range", () => {
-    const cd = new ChartData(makeSource([[0], [1], [2]]));
+    const source = makeSource([[0], [1], [2]]);
+    const cd = new ChartData(source, source);
     const x = scaleTime().range([0, 100]);
     updateScaleX(x, new AR1Basis(0, 2), cd);
     const [d0, d1] = x.domain();
@@ -53,7 +55,7 @@ describe("updateScaleX", () => {
 });
 
 describe("updateScaleY", () => {
-  const makeSource = (data: number[][]): IDataSource => ({
+  const makeSource = (data: number[][]): IDataSource & ChartOptions => ({
     startTime: 0,
     timeStep: 1,
     length: data.length,
@@ -63,7 +65,8 @@ describe("updateScaleY", () => {
   });
 
   it("sets domain from visible data bounds", () => {
-    const cd = new ChartData(makeSource([[10], [20], [40]]));
+    const source = makeSource([[10], [20], [40]]);
+    const cd = new ChartData(source, source);
     const y = scaleLinear().range([100, 0]);
     const tree = cd.buildAxisTree(0);
     const dp = cd.updateScaleY(new AR1Basis(0, 2), tree);

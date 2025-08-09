@@ -2,7 +2,7 @@ import { csv } from "d3-request";
 import { ValueFn, select, selectAll, pointer } from "d3-selection";
 import { D3ZoomEvent } from "d3-zoom";
 
-import { TimeSeriesChart, IDataSource } from "svg-time-series";
+import { TimeSeriesChart, IDataSource, ChartOptions } from "svg-time-series";
 import { LegendController } from "../LegendController.ts";
 import { measure } from "../measure.ts";
 
@@ -23,19 +23,22 @@ export function drawCharts(data: [number, number][], dualYAxis = false) {
     const svg = select(this).select<SVGSVGElement>("svg");
     const legend = select(this).select<HTMLElement>(".chart-legend");
     const source: IDataSource = {
+      length: data.length,
+      getSeries: (i, seriesIdx) => data[i][seriesIdx],
+    };
+    const options: ChartOptions = {
       startTime: Date.now(),
       timeStep: 86400000,
-      length: data.length,
       seriesCount: 2,
       seriesAxes: [0, 1],
-      getSeries: (i, seriesIdx) => data[i][seriesIdx],
+      dualYAxis,
     };
     const legendController = new LegendController(legend);
     const chart = new TimeSeriesChart(
       svg,
       source,
       legendController,
-      dualYAxis,
+      options,
       onZoom,
       onMouseMove,
     );

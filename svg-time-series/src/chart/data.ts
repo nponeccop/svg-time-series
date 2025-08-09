@@ -6,6 +6,7 @@ import {
 } from "../math/affine.ts";
 import { SegmentTree } from "segment-tree-rmq";
 import { SlidingWindow } from "./slidingWindow.ts";
+import type { ChartOptions } from "./types.ts";
 
 export interface IMinMax {
   readonly min: number;
@@ -25,15 +26,7 @@ const minMaxIdentity: IMinMax = {
 };
 
 export interface IDataSource {
-  readonly startTime: number;
-  readonly timeStep: number;
   readonly length: number;
-  readonly seriesCount: number;
-  /**
-   * Mapping from series index to Y-axis index. Each entry must be either 0 or 1
-   * and the array length must equal `seriesCount`.
-   */
-  readonly seriesAxes: number[];
   getSeries(index: number, seriesIdx: number): number;
 }
 
@@ -49,29 +42,30 @@ export class ChartData {
   /**
    * Creates a new ChartData instance.
    * @param source Data source; must contain at least one point.
+   * @param options Chart configuration options.
    * @throws if the source has length 0.
    */
-  constructor(source: IDataSource) {
+  constructor(source: IDataSource, options: ChartOptions) {
     if (source.length === 0) {
       throw new Error("ChartData requires a non-empty data array");
     }
-    if (source.seriesCount < 1) {
+    if (options.seriesCount < 1) {
       throw new Error("ChartData requires at least one series");
     }
-    if (!Number.isFinite(source.startTime)) {
+    if (!Number.isFinite(options.startTime)) {
       throw new Error("ChartData requires startTime to be a finite number");
     }
-    if (!Number.isFinite(source.timeStep)) {
+    if (!Number.isFinite(options.timeStep)) {
       throw new Error("ChartData requires timeStep to be a finite number");
     }
-    if (source.timeStep <= 0) {
+    if (options.timeStep <= 0) {
       throw new Error("ChartData requires timeStep to be greater than 0");
     }
-    this.seriesCount = source.seriesCount;
-    if (source.seriesAxes == null) {
+    this.seriesCount = options.seriesCount;
+    if (options.seriesAxes == null) {
       throw new Error("ChartData requires seriesAxes mapping");
     }
-    this.seriesAxes = source.seriesAxes;
+    this.seriesAxes = options.seriesAxes;
     if (this.seriesAxes.length !== this.seriesCount) {
       throw new Error(
         `ChartData requires seriesAxes length to match seriesCount (${this.seriesCount})`,
@@ -93,8 +87,8 @@ export class ChartData {
       ),
     );
     this.window = new SlidingWindow(initialData);
-    this.startTime = source.startTime;
-    this.timeStep = source.timeStep;
+    this.startTime = options.startTime;
+    this.timeStep = options.timeStep;
     // bIndexFull represents the full range of data indices and remains constant
     // since append() maintains a sliding window of fixed length
     this.bIndexFull = new AR1Basis(0, this.window.length - 1);

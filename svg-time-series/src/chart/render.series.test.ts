@@ -7,6 +7,7 @@ import { JSDOM } from "jsdom";
 import { select } from "d3-selection";
 import { ChartData, IDataSource } from "./data.ts";
 import { setupRender } from "./render.ts";
+import type { ChartOptions } from "./types.ts";
 
 class Matrix {
   constructor(
@@ -83,7 +84,7 @@ function createSvg() {
 describe("buildSeries", () => {
   it("returns single series when hasSf is false", () => {
     const svg = createSvg();
-    const source: IDataSource = {
+    const source: IDataSource & ChartOptions = {
       startTime: 0,
       timeStep: 1,
       length: 3,
@@ -91,15 +92,15 @@ describe("buildSeries", () => {
       seriesAxes: [0],
       getSeries: (i) => [1, 2, 3][i],
     };
-    const data = new ChartData(source);
-    const state = setupRender(svg as any, data, false);
+    const data = new ChartData(source, source);
+    const state = setupRender(svg as any, data, source);
     expect(state.series.length).toBe(1);
     expect(state.series[0]).toMatchObject({ axisIdx: 0 });
   });
 
   it("returns two series for combined axis", () => {
     const svg = createSvg();
-    const source: IDataSource = {
+    const source: IDataSource & ChartOptions = {
       startTime: 0,
       timeStep: 1,
       length: 3,
@@ -108,8 +109,8 @@ describe("buildSeries", () => {
       getSeries: (i, seriesIdx) =>
         seriesIdx === 0 ? [1, 2, 3][i] : [10, 20, 30][i],
     };
-    const data = new ChartData(source);
-    const state = setupRender(svg as any, data, false);
+    const data = new ChartData(source, source);
+    const state = setupRender(svg as any, data, source);
     expect(state.series.length).toBe(2);
     expect(state.series[0]).toMatchObject({ axisIdx: 0 });
     expect(state.series[1]).toMatchObject({ axisIdx: 1 });
@@ -117,7 +118,7 @@ describe("buildSeries", () => {
 
   it("returns two series for dualYAxis", () => {
     const svg = createSvg();
-    const source: IDataSource = {
+    const source: IDataSource & ChartOptions = {
       startTime: 0,
       timeStep: 1,
       length: 3,
@@ -125,9 +126,10 @@ describe("buildSeries", () => {
       seriesAxes: [0, 1],
       getSeries: (i, seriesIdx) =>
         seriesIdx === 0 ? [1, 2, 3][i] : [10, 20, 30][i],
+      dualYAxis: true,
     };
-    const data = new ChartData(source);
-    const state = setupRender(svg as any, data, true);
+    const data = new ChartData(source, source);
+    const state = setupRender(svg as any, data, source);
     expect(state.series.length).toBe(2);
     expect(state.series[0]).toMatchObject({ axisIdx: 0 });
     expect(state.series[1]).toMatchObject({ axisIdx: 1 });
@@ -137,7 +139,7 @@ describe("buildSeries", () => {
 describe("setupRender DOM order", () => {
   it("renders series views before axes", () => {
     const svg = createSvg();
-    const source: IDataSource = {
+    const source: IDataSource & ChartOptions = {
       startTime: 0,
       timeStep: 1,
       length: 3,
@@ -145,9 +147,10 @@ describe("setupRender DOM order", () => {
       seriesAxes: [0, 1],
       getSeries: (i, seriesIdx) =>
         seriesIdx === 0 ? [1, 2, 3][i] : [10, 20, 30][i],
+      dualYAxis: true,
     };
-    const data = new ChartData(source);
-    setupRender(svg as any, data, true);
+    const data = new ChartData(source, source);
+    setupRender(svg as any, data, source);
     const groups = svg.selectAll("g").nodes() as SVGGElement[];
     expect(groups[0].classList.contains("view")).toBe(true);
     expect(groups[1].classList.contains("view")).toBe(true);

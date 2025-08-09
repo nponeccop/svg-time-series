@@ -25,7 +25,7 @@ vi.mock("../axis.ts", () => {
 
 import { select } from "d3-selection";
 import { SeriesRenderer } from "./seriesRenderer.ts";
-import { TimeSeriesChart, type IDataSource } from "../draw.ts";
+import { TimeSeriesChart, type IDataSource, ChartOptions } from "../draw.ts";
 
 class Matrix {
   constructor(
@@ -94,12 +94,14 @@ describe("TimeSeriesChart.resize", () => {
     div.appendChild(svgEl);
 
     const source: IDataSource = {
+      length: 3,
+      getSeries: (i) => [1, 2, 3][i],
+    };
+    const options: ChartOptions = {
       startTime: 0,
       timeStep: 1,
-      length: 3,
       seriesCount: 1,
       seriesAxes: [0],
-      getSeries: (i) => [1, 2, 3][i],
     };
 
     const legend = {
@@ -114,6 +116,7 @@ describe("TimeSeriesChart.resize", () => {
       select(svgEl) as any,
       source,
       legend as any,
+      options,
     );
 
     renderSpy.mockClear();

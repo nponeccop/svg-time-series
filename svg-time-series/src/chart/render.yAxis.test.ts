@@ -4,6 +4,7 @@ import { JSDOM } from "jsdom";
 import { select } from "d3-selection";
 import { ChartData, IDataSource } from "./data.ts";
 import { setupRender } from "./render.ts";
+import type { ChartOptions } from "./types.ts";
 
 class Matrix {
   constructor(
@@ -80,7 +81,7 @@ function createSvg() {
 describe("setupRender Y-axis modes", () => {
   it("combines series when dualYAxis is false", () => {
     const svg = createSvg();
-    const source: IDataSource = {
+    const source: IDataSource & ChartOptions = {
       startTime: 0,
       timeStep: 1,
       length: 3,
@@ -88,16 +89,17 @@ describe("setupRender Y-axis modes", () => {
       seriesAxes: [0, 1],
       getSeries: (i, seriesIdx) =>
         seriesIdx === 0 ? [1, 2, 3][i] : [10, 20, 30][i],
+      dualYAxis: false,
     };
-    const data = new ChartData(source);
-    const state = setupRender(svg as any, data, false);
+    const data = new ChartData(source, source);
+    const state = setupRender(svg as any, data, source);
     expect(state.axes.y[0].scale.domain()).toEqual([1, 30]);
     expect(state.axes.y[1]).toBeUndefined();
   });
 
   it("separates scales when dualYAxis is true", () => {
     const svg = createSvg();
-    const source: IDataSource = {
+    const source: IDataSource & ChartOptions = {
       startTime: 0,
       timeStep: 1,
       length: 3,
@@ -105,9 +107,10 @@ describe("setupRender Y-axis modes", () => {
       seriesAxes: [0, 1],
       getSeries: (i, seriesIdx) =>
         seriesIdx === 0 ? [1, 2, 3][i] : [10, 20, 30][i],
+      dualYAxis: true,
     };
-    const data = new ChartData(source);
-    const state = setupRender(svg as any, data, true);
+    const data = new ChartData(source, source);
+    const state = setupRender(svg as any, data, source);
     expect(state.axes.y[0].scale.domain()).toEqual([1, 3]);
     expect(state.axes.y[1].scale.domain()).toEqual([10, 30]);
   });

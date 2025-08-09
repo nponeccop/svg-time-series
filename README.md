@@ -52,17 +52,20 @@ parameter of `TimeSeriesChart`, which enables independent left and right Y
 scales.
 
 ```ts
-import { TimeSeriesChart, IDataSource } from "svg-time-series";
+import { TimeSeriesChart, IDataSource, ChartOptions } from "svg-time-series";
 import { LegendController } from "./LegendController"; // implement your own
 
 const source: IDataSource = {
+  length: data.length,
+  getSeries: (i, seriesIdx) => data[i][seriesIdx],
+};
+const options: ChartOptions = {
   startTime,
   timeStep,
-  length: data.length,
   seriesCount: 2,
   // Assign the first series to the left axis and the second to the right.
   seriesAxes: [0, 1],
-  getSeries: (i, seriesIdx) => data[i][seriesIdx],
+  dualYAxis: true,
 };
 
 const chart = new TimeSeriesChart(
@@ -72,7 +75,7 @@ const chart = new TimeSeriesChart(
     new LegendController(legend, state, data, (ts) =>
       new Date(ts).toISOString(),
     ),
-  true, // enable dual Y axes
+  options,
   onZoom,
   onMouseMove,
 );
@@ -90,13 +93,16 @@ For two series sharing a single Y-axis, pass `false` for `dualYAxis`:
 
 ```ts
 const singleSource: IDataSource = {
+  length: data.length,
+  getSeries: (i, seriesIdx) => data[i][seriesIdx],
+};
+const singleOptions: ChartOptions = {
   startTime,
   timeStep,
-  length: data.length,
   seriesCount: 2,
   // Both series use the left axis
   seriesAxes: [0, 0],
-  getSeries: (i, seriesIdx) => data[i][seriesIdx],
+  dualYAxis: false,
 };
 
 const chartSingle = new TimeSeriesChart(
@@ -106,7 +112,7 @@ const chartSingle = new TimeSeriesChart(
     new LegendController(legend, state, data, (ts) =>
       new Date(ts).toISOString(),
     ),
-  false, // series share one axis
+  singleOptions,
   onZoom,
   onMouseMove,
 );
