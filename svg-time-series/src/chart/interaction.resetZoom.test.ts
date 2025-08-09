@@ -139,15 +139,25 @@ function createChart(data: Array<[number, number]>, options?: any) {
     getSeries: (i, seriesIdx) => data[i][seriesIdx],
   };
   const legendController = new LegendController(select(legend) as any);
-  const chart = new TimeSeriesChart(
-    select(svgEl) as any,
-    source,
-    legendController,
-    true,
-    () => {},
-    () => {},
-    options,
-  );
+  const chart =
+    options === undefined
+      ? new TimeSeriesChart(
+          select(svgEl) as any,
+          source,
+          legendController,
+          true,
+          () => {},
+          () => {},
+        )
+      : new TimeSeriesChart(
+          select(svgEl) as any,
+          source,
+          legendController,
+          true,
+          () => {},
+          () => {},
+          options,
+        );
 
   return { interaction: chart.interaction };
 }
