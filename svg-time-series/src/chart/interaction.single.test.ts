@@ -5,7 +5,11 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { select } from "d3-selection";
 import { AR1Basis } from "../math/affine.ts";
-import { TimeSeriesChart, IDataSource } from "../draw.ts";
+import {
+  TimeSeriesChart,
+  type IDataSource,
+  type ChartOptions,
+} from "../draw.ts";
 import { LegendController } from "../../../samples/LegendController.ts";
 
 class Matrix {
@@ -114,19 +118,21 @@ function createChart(data: Array<[number]>) {
     '<span class="chart-legend__green_value"></span>';
 
   const source: IDataSource = {
+    length: data.length,
+    getSeries: (i) => data[i][0],
+  };
+  const options: ChartOptions = {
     startTime: 0,
     timeStep: 1,
-    length: data.length,
     seriesCount: 1,
     seriesAxes: [0],
-    getSeries: (i) => data[i][0],
   };
   const legendController = new LegendController(select(legend) as any);
   const chart = new TimeSeriesChart(
     select(svgEl) as any,
     source,
+    options,
     legendController,
-    false,
     () => {},
     () => {},
   );

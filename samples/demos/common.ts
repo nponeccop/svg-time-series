@@ -2,11 +2,18 @@ import { csv } from "d3-request";
 import { ValueFn, select, selectAll, pointer } from "d3-selection";
 import { D3ZoomEvent } from "d3-zoom";
 
-import { TimeSeriesChart, IDataSource } from "svg-time-series";
+import {
+  TimeSeriesChart,
+  type IDataSource,
+  type ChartOptions,
+} from "svg-time-series";
 import { LegendController } from "../LegendController.ts";
 import { measure } from "../measure.ts";
 
-export function drawCharts(data: [number, number][], dualYAxis = false) {
+export function drawCharts(
+  data: [number, number][],
+  seriesAxes: number[] = [0, 0],
+) {
   const charts: TimeSeriesChart[] = [];
 
   const onZoom = (event: D3ZoomEvent<SVGRectElement, unknown>) =>
@@ -23,19 +30,21 @@ export function drawCharts(data: [number, number][], dualYAxis = false) {
     const svg = select(this).select<SVGSVGElement>("svg");
     const legend = select(this).select<HTMLElement>(".chart-legend");
     const source: IDataSource = {
+      length: data.length,
+      getSeries: (i, seriesIdx) => data[i][seriesIdx],
+    };
+    const options: ChartOptions = {
       startTime: Date.now(),
       timeStep: 86400000,
-      length: data.length,
       seriesCount: 2,
-      seriesAxes: [0, 1],
-      getSeries: (i, seriesIdx) => data[i][seriesIdx],
+      seriesAxes,
     };
     const legendController = new LegendController(legend);
     const chart = new TimeSeriesChart(
       svg,
       source,
+      options,
       legendController,
-      dualYAxis,
       onZoom,
       onMouseMove,
     );
@@ -79,9 +88,9 @@ interface Resize {
 
 const resize: Resize = { interval: 60, request: null, timer: null, eval: null };
 
-export function loadAndDraw(dualYAxis = false) {
+export function loadAndDraw(seriesAxes: number[] = [0, 0]) {
   onCsv((data: [number, number][]) => {
-    drawCharts(data, dualYAxis);
+    drawCharts(data, seriesAxes);
 
     resize.request = function () {
       if (resize.timer) clearTimeout(resize.timer);
@@ -93,7 +102,7 @@ export function loadAndDraw(dualYAxis = false) {
         .append("svg")
         .append("g")
         .attr("class", "view");
-      drawCharts(data, dualYAxis);
+      drawCharts(data, seriesAxes);
     };
   });
 }

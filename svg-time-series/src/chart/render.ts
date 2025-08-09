@@ -12,6 +12,7 @@ import { ViewportTransform } from "../ViewportTransform.ts";
 import { updateNode } from "../utils/domNodeTransform.ts";
 import { AR1Basis, DirectProductBasis, bPlaceholder } from "../math/affine.ts";
 import type { ChartData, IMinMax } from "./data.ts";
+import type { ChartOptions } from "./types.ts";
 import { SegmentTree } from "segment-tree-rmq";
 import {
   createDimensions,
@@ -147,15 +148,16 @@ export function updateYScales(
 export function setupRender(
   svg: Selection<SVGSVGElement, unknown, HTMLElement, unknown>,
   data: ChartData,
-  dualYAxis: boolean,
+  options: ChartOptions,
 ): RenderState {
-  const seriesCount = data.seriesCount;
+  const seriesCount = options.seriesCount;
 
   const bScreenVisibleDp = createDimensions(svg);
   const bScreenXVisible = bScreenVisibleDp.x();
   const width = bScreenXVisible.getRange();
   const height = bScreenVisibleDp.y().getRange();
-  const axisCount = dualYAxis && data.seriesAxes.includes(1) ? 2 : 1;
+  const axisCount =
+    options.seriesAxes.length > 0 ? Math.max(...options.seriesAxes) + 1 : 1;
 
   const [xRange, yRange] = bScreenVisibleDp.toArr();
   const xScale: ScaleTime<number, number> = scaleTime().range(xRange);
@@ -183,7 +185,7 @@ export function setupRender(
   const series: Series[] = [];
   for (let i = 0; i < seriesCount; i++) {
     const { view, path } = initSeriesNode(svg);
-    const axisIdx = data.seriesAxes[i] ?? 0;
+    const axisIdx = options.seriesAxes[i] ?? 0;
     series.push({ axisIdx, view, path, line: createLine(i) });
   }
 

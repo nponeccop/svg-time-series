@@ -5,7 +5,11 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { select } from "d3-selection";
 import { AR1Basis } from "../math/affine.ts";
-import { TimeSeriesChart, IDataSource } from "../draw.ts";
+import {
+  TimeSeriesChart,
+  type IDataSource,
+  type ChartOptions,
+} from "../draw.ts";
 import { LegendController } from "../../../samples/LegendController.ts";
 
 class Matrix {
@@ -106,7 +110,7 @@ vi.mock("./zoomState.ts", () => ({
   },
 }));
 
-function createChart(data: Array<[number, number]>, options?: any) {
+function createChart(data: Array<[number, number]>, zoomOpts?: any) {
   currentDataLength = data.length;
   const parent = document.createElement("div");
   const w = Math.max(currentDataLength - 1, 0);
@@ -128,22 +132,24 @@ function createChart(data: Array<[number, number]>, options?: any) {
     '<span class="chart-legend__blue_value"></span>';
 
   const source: IDataSource = {
+    length: data.length,
+    getSeries: (i, seriesIdx) => data[i][seriesIdx],
+  };
+  const options: ChartOptions = {
     startTime: 0,
     timeStep: 1,
-    length: data.length,
     seriesCount: 2,
     seriesAxes: [0, 1],
-    getSeries: (i, seriesIdx) => data[i][seriesIdx],
   };
   const legendController = new LegendController(select(legend) as any);
   const chart = new TimeSeriesChart(
     select(svgEl) as any,
     source,
-    legendController,
-    true,
-    () => {},
-    () => {},
     options,
+    legendController,
+    () => {},
+    () => {},
+    zoomOpts,
   );
 
   return { interaction: chart.interaction };

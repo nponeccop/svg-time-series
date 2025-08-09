@@ -5,6 +5,7 @@ import {
   betweenTBasesAR1,
 } from "../math/affine.ts";
 import { SegmentTree } from "segment-tree-rmq";
+import type { ChartOptions } from "./types.ts";
 
 export interface IMinMax {
   readonly min: number;
@@ -24,15 +25,7 @@ const minMaxIdentity: IMinMax = {
 };
 
 export interface IDataSource {
-  readonly startTime: number;
-  readonly timeStep: number;
   readonly length: number;
-  readonly seriesCount: number;
-  /**
-   * Mapping from series index to Y-axis index. Each entry must be either 0 or 1
-   * and the array length must equal `seriesCount`.
-   */
-  readonly seriesAxes: number[];
   getSeries(index: number, seriesIdx: number): number;
 }
 
@@ -49,20 +42,24 @@ export class ChartData {
   /**
    * Creates a new ChartData instance.
    * @param source Data source; must contain at least one point.
+   * @param options Chart configuration options.
    * @throws if the source has length 0.
    */
-  constructor(source: IDataSource) {
+  constructor(
+    source: IDataSource,
+    options: ChartOptions = source as unknown as ChartOptions,
+  ) {
     if (source.length === 0) {
       throw new Error("ChartData requires a non-empty data array");
     }
-    if (source.seriesCount < 1) {
+    if (options.seriesCount < 1) {
       throw new Error("ChartData requires at least one series");
     }
-    this.seriesCount = source.seriesCount;
-    if (source.seriesAxes == null) {
+    this.seriesCount = options.seriesCount;
+    if (options.seriesAxes == null) {
       throw new Error("ChartData requires seriesAxes mapping");
     }
-    this.seriesAxes = source.seriesAxes;
+    this.seriesAxes = options.seriesAxes;
     if (this.seriesAxes.length !== this.seriesCount) {
       throw new Error(
         `ChartData requires seriesAxes length to match seriesCount (${this.seriesCount})`,
@@ -83,8 +80,8 @@ export class ChartData {
         source.getSeries(i, j),
       ),
     );
-    this.startTime = source.startTime;
-    this.timeStep = source.timeStep;
+    this.startTime = options.startTime;
+    this.timeStep = options.timeStep;
     this.startIndex = 0;
     // bIndexFull represents the full range of data indices and remains constant
     // since append() maintains a sliding window of fixed length

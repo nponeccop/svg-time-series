@@ -7,7 +7,11 @@ import { JSDOM } from "jsdom";
 import { select } from "d3-selection";
 
 import { LegendController } from "./LegendController.ts";
-import { ChartData, IDataSource } from "../svg-time-series/src/chart/data.ts";
+import {
+  ChartData,
+  type IDataSource,
+} from "../svg-time-series/src/chart/data.ts";
+import type { ChartOptions } from "../svg-time-series/src/chart/types.ts";
 import { setupRender } from "../svg-time-series/src/chart/render.ts";
 import * as domNode from "../svg-time-series/src/utils/domNodeTransform.ts";
 
@@ -93,15 +97,17 @@ describe("LegendController", () => {
   it("places highlight dot with correct y and color", () => {
     const { svg, legendDiv } = createSvgAndLegend();
     const source: IDataSource = {
+      length: 2,
+      getSeries: (i) => [10, 20][i],
+    };
+    const options: ChartOptions = {
       startTime: 0,
       timeStep: 1,
-      length: 2,
       seriesCount: 1,
-      getSeries: (i) => [10, 20][i],
       seriesAxes: [0],
     };
-    const data = new ChartData(source);
-    const state = setupRender(svg as any, data, false);
+    const data = new ChartData(source, options);
+    const state = setupRender(svg as any, data, options);
     select(state.series[0].path).attr("stroke", "green");
     const lc = new LegendController(legendDiv as any);
     lc.init({
@@ -138,21 +144,23 @@ describe("LegendController", () => {
   it("handles legacy tuple return from getPoint", () => {
     const { svg, legendDiv } = createSvgAndLegend();
     const source: IDataSource = {
+      length: 2,
+      getSeries: (i) => [10, 20][i],
+    };
+    const options: ChartOptions = {
       startTime: 0,
       timeStep: 1,
-      length: 2,
       seriesCount: 1,
-      getSeries: (i) => [10, 20][i],
       seriesAxes: [0],
     };
-    const data = new ChartData(source);
+    const data = new ChartData(source, options);
     const originalGetPoint = data.getPoint.bind(data);
     // mimic old API returning [timestamp, value...]
     data.getPoint = ((idx: number) => {
       const { values, timestamp } = originalGetPoint(idx);
       return [timestamp, ...values] as any;
     }) as any;
-    const state = setupRender(svg as any, data, false);
+    const state = setupRender(svg as any, data, options);
     select(state.series[0].path).attr("stroke", "green");
     const lc = new LegendController(legendDiv as any);
     lc.init({
@@ -178,21 +186,23 @@ describe("LegendController", () => {
   it("ignores results missing values array", () => {
     const { svg, legendDiv } = createSvgAndLegend();
     const source: IDataSource = {
+      length: 2,
+      getSeries: (i) => [10, 20][i],
+    };
+    const options: ChartOptions = {
       startTime: 0,
       timeStep: 1,
-      length: 2,
       seriesCount: 1,
-      getSeries: (i) => [10, 20][i],
       seriesAxes: [0],
     };
-    const data = new ChartData(source);
+    const data = new ChartData(source, options);
     const originalGetPoint = data.getPoint.bind(data);
     // mimic buggy API returning only a timestamp
     data.getPoint = ((idx: number) => {
       const { timestamp } = originalGetPoint(idx);
       return { timestamp } as any;
     }) as any;
-    const state = setupRender(svg as any, data, false);
+    const state = setupRender(svg as any, data, options);
     select(state.series[0].path).attr("stroke", "green");
     const lc = new LegendController(legendDiv as any);
     lc.init({

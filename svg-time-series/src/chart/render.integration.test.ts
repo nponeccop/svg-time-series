@@ -5,7 +5,8 @@
 import { describe, it, expect, beforeAll, vi } from "vitest";
 import { JSDOM } from "jsdom";
 import { select } from "d3-selection";
-import { ChartData, IDataSource } from "./data.ts";
+import { ChartData, type IDataSource } from "./data.ts";
+import type { ChartOptions } from "./types.ts";
 import { setupRender } from "./render.ts";
 import * as domNode from "../utils/domNodeTransform.ts";
 
@@ -84,7 +85,7 @@ function createSvg() {
 describe("RenderState.refresh integration", () => {
   it("updates scales, axes and series views", () => {
     const svg = createSvg();
-    const source: IDataSource = {
+    const source: IDataSource & ChartOptions = {
       startTime: 0,
       timeStep: 1,
       length: 3,
@@ -93,8 +94,8 @@ describe("RenderState.refresh integration", () => {
       getSeries: (i, seriesIdx) =>
         seriesIdx === 0 ? [1, 2, 3][i] : [10, 20, 30][i],
     };
-    const data = new ChartData(source);
-    const state = setupRender(svg as any, data, true);
+    const data = new ChartData(source, source);
+    const state = setupRender(svg as any, data, source);
     const updateNodeSpy = vi
       .spyOn(domNode, "updateNode")
       .mockImplementation(() => {});

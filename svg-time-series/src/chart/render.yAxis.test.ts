@@ -2,7 +2,8 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import { JSDOM } from "jsdom";
 import { select } from "d3-selection";
-import { ChartData, IDataSource } from "./data.ts";
+import { ChartData, type IDataSource } from "./data.ts";
+import type { ChartOptions } from "./types.ts";
 import { setupRender } from "./render.ts";
 
 class Matrix {
@@ -78,36 +79,40 @@ function createSvg() {
 }
 
 describe("setupRender Y-axis modes", () => {
-  it("combines series when dualYAxis is false", () => {
+  it("combines series when both map to axis 0", () => {
     const svg = createSvg();
     const source: IDataSource = {
-      startTime: 0,
-      timeStep: 1,
       length: 3,
-      seriesCount: 2,
-      seriesAxes: [0, 1],
       getSeries: (i, seriesIdx) =>
         seriesIdx === 0 ? [1, 2, 3][i] : [10, 20, 30][i],
     };
-    const data = new ChartData(source);
-    const state = setupRender(svg as any, data, false);
+    const options: ChartOptions = {
+      startTime: 0,
+      timeStep: 1,
+      seriesCount: 2,
+      seriesAxes: [0, 0],
+    };
+    const data = new ChartData(source, options);
+    const state = setupRender(svg as any, data, options);
     expect(state.axes.y[0].scale.domain()).toEqual([1, 30]);
     expect(state.axes.y[1]).toBeUndefined();
   });
 
-  it("separates scales when dualYAxis is true", () => {
+  it("separates scales for distinct axes", () => {
     const svg = createSvg();
     const source: IDataSource = {
-      startTime: 0,
-      timeStep: 1,
       length: 3,
-      seriesCount: 2,
-      seriesAxes: [0, 1],
       getSeries: (i, seriesIdx) =>
         seriesIdx === 0 ? [1, 2, 3][i] : [10, 20, 30][i],
     };
-    const data = new ChartData(source);
-    const state = setupRender(svg as any, data, true);
+    const options: ChartOptions = {
+      startTime: 0,
+      timeStep: 1,
+      seriesCount: 2,
+      seriesAxes: [0, 1],
+    };
+    const data = new ChartData(source, options);
+    const state = setupRender(svg as any, data, options);
     expect(state.axes.y[0].scale.domain()).toEqual([1, 3]);
     expect(state.axes.y[1].scale.domain()).toEqual([10, 30]);
   });

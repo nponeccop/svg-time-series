@@ -45,34 +45,32 @@ work is possible. Keep watching!
 ## Y-axis modes
 
 Charts can display one or two data series. The library supports at most two
-series; additional series are ignored. By default, all series share a single
-Y-axis whose scale is computed from the combined minimum and maximum of every
-series. To draw series with different units, pass `true` for the `dualYAxis`
-parameter of `TimeSeriesChart`, which enables independent left and right Y
-scales.
+series; additional series are ignored. All series are mapped to Y-axes via the
+`seriesAxes` array in `ChartOptions`. Axis count is inferred from the largest
+axis index, so mapping a series to axis `1` enables independent left and right
+Y scales.
 
 ```ts
 import { TimeSeriesChart, IDataSource } from "svg-time-series";
 import { LegendController } from "./LegendController"; // implement your own
 
 const source: IDataSource = {
+  length: data.length,
+  getSeries: (i, seriesIdx) => data[i][seriesIdx],
+};
+const options: ChartOptions = {
   startTime,
   timeStep,
-  length: data.length,
   seriesCount: 2,
   // Assign the first series to the left axis and the second to the right.
   seriesAxes: [0, 1],
-  getSeries: (i, seriesIdx) => data[i][seriesIdx],
 };
-
+const legendController = new LegendController(legend); // implement your own
 const chart = new TimeSeriesChart(
   svg,
   source,
-  (state, data) =>
-    new LegendController(legend, state, data, (ts) =>
-      new Date(ts).toISOString(),
-    ),
-  true, // enable dual Y axes
+  options,
+  legendController,
   onZoom,
   onMouseMove,
 );
@@ -86,27 +84,25 @@ length must equal `seriesCount`.
 The third argument creates a legend controller, letting you customize how
 legend entries are rendered, including timestamp formatting.
 
-For two series sharing a single Y-axis, pass `false` for `dualYAxis`:
+For two series sharing a single Y-axis, map both to axis `0`:
 
 ```ts
 const singleSource: IDataSource = {
+  length: data.length,
+  getSeries: (i, seriesIdx) => data[i][seriesIdx],
+};
+const singleOptions: ChartOptions = {
   startTime,
   timeStep,
-  length: data.length,
   seriesCount: 2,
   // Both series use the left axis
   seriesAxes: [0, 0],
-  getSeries: (i, seriesIdx) => data[i][seriesIdx],
 };
-
 const chartSingle = new TimeSeriesChart(
   svg,
   singleSource,
-  (state, data) =>
-    new LegendController(legend, state, data, (ts) =>
-      new Date(ts).toISOString(),
-    ),
-  false, // series share one axis
+  singleOptions,
+  legendController,
   onZoom,
   onMouseMove,
 );

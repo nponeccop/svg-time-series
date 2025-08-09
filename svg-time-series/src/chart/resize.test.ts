@@ -25,7 +25,11 @@ vi.mock("../axis.ts", () => {
 
 import { select } from "d3-selection";
 import * as renderUtils from "./render/utils.ts";
-import { TimeSeriesChart, type IDataSource } from "../draw.ts";
+import {
+  TimeSeriesChart,
+  type IDataSource,
+  type ChartOptions,
+} from "../draw.ts";
 
 class Matrix {
   constructor(
@@ -94,12 +98,14 @@ describe("TimeSeriesChart.resize", () => {
     div.appendChild(svgEl);
 
     const source: IDataSource = {
+      length: 3,
+      getSeries: (i) => [1, 2, 3][i],
+    };
+    const options: ChartOptions = {
       startTime: 0,
       timeStep: 1,
-      length: 3,
       seriesCount: 1,
       seriesAxes: [0],
-      getSeries: (i) => [1, 2, 3][i],
     };
 
     const legend = {
@@ -113,6 +119,7 @@ describe("TimeSeriesChart.resize", () => {
     const chart = new TimeSeriesChart(
       select(svgEl) as any,
       source,
+      options,
       legend as any,
     );
 

@@ -4,6 +4,7 @@ import { D3ZoomEvent } from "d3-zoom";
 import { ChartData, IDataSource } from "./chart/data.ts";
 import { setupRender } from "./chart/render.ts";
 import type { RenderState } from "./chart/render.ts";
+import type { ChartOptions } from "./chart/types.ts";
 import { renderPaths } from "./chart/render/utils.ts";
 import type { ILegendController, LegendContext } from "./chart/legend.ts";
 import { ZoomState, IZoomStateOptions } from "./chart/zoomState.ts";
@@ -11,6 +12,7 @@ import { ZoomState, IZoomStateOptions } from "./chart/zoomState.ts";
 export type { IMinMax, IDataSource } from "./chart/data.ts";
 export type { ILegendController } from "./chart/legend.ts";
 export type { IZoomStateOptions } from "./chart/zoomState.ts";
+export type { ChartOptions } from "./chart/types.ts";
 
 export interface IPublicInteraction {
   zoom: (event: D3ZoomEvent<SVGRectElement, unknown>) => void;
@@ -28,17 +30,17 @@ export class TimeSeriesChart {
   constructor(
     svg: Selection<SVGSVGElement, unknown, HTMLElement, unknown>,
     data: IDataSource,
+    options: ChartOptions,
     legendController: ILegendController,
-    dualYAxis = false,
     zoomHandler: (
       event: D3ZoomEvent<SVGRectElement, unknown>,
     ) => void = () => {},
     mouseMoveHandler: (event: MouseEvent) => void = () => {},
     zoomOptions: IZoomStateOptions = {},
   ) {
-    this.data = new ChartData(data);
+    this.data = new ChartData(data, options);
 
-    this.state = setupRender(svg, this.data, dualYAxis);
+    this.state = setupRender(svg, this.data, options);
 
     this.zoomArea = svg
       .append("rect")
