@@ -131,14 +131,14 @@ export class TimeSeriesChart {
     const { width, height } = dimensions;
     this.svg.attr("width", width).attr("height", height);
 
-    const bScreenXVisible = new AR1Basis(0, width);
+    const screenXBasis = new AR1Basis(0, width);
     const bScreenYVisible = new AR1Basis(height, 0);
     const bScreenVisible = DirectProductBasis.fromProjections(
-      bScreenXVisible,
+      screenXBasis,
       bScreenYVisible,
     );
 
-    this.state.bScreenXVisible = bScreenXVisible;
+    this.state.screenXBasis = screenXBasis;
 
     this.state.dimensions.width = width;
     this.state.dimensions.height = height;
