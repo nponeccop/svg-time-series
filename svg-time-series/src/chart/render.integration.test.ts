@@ -6,6 +6,7 @@ import { describe, it, expect, beforeAll, vi } from "vitest";
 import { JSDOM } from "jsdom";
 import { select } from "d3-selection";
 import { ChartData, IDataSource } from "./data.ts";
+import { AxisId } from "./types.ts";
 import { setupRender } from "./render.ts";
 import * as domNode from "../utils/domNodeTransform.ts";
 
@@ -89,7 +90,7 @@ describe("RenderState.refresh integration", () => {
       timeStep: 1,
       length: 3,
       seriesCount: 2,
-      seriesAxes: [0, 1],
+      seriesAxes: [AxisId.Primary, AxisId.Secondary],
       getSeries: (i, seriesIdx) =>
         seriesIdx === 0 ? [1, 2, 3][i] : [10, 20, 30][i],
     };
@@ -100,23 +101,27 @@ describe("RenderState.refresh integration", () => {
       .mockImplementation(() => {});
 
     const xBefore = state.axes.x.scale.domain().slice();
-    const yNyBefore = state.axes.y[0].scale.domain().slice();
-    const ySfBefore = state.axes.y[1].scale.domain().slice();
+    const yNyBefore = state.axes.y[AxisId.Primary].scale.domain().slice();
+    const ySfBefore = state.axes.y[AxisId.Secondary].scale.domain().slice();
 
     data.append(100, 200);
     state.refresh(data);
 
     const xAfter = state.axes.x.scale.domain();
-    const yNyAfter = state.axes.y[0].scale.domain();
-    const ySfAfter = state.axes.y[1].scale.domain();
+    const yNyAfter = state.axes.y[AxisId.Primary].scale.domain();
+    const ySfAfter = state.axes.y[AxisId.Secondary].scale.domain();
 
     expect(xAfter).not.toEqual(xBefore);
     expect(yNyAfter).not.toEqual(yNyBefore);
     expect(ySfAfter).not.toEqual(ySfBefore);
 
     expect((state.axes.x.axis as any).scale1.domain()).toEqual(xAfter);
-    expect((state.axes.y[0].axis as any).scale1.domain()).toEqual(yNyAfter);
-    expect((state.axes.y[1].axis as any).scale1.domain()).toEqual(ySfAfter);
+    expect((state.axes.y[AxisId.Primary].axis as any).scale1.domain()).toEqual(
+      yNyAfter,
+    );
+    expect(
+      (state.axes.y[AxisId.Secondary].axis as any).scale1.domain(),
+    ).toEqual(ySfAfter);
 
     expect(updateNodeSpy).toHaveBeenCalledTimes(state.series.length);
     for (const s of state.series) {

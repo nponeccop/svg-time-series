@@ -8,6 +8,7 @@ import { select } from "d3-selection";
 
 import { LegendController } from "./LegendController.ts";
 import { ChartData, IDataSource } from "../svg-time-series/src/chart/data.ts";
+import { AxisId } from "../svg-time-series/src/chart/types.ts";
 import { setupRender } from "../svg-time-series/src/chart/render.ts";
 import * as domNode from "../svg-time-series/src/utils/domNodeTransform.ts";
 
@@ -98,7 +99,7 @@ describe("LegendController", () => {
       length: 2,
       seriesCount: 1,
       getSeries: (i) => [10, 20][i],
-      seriesAxes: [0],
+      seriesAxes: [AxisId.Primary],
     };
     const data = new ChartData(source);
     const state = setupRender(svg as any, data, false);
@@ -109,7 +110,7 @@ describe("LegendController", () => {
       length: data.length,
       series: state.series.map((s) => ({
         path: s.path as SVGPathElement,
-        transform: state.axes.y[s.axisIdx].transform,
+        transform: state.axes.y[s.axis].transform,
       })),
     });
 
@@ -123,7 +124,7 @@ describe("LegendController", () => {
     const matrix = lastCall[1] as Matrix;
     const modelPoint = new Point(1, data.getPoint(1).values[0]);
     const expected = modelPoint.matrixTransform(
-      state.axes.y[0].transform.matrix as any,
+      state.axes.y[AxisId.Primary].transform.matrix as any,
     );
     expect(matrix.e).toBeCloseTo(expected.x);
     expect(matrix.f).toBeCloseTo(expected.y);
@@ -143,7 +144,7 @@ describe("LegendController", () => {
       length: 2,
       seriesCount: 1,
       getSeries: (i) => [10, 20][i],
-      seriesAxes: [0],
+      seriesAxes: [AxisId.Primary],
     };
     const data = new ChartData(source);
     const originalGetPoint = data.getPoint.bind(data);
@@ -160,7 +161,7 @@ describe("LegendController", () => {
       length: data.length,
       series: state.series.map((s) => ({
         path: s.path as SVGPathElement,
-        transform: state.axes.y[s.axisIdx].transform,
+        transform: state.axes.y[s.axis].transform,
       })),
     });
 
@@ -183,7 +184,7 @@ describe("LegendController", () => {
       length: 2,
       seriesCount: 1,
       getSeries: (i) => [10, 20][i],
-      seriesAxes: [0],
+      seriesAxes: [AxisId.Primary],
     };
     const data = new ChartData(source);
     const originalGetPoint = data.getPoint.bind(data);
@@ -200,7 +201,7 @@ describe("LegendController", () => {
       length: data.length,
       series: state.series.map((s) => ({
         path: s.path as SVGPathElement,
-        transform: state.axes.y[s.axisIdx].transform,
+        transform: state.axes.y[s.axis].transform,
       })),
     });
 

@@ -6,6 +6,7 @@ import { describe, it, expect, beforeAll } from "vitest";
 import { JSDOM } from "jsdom";
 import { select } from "d3-selection";
 import { ChartData, IDataSource } from "./data.ts";
+import { AxisId } from "./types.ts";
 import { setupRender } from "./render.ts";
 
 class Matrix {
@@ -88,13 +89,13 @@ describe("buildSeries", () => {
       timeStep: 1,
       length: 3,
       seriesCount: 1,
-      seriesAxes: [0],
+      seriesAxes: [AxisId.Primary],
       getSeries: (i) => [1, 2, 3][i],
     };
     const data = new ChartData(source);
     const state = setupRender(svg as any, data, false);
     expect(state.series.length).toBe(1);
-    expect(state.series[0]).toMatchObject({ axisIdx: 0 });
+    expect(state.series[0]).toMatchObject({ axis: AxisId.Primary });
   });
 
   it("returns two series for combined axis", () => {
@@ -104,15 +105,15 @@ describe("buildSeries", () => {
       timeStep: 1,
       length: 3,
       seriesCount: 2,
-      seriesAxes: [0, 1],
+      seriesAxes: [AxisId.Primary, AxisId.Secondary],
       getSeries: (i, seriesIdx) =>
         seriesIdx === 0 ? [1, 2, 3][i] : [10, 20, 30][i],
     };
     const data = new ChartData(source);
     const state = setupRender(svg as any, data, false);
     expect(state.series.length).toBe(2);
-    expect(state.series[0]).toMatchObject({ axisIdx: 0 });
-    expect(state.series[1]).toMatchObject({ axisIdx: 1 });
+    expect(state.series[0]).toMatchObject({ axis: AxisId.Primary });
+    expect(state.series[1]).toMatchObject({ axis: AxisId.Secondary });
   });
 
   it("returns two series for dualYAxis", () => {
@@ -122,14 +123,14 @@ describe("buildSeries", () => {
       timeStep: 1,
       length: 3,
       seriesCount: 2,
-      seriesAxes: [0, 1],
+      seriesAxes: [AxisId.Primary, AxisId.Secondary],
       getSeries: (i, seriesIdx) =>
         seriesIdx === 0 ? [1, 2, 3][i] : [10, 20, 30][i],
     };
     const data = new ChartData(source);
     const state = setupRender(svg as any, data, true);
     expect(state.series.length).toBe(2);
-    expect(state.series[0]).toMatchObject({ axisIdx: 0 });
-    expect(state.series[1]).toMatchObject({ axisIdx: 1 });
+    expect(state.series[0]).toMatchObject({ axis: AxisId.Primary });
+    expect(state.series[1]).toMatchObject({ axis: AxisId.Secondary });
   });
 });

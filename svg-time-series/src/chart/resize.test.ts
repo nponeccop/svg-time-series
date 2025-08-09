@@ -26,6 +26,7 @@ vi.mock("../axis.ts", () => {
 import { select } from "d3-selection";
 import * as renderUtils from "./render/utils.ts";
 import { TimeSeriesChart, type IDataSource } from "../draw.ts";
+import { AxisId } from "./types.ts";
 
 class Matrix {
   constructor(
@@ -98,7 +99,7 @@ describe("TimeSeriesChart.resize", () => {
       timeStep: 1,
       length: 3,
       seriesCount: 1,
-      seriesAxes: [0],
+      seriesAxes: [AxisId.Primary],
       getSeries: (i) => [1, 2, 3][i],
     };
 

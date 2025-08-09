@@ -3,6 +3,7 @@ import { describe, it, expect, beforeAll } from "vitest";
 import { scaleLinear } from "d3-scale";
 import { AR1Basis, DirectProductBasis } from "../math/affine.ts";
 import { ViewportTransform } from "../ViewportTransform.ts";
+import { AxisId } from "./types.ts";
 import { updateYScales } from "./render.ts";
 
 class Matrix {
@@ -81,7 +82,12 @@ describe("updateYScales", () => {
     };
 
     const data = {
-      seriesAxes: [0, 1, 2, 1],
+      seriesAxes: [
+        AxisId.Primary,
+        AxisId.Secondary,
+        2 as AxisId,
+        AxisId.Secondary,
+      ],
       bIndexFull: new AR1Basis(0, 10),
       buildAxisTree(axis: number) {
         return {
@@ -117,7 +123,7 @@ describe("updateYScales", () => {
     };
 
     const data = {
-      seriesAxes: [0, 1, 2],
+      seriesAxes: [AxisId.Primary, AxisId.Secondary, 2 as AxisId],
       bIndexFull: new AR1Basis(0, 5),
       buildAxisTree(axis: number) {
         return {

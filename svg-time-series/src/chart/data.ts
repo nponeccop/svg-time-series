@@ -5,6 +5,7 @@ import {
   betweenTBasesAR1,
 } from "../math/affine.ts";
 import { SegmentTree } from "segment-tree-rmq";
+import { AxisId } from "./types.ts";
 
 export interface IMinMax {
   readonly min: number;
@@ -32,19 +33,22 @@ export interface IDataSource {
    * Mapping from series index to Y-axis index. Each entry must be either 0 or 1
    * and the array length must equal `seriesCount`.
    */
-  readonly seriesAxes: number[];
+  readonly seriesAxes: AxisId[];
   getSeries(index: number, seriesIdx: number): number;
 }
 
 export class ChartData {
   public data: number[][];
-  public readonly seriesByAxis: number[][] = [[], []];
+  public readonly seriesByAxis: Record<AxisId, number[]> = {
+    [AxisId.Primary]: [],
+    [AxisId.Secondary]: [],
+  };
   public bIndexFull: AR1Basis;
   public readonly startTime: number;
   public readonly timeStep: number;
   public startIndex: number;
   public readonly seriesCount: number;
-  public readonly seriesAxes: number[];
+  public readonly seriesAxes: AxisId[];
 
   /**
    * Creates a new ChartData instance.
@@ -70,12 +74,12 @@ export class ChartData {
     }
     let axisIdx = 0;
     for (const axis of this.seriesAxes) {
-      if (axis !== 0 && axis !== 1) {
+      if (axis !== AxisId.Primary && axis !== AxisId.Secondary) {
         throw new Error(
           `ChartData seriesAxes[${axisIdx}] must be 0 or 1; received ${axis}`,
         );
       }
-      this.seriesByAxis[axis as 0 | 1].push(axisIdx);
+      this.seriesByAxis[axis].push(axisIdx);
       axisIdx++;
     }
     this.data = Array.from({ length: source.length }).map((_, i) =>
@@ -142,7 +146,7 @@ export class ChartData {
     return Math.min(Math.max(idx, 0), this.data.length - 1);
   }
 
-  private buildAxisMinMax(axis: number): Array<IMinMax | undefined> {
+  private buildAxisMinMax(axis: AxisId): Array<IMinMax | undefined> {
     const idxs = this.seriesByAxis[axis];
     return this.data.map((row) => {
       let min = Infinity;
@@ -158,7 +162,7 @@ export class ChartData {
     });
   }
 
-  buildAxisTree(axis: number): SegmentTree<IMinMax> {
+  buildAxisTree(axis: AxisId): SegmentTree<IMinMax> {
     const arr = Array.from(
       this.buildAxisMinMax(axis),
       (v) => v ?? minMaxIdentity,

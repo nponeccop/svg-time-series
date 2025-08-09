@@ -22,6 +22,7 @@ vi.mock("../axis.ts", () => {
 import { JSDOM } from "jsdom";
 import { select } from "d3-selection";
 import { ChartData, type IDataSource } from "./data.ts";
+import { AxisId } from "./types.ts";
 import { setupRender } from "./render.ts";
 import { updateNode } from "../utils/domNodeTransform.ts";
 
@@ -100,7 +101,7 @@ describe("RenderState.refresh", () => {
       timeStep: 1,
       length: 3,
       seriesCount: 1,
-      seriesAxes: [0],
+      seriesAxes: [AxisId.Primary],
       getSeries: (i) => [1, 2, 3][i],
     };
     const data = new ChartData(source);
@@ -111,12 +112,10 @@ describe("RenderState.refresh", () => {
     state.refresh(data);
 
     expect(state.series.length).toBe(1);
-    expect(state.axes.y[state.series[0].axisIdx].scale.domain()).toEqual([
-      1, 3,
-    ]);
+    expect(state.axes.y[state.series[0].axis].scale.domain()).toEqual([1, 3]);
     expect(updateNodeMock).toHaveBeenCalledTimes(state.series.length);
     state.series.forEach((s, i) => {
-      const t = state.axes.y[s.axisIdx].transform;
+      const t = state.axes.y[s.axis].transform;
       expect(updateNodeMock).toHaveBeenNthCalledWith(i + 1, s.view, t.matrix);
     });
   });
@@ -128,7 +127,7 @@ describe("RenderState.refresh", () => {
       timeStep: 1,
       length: 3,
       seriesCount: 2,
-      seriesAxes: [0, 1],
+      seriesAxes: [AxisId.Primary, AxisId.Secondary],
       getSeries: (i, s) => (s === 0 ? [1, 2, 3][i] : [10, 20, 30][i]),
     };
     const data = new ChartData(source);
@@ -138,15 +137,11 @@ describe("RenderState.refresh", () => {
 
     state.refresh(data);
 
-    expect(state.axes.y[state.series[0].axisIdx].scale.domain()).toEqual([
-      1, 3,
-    ]);
-    expect(state.axes.y[state.series[1].axisIdx].scale.domain()).toEqual([
-      10, 30,
-    ]);
+    expect(state.axes.y[state.series[0].axis].scale.domain()).toEqual([1, 3]);
+    expect(state.axes.y[state.series[1].axis].scale.domain()).toEqual([10, 30]);
     expect(updateNodeMock).toHaveBeenCalledTimes(state.series.length);
     state.series.forEach((s, i) => {
-      const t = state.axes.y[s.axisIdx].transform;
+      const t = state.axes.y[s.axis].transform;
       expect(updateNodeMock).toHaveBeenNthCalledWith(i + 1, s.view, t.matrix);
     });
   });
@@ -158,7 +153,7 @@ describe("RenderState.refresh", () => {
       timeStep: 1,
       length: 3,
       seriesCount: 2,
-      seriesAxes: [0, 1],
+      seriesAxes: [AxisId.Primary, AxisId.Secondary],
       getSeries: (i, s) => (s === 0 ? [1, 2, 3][i] : [10, 20, 30][i]),
     };
     const data = new ChartData(source);
@@ -167,7 +162,7 @@ describe("RenderState.refresh", () => {
     state.refresh(data);
 
     expect(state.axes.y).toHaveLength(1);
-    expect(state.axes.y[0].scale.domain()).toEqual([1, 30]);
+    expect(state.axes.y[AxisId.Primary].scale.domain()).toEqual([1, 30]);
   });
 
   it("refreshes after data changes", () => {
@@ -177,7 +172,7 @@ describe("RenderState.refresh", () => {
       timeStep: 1,
       length: 3,
       seriesCount: 2,
-      seriesAxes: [0, 1],
+      seriesAxes: [AxisId.Primary, AxisId.Secondary],
       getSeries: (i, s) => (s === 0 ? [1, 2, 3][i] : [10, 20, 30][i]),
     };
     const data1 = new ChartData(source1);
@@ -188,7 +183,7 @@ describe("RenderState.refresh", () => {
       timeStep: 1,
       length: 3,
       seriesCount: 2,
-      seriesAxes: [0, 1],
+      seriesAxes: [AxisId.Primary, AxisId.Secondary],
       getSeries: (i, s) => (s === 0 ? [4, 5, 6][i] : [40, 50, 60][i]),
     };
     const data2 = new ChartData(source2);
@@ -197,8 +192,8 @@ describe("RenderState.refresh", () => {
 
     state.refresh(data2);
 
-    expect(state.axes.y[0].scale.domain()).toEqual([4, 6]);
-    expect(state.axes.y[1].scale.domain()).toEqual([40, 60]);
+    expect(state.axes.y[AxisId.Primary].scale.domain()).toEqual([4, 6]);
+    expect(state.axes.y[AxisId.Secondary].scale.domain()).toEqual([40, 60]);
     expect(updateNodeMock).toHaveBeenCalledTimes(state.series.length);
   });
 
@@ -209,18 +204,24 @@ describe("RenderState.refresh", () => {
       timeStep: 1,
       length: 3,
       seriesCount: 1,
-      seriesAxes: [0],
+      seriesAxes: [AxisId.Primary],
       getSeries: (i) => [1, 2, 3][i],
     };
     const data = new ChartData(source);
     const state = setupRender(svg as any, data, false);
 
-    expect(state.axes.y[0].tree.query(0, 2)).toEqual({ min: 1, max: 3 });
+    expect(state.axes.y[AxisId.Primary].tree.query(0, 2)).toEqual({
+      min: 1,
+      max: 3,
+    });
 
     data.append(4);
     state.refresh(data);
 
-    expect(state.axes.y[0].tree.query(0, 2)).toEqual({ min: 2, max: 4 });
+    expect(state.axes.y[AxisId.Primary].tree.query(0, 2)).toEqual({
+      min: 2,
+      max: 4,
+    });
   });
 
   it("produces finite domain when series is all NaN", () => {
@@ -230,13 +231,16 @@ describe("RenderState.refresh", () => {
       timeStep: 1,
       length: 2,
       seriesCount: 1,
-      seriesAxes: [0],
+      seriesAxes: [AxisId.Primary],
       getSeries: () => NaN,
     };
     const data = new ChartData(source);
     const state = setupRender(svg as any, data, false);
     state.refresh(data);
-    expect(state.axes.y[0].scale.domain()).toEqual([Infinity, -Infinity]);
+    expect(state.axes.y[AxisId.Primary].scale.domain()).toEqual([
+      Infinity,
+      -Infinity,
+    ]);
   });
 
   it("produces finite domains for dual-axis all NaN data", () => {
@@ -246,13 +250,19 @@ describe("RenderState.refresh", () => {
       timeStep: 1,
       length: 2,
       seriesCount: 2,
-      seriesAxes: [0, 1],
+      seriesAxes: [AxisId.Primary, AxisId.Secondary],
       getSeries: () => NaN,
     };
     const data = new ChartData(source);
     const state = setupRender(svg as any, data, true);
     state.refresh(data);
-    expect(state.axes.y[0].scale.domain()).toEqual([Infinity, -Infinity]);
-    expect(state.axes.y[1].scale.domain()).toEqual([Infinity, -Infinity]);
+    expect(state.axes.y[AxisId.Primary].scale.domain()).toEqual([
+      Infinity,
+      -Infinity,
+    ]);
+    expect(state.axes.y[AxisId.Secondary].scale.domain()).toEqual([
+      Infinity,
+      -Infinity,
+    ]);
   });
 });

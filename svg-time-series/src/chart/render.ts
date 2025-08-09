@@ -13,6 +13,7 @@ import { updateNode } from "../utils/domNodeTransform.ts";
 import { AR1Basis, DirectProductBasis, bPlaceholder } from "../math/affine.ts";
 import type { ChartData, IMinMax } from "./data.ts";
 import { SegmentTree } from "segment-tree-rmq";
+import { AxisId } from "./types.ts";
 import {
   createDimensions,
   updateScaleX,
@@ -50,7 +51,8 @@ function setupAxes(
   const gX = svg.append("g").attr("class", "axis").call(xAxis.axis.bind(xAxis));
 
   axes.forEach((a, i) => {
-    const orientation = i === 0 ? Orientation.Right : Orientation.Left;
+    const orientation =
+      i === AxisId.Primary ? Orientation.Right : Orientation.Left;
     a.g = svg
       .append("g")
       .attr("class", "axis")
@@ -90,7 +92,7 @@ interface AxisState {
 }
 
 export interface Series {
-  axisIdx: number;
+  axis: AxisId;
   view?: SVGGElement;
   path?: SVGPathElement;
   line: Line<number[]>;
@@ -116,7 +118,7 @@ export function updateYScales(
     scale: a.scale,
   }));
 
-  const axisIndices: number[] = [];
+  const axisIndices: AxisId[] = [];
   for (const idx of data.seriesAxes) {
     if (!axisIndices.includes(idx)) {
       axisIndices.push(idx);
@@ -155,7 +157,8 @@ export function setupRender(
   const bScreenXVisible = bScreenVisibleDp.x();
   const width = bScreenXVisible.getRange();
   const height = bScreenVisibleDp.y().getRange();
-  const axisCount = dualYAxis && data.seriesAxes.includes(1) ? 2 : 1;
+  const axisCount =
+    dualYAxis && data.seriesAxes.includes(AxisId.Secondary) ? 2 : 1;
 
   const [xRange, yRange] = bScreenVisibleDp.toArr();
   const xScale: ScaleTime<number, number> = scaleTime().range(xRange);
@@ -164,7 +167,7 @@ export function setupRender(
   const axesY: AxisState[] = Array.from({ length: axisCount }, (_, i) => ({
     transform: new ViewportTransform(),
     scale: scaleLinear<number, number>().range(yRange),
-    tree: data.buildAxisTree(i),
+    tree: data.buildAxisTree(i as AxisId),
   }));
 
   updateYScales(axesY, data.bIndexFull, data);
@@ -183,8 +186,8 @@ export function setupRender(
   const series: Series[] = [];
   for (let i = 0; i < seriesCount; i++) {
     const { view, path } = initSeriesNode(svg);
-    const axisIdx = data.seriesAxes[i] ?? 0;
-    series.push({ axisIdx, view, path, line: createLine(i) });
+    const axis = data.seriesAxes[i] ?? AxisId.Primary;
+    series.push({ axis, view, path, line: createLine(i) });
   }
 
   const axes: Axes = { x: xAxisData, y: axesY };
@@ -196,9 +199,9 @@ export function setupRender(
     dimensions,
     series,
     refresh(this: RenderState, data: ChartData) {
-      const bIndexVisible = this.axes.y[0].transform.fromScreenToModelBasisX(
-        this.bScreenXVisible,
-      );
+      const bIndexVisible = this.axes.y[
+        AxisId.Primary
+      ].transform.fromScreenToModelBasisX(this.bScreenXVisible);
       updateScaleX(this.axes.x.scale, bIndexVisible, data);
 
       updateYScales(this.axes.y, bIndexVisible, data);
@@ -206,7 +209,8 @@ export function setupRender(
       for (const s of this.series) {
         if (s.view) {
           const t =
-            this.axes.y[s.axisIdx]?.transform ?? this.axes.y[0].transform;
+            this.axes.y[s.axis]?.transform ??
+            this.axes.y[AxisId.Primary].transform;
           updateNode(s.view, t.matrix);
         }
       }

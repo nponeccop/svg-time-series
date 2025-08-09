@@ -6,6 +6,7 @@ import { select, Selection } from "d3-selection";
 import { scaleLinear, scaleTime } from "d3-scale";
 import { AR1Basis } from "../math/affine.ts";
 import { ChartData, IDataSource } from "./data.ts";
+import { AxisId } from "./types.ts";
 import type { ViewportTransform } from "../ViewportTransform.ts";
 import { vi } from "vitest";
 import {
@@ -44,7 +45,7 @@ describe("updateScaleX", () => {
     timeStep: 1,
     length: data.length,
     seriesCount: 1,
-    seriesAxes: [0],
+    seriesAxes: [AxisId.Primary],
     getSeries: (i) => data[i][0],
   });
 
@@ -64,7 +65,7 @@ describe("updateScaleY", () => {
     timeStep: 1,
     length: data.length,
     seriesCount: 1,
-    seriesAxes: [0],
+    seriesAxes: [AxisId.Primary],
     getSeries: (i) => data[i][0],
   });
 
@@ -74,7 +75,7 @@ describe("updateScaleY", () => {
     const vt = {
       onReferenceViewWindowResize: vi.fn(),
     } as unknown as ViewportTransform;
-    const tree = cd.buildAxisTree(0);
+    const tree = cd.buildAxisTree(AxisId.Primary);
     const dp = cd.updateScaleY(new AR1Basis(0, 2), tree);
     vt.onReferenceViewWindowResize(dp);
     y.domain(dp.y().toArr());

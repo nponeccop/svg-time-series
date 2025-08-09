@@ -7,6 +7,7 @@ import type { RenderState } from "./chart/render.ts";
 import { renderPaths } from "./chart/render/utils.ts";
 import type { ILegendController, LegendContext } from "./chart/legend.ts";
 import { ZoomState, IZoomStateOptions } from "./chart/zoomState.ts";
+import { AxisId } from "./chart/types.ts";
 
 export type { IMinMax, IDataSource } from "./chart/data.ts";
 export type { ILegendController } from "./chart/legend.ts";
@@ -54,8 +55,8 @@ export class TimeSeriesChart {
       series: this.state.series.map((s) => ({
         path: s.path as SVGPathElement,
         transform:
-          this.state.axes.y[s.axisIdx]?.transform ??
-          this.state.axes.y[0].transform,
+          this.state.axes.y[s.axis]?.transform ??
+          this.state.axes.y[AxisId.Primary].transform,
       })),
     };
     this.legendController.init(context);
@@ -120,7 +121,7 @@ export class TimeSeriesChart {
   };
 
   public onHover = (x: number) => {
-    let idx = this.state.axes.y[0].transform.fromScreenToModelX(x);
+    let idx = this.state.axes.y[AxisId.Primary].transform.fromScreenToModelX(x);
     idx = Math.min(Math.max(idx, 0), this.data.length - 1);
     this.legendController.highlightIndex(idx);
   };

@@ -3,6 +3,7 @@ import { describe, it, expect, beforeAll } from "vitest";
 import { JSDOM } from "jsdom";
 import { select } from "d3-selection";
 import { ChartData, IDataSource } from "./data.ts";
+import { AxisId } from "./types.ts";
 import { setupRender } from "./render.ts";
 
 class Matrix {
@@ -85,14 +86,14 @@ describe("setupRender Y-axis modes", () => {
       timeStep: 1,
       length: 3,
       seriesCount: 2,
-      seriesAxes: [0, 1],
+      seriesAxes: [AxisId.Primary, AxisId.Secondary],
       getSeries: (i, seriesIdx) =>
         seriesIdx === 0 ? [1, 2, 3][i] : [10, 20, 30][i],
     };
     const data = new ChartData(source);
     const state = setupRender(svg as any, data, false);
-    expect(state.axes.y[0].scale.domain()).toEqual([1, 30]);
-    expect(state.axes.y[1]).toBeUndefined();
+    expect(state.axes.y[AxisId.Primary].scale.domain()).toEqual([1, 30]);
+    expect(state.axes.y[AxisId.Secondary]).toBeUndefined();
   });
 
   it("separates scales when dualYAxis is true", () => {
@@ -102,13 +103,13 @@ describe("setupRender Y-axis modes", () => {
       timeStep: 1,
       length: 3,
       seriesCount: 2,
-      seriesAxes: [0, 1],
+      seriesAxes: [AxisId.Primary, AxisId.Secondary],
       getSeries: (i, seriesIdx) =>
         seriesIdx === 0 ? [1, 2, 3][i] : [10, 20, 30][i],
     };
     const data = new ChartData(source);
     const state = setupRender(svg as any, data, true);
-    expect(state.axes.y[0].scale.domain()).toEqual([1, 3]);
-    expect(state.axes.y[1].scale.domain()).toEqual([10, 30]);
+    expect(state.axes.y[AxisId.Primary].scale.domain()).toEqual([1, 3]);
+    expect(state.axes.y[AxisId.Secondary].scale.domain()).toEqual([10, 30]);
   });
 });

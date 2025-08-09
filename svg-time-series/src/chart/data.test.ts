@@ -1,10 +1,11 @@
 import { describe, it, expect } from "vitest";
 import { ChartData, IDataSource } from "./data.ts";
+import { AxisId } from "./types.ts";
 import { AR1Basis } from "../math/affine.ts";
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
 describe("ChartData", () => {
-  const makeSource = (data: number[][], seriesAxes: number[]): IDataSource => ({
+  const makeSource = (data: number[][], seriesAxes: AxisId[]): IDataSource => ({
     startTime: 0,
     timeStep: 1,
     length: data.length,
@@ -20,7 +21,7 @@ describe("ChartData", () => {
       length: 0,
       seriesCount: 1,
       getSeries: () => 0,
-      seriesAxes: [0],
+      seriesAxes: [AxisId.Primary],
     };
     expect(() => new ChartData(source)).toThrow(/non-empty data array/);
   });
@@ -31,7 +32,7 @@ describe("ChartData", () => {
         [0, 0],
         [1, 1],
       ],
-      [0],
+      [AxisId.Primary],
     );
     expect(() => new ChartData(source)).toThrow(/seriesAxes length/);
   });
@@ -42,7 +43,7 @@ describe("ChartData", () => {
         [0, 0],
         [1, 1],
       ],
-      [0, 2],
+      [AxisId.Primary, 2 as AxisId],
     );
     expect(() => new ChartData(source)).toThrow(/0 or 1/);
   });
@@ -53,7 +54,7 @@ describe("ChartData", () => {
         [0, 0],
         [1, 1],
       ],
-      [0, 1],
+      [AxisId.Primary, AxisId.Secondary],
     );
     const cd = new ChartData(source);
     expect(cd.data).toEqual([
@@ -81,7 +82,7 @@ describe("ChartData", () => {
           [30, 40],
           [50, 60],
         ],
-        [0, 1],
+        [AxisId.Primary, AxisId.Secondary],
       ),
     );
     expect(cd.getPoint(1)).toEqual({ values: [30, 40], timestamp: 1 });
@@ -97,7 +98,7 @@ describe("ChartData", () => {
           [30, 40],
           [50, 60],
         ],
-        [0, 1],
+        [AxisId.Primary, AxisId.Secondary],
       ),
     );
     expect(() => cd.getPoint(NaN)).toThrow(/idx/);
@@ -113,7 +114,7 @@ describe("ChartData", () => {
           [30, 40],
           [50, 60],
         ],
-        [0, 1],
+        [AxisId.Primary, AxisId.Secondary],
       ),
     );
     expect(cd.getPoint(1_000_000)).toEqual({
@@ -133,7 +134,7 @@ describe("ChartData", () => {
           [0, 0],
           [1, 1],
         ],
-        [0, 1],
+        [AxisId.Primary, AxisId.Secondary],
       ),
     );
 
@@ -147,8 +148,8 @@ describe("ChartData", () => {
     ]);
     expect(cd.getPoint(0).timestamp).toBe(3);
     expect(cd.getPoint(1).timestamp).toBe(4);
-    const tree0 = cd.buildAxisTree(0);
-    const tree1 = cd.buildAxisTree(1);
+    const tree0 = cd.buildAxisTree(AxisId.Primary);
+    const tree1 = cd.buildAxisTree(AxisId.Secondary);
     expect(tree0.query(0, 1)).toEqual({ min: 3, max: 4 });
     expect(tree1.query(0, 1)).toEqual({ min: 3, max: 4 });
   });
@@ -159,7 +160,7 @@ describe("ChartData", () => {
         [0, 0],
         [1, 1],
       ],
-      [0, 1],
+      [AxisId.Primary, AxisId.Secondary],
     );
     const cd = new ChartData(source);
     expect(() => cd.append(undefined as unknown as number, 2)).toThrow(
@@ -173,7 +174,7 @@ describe("ChartData", () => {
         [0, 0],
         [1, 1],
       ],
-      [0, 1],
+      [AxisId.Primary, AxisId.Secondary],
     );
     const cd = new ChartData(source);
     expect(() => cd.append(2, undefined as unknown as number)).toThrow(
@@ -189,12 +190,12 @@ describe("ChartData", () => {
           [30, 40],
           [50, 60],
         ],
-        [0, 1],
+        [AxisId.Primary, AxisId.Secondary],
       ),
     );
     const range = new AR1Basis(0, 2);
-    const tree0 = cd.buildAxisTree(0);
-    const tree1 = cd.buildAxisTree(1);
+    const tree0 = cd.buildAxisTree(AxisId.Primary);
+    const tree1 = cd.buildAxisTree(AxisId.Secondary);
     expect(cd.bAxisVisible(range, tree0).toArr()).toEqual([10, 50]);
     expect(cd.bAxisVisible(range, tree1).toArr()).toEqual([20, 60]);
   });
@@ -207,11 +208,11 @@ describe("ChartData", () => {
           [30, 40],
           [50, 60],
         ],
-        [0, 1],
+        [AxisId.Primary, AxisId.Secondary],
       ),
     );
-    const tree0 = cd.buildAxisTree(0);
-    const tree1 = cd.buildAxisTree(1);
+    const tree0 = cd.buildAxisTree(AxisId.Primary);
+    const tree1 = cd.buildAxisTree(AxisId.Secondary);
 
     const fractionalRange = new AR1Basis(0.49, 1.49);
     expect(cd.bAxisVisible(fractionalRange, tree0).toArr()).toEqual([10, 50]);
@@ -226,11 +227,11 @@ describe("ChartData", () => {
           [30, 40],
           [50, 60],
         ],
-        [0, 1],
+        [AxisId.Primary, AxisId.Secondary],
       ),
     );
-    const tree0 = cd.buildAxisTree(0);
-    const tree1 = cd.buildAxisTree(1);
+    const tree0 = cd.buildAxisTree(AxisId.Primary);
+    const tree1 = cd.buildAxisTree(AxisId.Secondary);
 
     const fractionalRange = new AR1Basis(1.1, 1.7);
     expect(cd.bAxisVisible(fractionalRange, tree0).toArr()).toEqual([30, 50]);
@@ -245,11 +246,11 @@ describe("ChartData", () => {
           [30, 40],
           [50, 60],
         ],
-        [0, 1],
+        [AxisId.Primary, AxisId.Secondary],
       ),
     );
-    const tree0 = cd.buildAxisTree(0);
-    const tree1 = cd.buildAxisTree(1);
+    const tree0 = cd.buildAxisTree(AxisId.Primary);
+    const tree1 = cd.buildAxisTree(AxisId.Secondary);
 
     const outOfRange = new AR1Basis(-0.5, 3.5);
     expect(() => cd.bAxisVisible(outOfRange, tree0)).not.toThrow();
@@ -266,11 +267,11 @@ describe("ChartData", () => {
           [30, 40],
           [50, 60],
         ],
-        [0, 1],
+        [AxisId.Primary, AxisId.Secondary],
       ),
     );
-    const tree0 = cd.buildAxisTree(0);
-    const tree1 = cd.buildAxisTree(1);
+    const tree0 = cd.buildAxisTree(AxisId.Primary);
+    const tree1 = cd.buildAxisTree(AxisId.Secondary);
 
     const leftRange = new AR1Basis(-5, -1);
     expect(() => cd.bAxisVisible(leftRange, tree0)).not.toThrow();
@@ -287,11 +288,11 @@ describe("ChartData", () => {
           [30, 40],
           [50, 60],
         ],
-        [0, 1],
+        [AxisId.Primary, AxisId.Secondary],
       ),
     );
-    const tree0 = cd.buildAxisTree(0);
-    const tree1 = cd.buildAxisTree(1);
+    const tree0 = cd.buildAxisTree(AxisId.Primary);
+    const tree1 = cd.buildAxisTree(AxisId.Secondary);
 
     const rightRange = new AR1Basis(5, 10);
     expect(() => cd.bAxisVisible(rightRange, tree0)).not.toThrow();
@@ -308,11 +309,11 @@ describe("ChartData", () => {
           [5, 2],
           [-3, 7],
         ],
-        [0, 1],
+        [AxisId.Primary, AxisId.Secondary],
       ),
     );
-    const tree0 = cd.buildAxisTree(0);
-    const tree1 = cd.buildAxisTree(1);
+    const tree0 = cd.buildAxisTree(AxisId.Primary);
+    const tree1 = cd.buildAxisTree(AxisId.Secondary);
     const { combined, dp } = cd.combinedAxisDp(cd.bIndexFull, tree0, tree1);
     expect(combined.toArr()).toEqual([-3, 10]);
     expect(dp.x().toArr()).toEqual([0, 2]);
@@ -326,11 +327,11 @@ describe("ChartData", () => {
           [NaN, NaN],
           [NaN, NaN],
         ],
-        [0, 1],
+        [AxisId.Primary, AxisId.Secondary],
       ),
     );
-    const tree0 = cd.buildAxisTree(0);
-    const tree1 = cd.buildAxisTree(1);
+    const tree0 = cd.buildAxisTree(AxisId.Primary);
+    const tree1 = cd.buildAxisTree(AxisId.Secondary);
     const range = new AR1Basis(0, 1);
     expect(tree0.query(0, 1)).toEqual({ min: Infinity, max: -Infinity });
     expect(tree1.query(0, 1)).toEqual({
@@ -354,11 +355,11 @@ describe("ChartData", () => {
           [NaN, NaN],
           [5, 3],
         ],
-        [0, 1],
+        [AxisId.Primary, AxisId.Secondary],
       ),
     );
-    const tree0 = cd.buildAxisTree(0);
-    const tree1 = cd.buildAxisTree(1);
+    const tree0 = cd.buildAxisTree(AxisId.Primary);
+    const tree1 = cd.buildAxisTree(AxisId.Secondary);
     const range = new AR1Basis(0, 1);
     expect(tree0.query(0, 1)).toEqual({ min: 5, max: 5 });
     expect(tree1.query(0, 1)).toEqual({ min: 3, max: 3 });
@@ -374,13 +375,13 @@ describe("ChartData", () => {
         length: 2,
         seriesCount: 1,
         getSeries: (i) => [0, 1][i],
-        seriesAxes: [0],
+        seriesAxes: [AxisId.Primary],
       };
       const cd = new ChartData(source);
       expect(cd.data).toEqual([[0], [1]]);
       cd.append(2);
       expect(cd.data).toEqual([[1], [2]]);
-      const tree0 = cd.buildAxisTree(0);
+      const tree0 = cd.buildAxisTree(AxisId.Primary);
       expect(tree0.query(0, 1)).toEqual({ min: 1, max: 2 });
     });
 
@@ -391,7 +392,7 @@ describe("ChartData", () => {
         length: 1,
         seriesCount: 1,
         getSeries: (i) => [0][i],
-        seriesAxes: [0],
+        seriesAxes: [AxisId.Primary],
       };
       const cd = new ChartData(source);
       expect(() => cd.append(1)).not.toThrow();
@@ -399,8 +400,8 @@ describe("ChartData", () => {
     });
 
     it("returns Infinity/-Infinity min/max when data is all NaN", () => {
-      const cd = new ChartData(makeSource([[NaN], [NaN]], [0]));
-      const tree0 = cd.buildAxisTree(0);
+      const cd = new ChartData(makeSource([[NaN], [NaN]], [AxisId.Primary]));
+      const tree0 = cd.buildAxisTree(AxisId.Primary);
       const range = new AR1Basis(0, 1);
       expect(tree0.query(0, 1)).toEqual({
         min: Infinity,
@@ -420,11 +421,17 @@ describe("ChartData", () => {
           [0, 10, 5, 100, 200],
           [1, 20, 15, 110, 220],
         ],
-        [0, 0, 0, 1, 1],
+        [
+          AxisId.Primary,
+          AxisId.Primary,
+          AxisId.Primary,
+          AxisId.Secondary,
+          AxisId.Secondary,
+        ],
       ),
     );
-    let tree0 = cd.buildAxisTree(0);
-    let tree1 = cd.buildAxisTree(1);
+    let tree0 = cd.buildAxisTree(AxisId.Primary);
+    let tree1 = cd.buildAxisTree(AxisId.Secondary);
     expect(tree0.query(0, 1)).toEqual({ min: 0, max: 20 });
     expect(tree1.query(0, 1)).toEqual({ min: 100, max: 220 });
 
@@ -433,8 +440,8 @@ describe("ChartData", () => {
       [1, 20, 15, 110, 220],
       [2, 30, 25, 130, 230],
     ]);
-    tree0 = cd.buildAxisTree(0);
-    tree1 = cd.buildAxisTree(1);
+    tree0 = cd.buildAxisTree(AxisId.Primary);
+    tree1 = cd.buildAxisTree(AxisId.Secondary);
     expect(tree0.query(0, 1)).toEqual({ min: 1, max: 30 });
     expect(tree1.query(0, 1)).toEqual({ min: 110, max: 230 });
     expect(cd.getPoint(1)).toEqual({

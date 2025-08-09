@@ -6,6 +6,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { select } from "d3-selection";
 import { AR1Basis } from "../math/affine.ts";
 import { TimeSeriesChart, IDataSource } from "../draw.ts";
+import { AxisId } from "./types.ts";
 import { LegendController } from "../../../samples/LegendController.ts";
 
 class Matrix {
@@ -132,7 +133,7 @@ function createChart(data: Array<[number, number]>, options?: any) {
     timeStep: 1,
     length: data.length,
     seriesCount: 2,
-    seriesAxes: [0, 1],
+    seriesAxes: [AxisId.Primary, AxisId.Secondary],
     getSeries: (i, seriesIdx) => data[i][seriesIdx],
   };
   const legendController = new LegendController(select(legend) as any);
