@@ -62,6 +62,7 @@ vi.mock("../axis.ts", () => ({
 }));
 
 let zoomReset: any;
+let zoomSetScaleExtent: any;
 let legendRefresh: any;
 let zoomOptions: any;
 vi.mock("../../../samples/LegendController.ts", () => ({
@@ -90,6 +91,7 @@ vi.mock("./zoomState.ts", () => ({
     refresh = vi.fn();
     destroy = vi.fn();
     zoom = vi.fn();
+    setScaleExtent = vi.fn();
     constructor(
       _zoomArea: any,
       state: any,
@@ -101,6 +103,7 @@ vi.mock("./zoomState.ts", () => ({
       this.refreshChart = refreshChart;
       this.zoomCallback = zoomCallback;
       zoomReset = this.reset;
+      zoomSetScaleExtent = this.setScaleExtent;
       zoomOptions = options;
     }
   },
@@ -154,6 +157,7 @@ beforeEach(() => {
   nodeTransforms.clear();
   transformInstances.length = 0;
   zoomOptions = undefined;
+  zoomSetScaleExtent = undefined;
   (SVGSVGElement.prototype as any).createSVGMatrix = () => new Matrix();
 });
 
@@ -179,6 +183,17 @@ describe("interaction.resetZoom", () => {
     expect(zoomReset).toHaveBeenCalled();
     expect(transform.onZoomPan).toHaveBeenCalledWith({ x: 0, k: 1 });
     expect(legendRefresh).toHaveBeenCalled();
+  });
+});
+
+describe("interaction.setScaleExtent", () => {
+  it("delegates to ZoomState", () => {
+    const { interaction } = createChart([
+      [10, 20],
+      [30, 40],
+    ]);
+    interaction.setScaleExtent([2, 80]);
+    expect(zoomSetScaleExtent).toHaveBeenCalledWith([2, 80]);
   });
 });
 

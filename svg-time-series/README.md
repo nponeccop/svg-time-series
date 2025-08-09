@@ -56,6 +56,17 @@ additional series are ignored.
 The third argument lets you supply a custom legend controller. See
 `samples/LegendController.ts` for a reference implementation.
 
+## Runtime zoom range
+
+You can adjust how far users can zoom in or out without recreating the chart.
+Use the interaction API to set new minimum and maximum zoom scales:
+
+```ts
+chart.interaction.setScaleExtent([1, 80]);
+```
+
+The first value limits zooming out, while the second limits zooming in.
+
 ## Demos
 
 To explore complete examples with zooming and real-time updates, run the demos in [`samples`](../samples).
