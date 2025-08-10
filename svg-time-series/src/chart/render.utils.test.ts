@@ -2,7 +2,8 @@
  * @vitest-environment jsdom
  */
 import { describe, it, expect } from "vitest";
-import { select, Selection } from "d3-selection";
+import type { Selection } from "d3-selection";
+import { select } from "d3-selection";
 import { scaleLinear, scaleTime } from "d3-scale";
 import { AR1Basis } from "../math/affine.ts";
 import { ChartData, IDataSource } from "./data.ts";

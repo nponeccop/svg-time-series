@@ -1,4 +1,4 @@
-import { Selection } from "d3-selection";
+import type { Selection } from "d3-selection";
 import { scaleTime, type ScaleTime, type ScaleLinear } from "d3-scale";
 import type { Line } from "d3-shape";
 

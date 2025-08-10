@@ -1,9 +1,10 @@
 /**
  * @vitest-environment jsdom
  */
-/* eslint-disable @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { select, type Selection } from "d3-selection";
+import type { Selection } from "d3-selection";
+import { select } from "d3-selection";
 import { AR1Basis } from "../math/affine.ts";
 import { TimeSeriesChart, IDataSource } from "../draw.ts";
 import { LegendController } from "../../../samples/LegendController.ts";

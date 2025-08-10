@@ -1,4 +1,4 @@
-import { Selection } from "d3-selection";
+import type { Selection } from "d3-selection";
 import {
   zoom as d3zoom,
   D3ZoomEvent,

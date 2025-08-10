@@ -3,7 +3,8 @@
  */
 /* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-useless-constructor */
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { select, type Selection } from "d3-selection";
+import type { Selection } from "d3-selection";
+import { select } from "d3-selection";
 import { AR1Basis } from "../math/affine.ts";
 import {
   TimeSeriesChart,

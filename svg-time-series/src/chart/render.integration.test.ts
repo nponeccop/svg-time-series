@@ -3,7 +3,8 @@
  */
 import { describe, it, expect, beforeAll, vi } from "vitest";
 import { JSDOM } from "jsdom";
-import { select, type Selection } from "d3-selection";
+import type { Selection } from "d3-selection";
+import { select } from "d3-selection";
 import { ChartData, IDataSource } from "./data.ts";
 import { setupRender } from "./render.ts";
 import * as domNode from "../utils/domNodeTransform.ts";
