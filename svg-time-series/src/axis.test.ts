@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { JSDOM } from "jsdom";
-import { select } from "d3-selection";
+import { select, type Selection } from "d3-selection";
 import { scaleLinear } from "d3-scale";
 import { MyAxis, Orientation } from "./axis.ts";
 
@@ -10,8 +10,8 @@ function createGroup() {
   const dom = new JSDOM(`<svg xmlns="${NS}"></svg>`, {
     contentType: "image/svg+xml",
   });
-  const svg = dom.window.document.querySelector("svg") as SVGSVGElement;
-  const g = dom.window.document.createElementNS(NS, "g") as SVGGElement;
+  const svg = dom.window.document.querySelector("svg")!;
+  const g = dom.window.document.createElementNS(NS, "g");
   svg.appendChild(g);
   return { g };
 }
@@ -23,7 +23,14 @@ describe("MyAxis tick creation", () => {
     const axis = new MyAxis(Orientation.Bottom, scale).setTickValues([
       0, 50, 100,
     ]);
-    axis.axis(select(g) as any);
+    axis.axis(
+      select(g) as unknown as Selection<
+        SVGGElement,
+        unknown,
+        HTMLElement,
+        unknown
+      >,
+    );
 
     const ticks = Array.from(g.querySelectorAll(".tick"));
     expect(ticks.map((t) => t.getAttribute("transform"))).toEqual([
@@ -40,7 +47,14 @@ describe("MyAxis tick creation", () => {
     const scale1 = scaleLinear().domain([0, 100]).range([0, 100]);
     const scale2 = scaleLinear().domain([0, 1]).range([0, 200]);
     const axis = new MyAxis(Orientation.Bottom, scale1, scale2).ticks(3);
-    axis.axis(select(g) as any);
+    axis.axis(
+      select(g) as unknown as Selection<
+        SVGGElement,
+        unknown,
+        HTMLElement,
+        unknown
+      >,
+    );
 
     const ticks = Array.from(g.querySelectorAll(".tick"));
     expect(ticks.length).toBe(6);
@@ -63,12 +77,26 @@ describe("MyAxis tick creation", () => {
     const scale1 = scaleLinear().domain([0, 100]).range([0, 100]);
     const scale2 = scaleLinear().domain([0, 1]).range([0, 200]);
     const axis = new MyAxis(Orientation.Bottom, scale1, scale2).ticks(3);
-    axis.axis(select(g) as any);
+    axis.axis(
+      select(g) as unknown as Selection<
+        SVGGElement,
+        unknown,
+        HTMLElement,
+        unknown
+      >,
+    );
 
     scale1.range([0, 200]);
     scale2.range([0, 400]);
     axis.setScale(scale1, scale2);
-    axis.axisUp(select(g) as any);
+    axis.axisUp(
+      select(g) as unknown as Selection<
+        SVGGElement,
+        unknown,
+        HTMLElement,
+        unknown
+      >,
+    );
 
     const ticks = Array.from(g.querySelectorAll(".tick"));
     expect(ticks.map((t) => t.getAttribute("transform"))).toEqual([

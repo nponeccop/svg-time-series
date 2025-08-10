@@ -7,10 +7,16 @@ import vitest from "@vitest/eslint-plugin";
 
 export default tsEslint.config(
   eslint.configs.recommended,
-  ...tsEslint.configs.recommended,
-  ...tsEslint.configs.strict,
+  ...tsEslint.configs.recommendedTypeChecked,
+  ...tsEslint.configs.strictTypeChecked,
   prettierConfig,
   {
+    languageOptions: {
+      parserOptions: {
+        project: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
     rules: {
       "@typescript-eslint/no-explicit-any": "error",
       "@typescript-eslint/no-empty-object-type": "error",
@@ -25,8 +31,16 @@ export default tsEslint.config(
   {
     files: ["**/*.test.ts"],
     ...vitest.configs.recommended,
-    rules: {
-      "@typescript-eslint/no-explicit-any": "off",
+    languageOptions: {
+      parserOptions: {
+        project: [
+          "./tsconfig.json",
+          "./segment-tree-rmq/tsconfig.json",
+          "./svg-time-series/tsconfig.eslint.json",
+          "./samples/tsconfig.json",
+        ],
+        tsconfigRootDir: import.meta.dirname,
+      },
     },
   },
 );
