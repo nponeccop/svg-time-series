@@ -23,7 +23,7 @@ describe("MyAxis tick creation", () => {
     const axis = new MyAxis(Orientation.Bottom, scale).setTickValues([
       0, 50, 100,
     ]);
-    axis.axis(select(g) as any);
+    axis.axis(select<SVGGElement, unknown>(g));
 
     const ticks = Array.from(g.querySelectorAll(".tick"));
     expect(ticks.map((t) => t.getAttribute("transform"))).toEqual([
@@ -31,7 +31,7 @@ describe("MyAxis tick creation", () => {
       "translate(50,0)",
       "translate(100,0)",
     ]);
-    const labels = ticks.map((t) => t.querySelector("text")!.textContent);
+    const labels = ticks.map((t) => t.querySelector("text")?.textContent ?? "");
     expect(labels).toEqual(["0", "50", "100"]);
   });
 
@@ -40,7 +40,7 @@ describe("MyAxis tick creation", () => {
     const scale1 = scaleLinear().domain([0, 100]).range([0, 100]);
     const scale2 = scaleLinear().domain([0, 1]).range([0, 200]);
     const axis = new MyAxis(Orientation.Bottom, scale1, scale2).ticks(3);
-    axis.axis(select(g) as any);
+    axis.axis(select<SVGGElement, unknown>(g));
 
     const ticks = Array.from(g.querySelectorAll(".tick"));
     expect(ticks.length).toBe(6);
@@ -53,7 +53,7 @@ describe("MyAxis tick creation", () => {
       "translate(200,0)",
     ]);
     const labels = ticks.map((t) =>
-      parseFloat(t.querySelector("text")!.textContent || ""),
+      parseFloat(t.querySelector("text")?.textContent ?? ""),
     );
     expect(labels).toEqual([0, 50, 100, 0, 0.5, 1]);
   });
@@ -63,12 +63,12 @@ describe("MyAxis tick creation", () => {
     const scale1 = scaleLinear().domain([0, 100]).range([0, 100]);
     const scale2 = scaleLinear().domain([0, 1]).range([0, 200]);
     const axis = new MyAxis(Orientation.Bottom, scale1, scale2).ticks(3);
-    axis.axis(select(g) as any);
+    axis.axis(select<SVGGElement, unknown>(g));
 
     scale1.range([0, 200]);
     scale2.range([0, 400]);
     axis.setScale(scale1, scale2);
-    axis.axisUp(select(g) as any);
+    axis.axisUp(select<SVGGElement, unknown>(g));
 
     const ticks = Array.from(g.querySelectorAll(".tick"));
     expect(ticks.map((t) => t.getAttribute("transform"))).toEqual([

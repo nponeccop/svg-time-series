@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { beforeAll, describe, expect, it } from "vitest";
+import type { ZoomTransform } from "d3-zoom";
 import { AR1Basis, DirectProductBasis } from "./math/affine.ts";
 
 class Matrix {
@@ -61,8 +61,13 @@ class Point {
 let ViewportTransform: typeof import("./ViewportTransform.ts").ViewportTransform;
 
 beforeAll(async () => {
-  (globalThis as any).DOMMatrix = Matrix;
-  (globalThis as any).DOMPoint = Point;
+  interface GlobalWithDOM {
+    DOMMatrix: typeof Matrix;
+    DOMPoint: typeof Point;
+  }
+  const g = globalThis as unknown as GlobalWithDOM;
+  g.DOMMatrix = Matrix;
+  g.DOMPoint = Point;
   ({ ViewportTransform } = await import("./ViewportTransform.ts"));
 });
 
@@ -88,7 +93,8 @@ describe("ViewportTransform", () => {
     expect(vt.fromScreenToModelY(20)).toBeCloseTo(2);
 
     // apply zoom: translate 10 and scale 2 on X
-    vt.onZoomPan({ x: 10, k: 2 } as any);
+    const zoom1: ZoomTransform = { x: 10, y: 0, k: 2 };
+    vt.onZoomPan(zoom1);
     expect(vt.fromScreenToModelX(70)).toBeCloseTo(3);
     // Y axis unaffected by zoom transform
     expect(vt.fromScreenToModelY(20)).toBeCloseTo(2);
@@ -109,7 +115,8 @@ describe("ViewportTransform", () => {
         new AR1Basis(0, 10),
       ),
     );
-    vt.onZoomPan({ x: 10, k: 2 } as any);
+    const zoom2: ZoomTransform = { x: 10, y: 0, k: 2 };
+    vt.onZoomPan(zoom2);
 
     const basis = vt.fromScreenToModelBasisX(new AR1Basis(20, 40));
     const [p1, p2] = basis.toArr();
@@ -132,9 +139,14 @@ describe("ViewportTransform", () => {
         new AR1Basis(0, 10),
       ),
     );
-    vt.onZoomPan({ x: 10, k: 2 } as any);
+    const zoom3: ZoomTransform = { x: 10, y: 0, k: 2 };
+    vt.onZoomPan(zoom3);
 
-    const p = (vt as any).toModelPoint(70, 20) as { x: number; y: number };
+    const p = (
+      vt as unknown as {
+        toModelPoint(x: number, y: number): DOMPoint;
+      }
+    ).toModelPoint(70, 20);
     expect(p.x).toBeCloseTo(3);
     expect(p.y).toBeCloseTo(2);
   });
@@ -154,7 +166,8 @@ describe("ViewportTransform", () => {
         new AR1Basis(0, 10),
       ),
     );
-    vt.onZoomPan({ x: 10, k: 2 } as any);
+    const zoom4: ZoomTransform = { x: 10, y: 0, k: 2 };
+    vt.onZoomPan(zoom4);
 
     const xScreen = 70;
     const xModel = vt.fromScreenToModelX(xScreen);
@@ -174,9 +187,11 @@ describe("ViewportTransform", () => {
 
   it("keeps pan offset constant when scaling", () => {
     const vt = new ViewportTransform();
-    vt.onZoomPan({ x: 50, k: 1 } as any);
+    const zoom5: ZoomTransform = { x: 50, y: 0, k: 1 };
+    vt.onZoomPan(zoom5);
     const t1 = vt.matrix.e;
-    vt.onZoomPan({ x: 50, k: 2 } as any);
+    const zoom6: ZoomTransform = { x: 50, y: 0, k: 2 };
+    vt.onZoomPan(zoom6);
     const t2 = vt.matrix.e;
     expect(t1).toBeCloseTo(50);
     expect(t2).toBeCloseTo(50);
