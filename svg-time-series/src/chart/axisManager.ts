@@ -41,7 +41,7 @@ export function buildAxisTree(
       .map((j) => ({ min: row[j], max: row[j] }))
       .reduce(buildMinMax, minMaxIdentity),
   );
-  return new SegmentTree(arr, buildMinMax, minMaxIdentity);
+ return new SegmentTree(arr, buildMinMax, minMaxIdentity);
 }
 
 export class AxisManager {
@@ -85,10 +85,11 @@ export class AxisManager {
         );
       }
       const tree = buildAxisTree(data, i);
-      this.axes[i].tree = tree;
+      const axis = this.axes[i]!;
+      axis.tree = tree;
       const dp = data.updateScaleY(bIndex, tree);
       const [min, max] = dp.y().toArr();
-      const domain = domains[i];
+      const domain = domains[i]!;
       domain.min = Math.min(domain.min, min);
       domain.max = Math.max(domain.max, max);
     }
