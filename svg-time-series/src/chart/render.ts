@@ -1,4 +1,4 @@
-import { Selection } from "d3-selection";
+import { Selection, select } from "d3-selection";
 import { scaleTime, type ScaleTime, type ScaleLinear } from "d3-scale";
 import type { Line } from "d3-shape";
 
@@ -31,7 +31,7 @@ function createYAxis(
 
 interface AxisData {
   axis: MyAxis;
-  g: Selection<SVGGElement, unknown, HTMLElement, unknown>;
+  g: SVGGElement | undefined;
 }
 
 interface AxisDataX extends AxisData {
@@ -78,7 +78,16 @@ export function refreshRenderState(state: RenderState, data: ChartData): void {
     updateNode(s.view, t.matrix);
   }
   state.axisRenders.forEach((r) => r.axis.axisUp(r.g));
-  state.axes.x.axis.axisUp(state.axes.x.g);
+  if (state.axes.x.g) {
+    state.axes.x.axis.axisUp(
+      select(state.axes.x.g) as unknown as Selection<
+        SVGGElement,
+        unknown,
+        HTMLElement,
+        unknown
+      >,
+    );
+  }
 }
 
 export function setupRender(
@@ -126,6 +135,7 @@ export function setupRender(
   xAxis.setScale(xScale);
   const xAxisGroup = svg.append("g").attr("class", "axis");
   xAxisGroup.call(xAxis.axis.bind(xAxis));
+  const xAxisGroupNode = xAxisGroup.node() ?? undefined;
 
   // Build render state for each Y axis separately from the model.
   const axisRenders: AxisRenderState[] = yAxes.map((a, i) => {
@@ -137,7 +147,7 @@ export function setupRender(
   });
 
   const axes: Axes = {
-    x: { axis: xAxis, g: xAxisGroup, scale: xScale },
+    x: { axis: xAxis, g: xAxisGroupNode, scale: xScale },
     y: yAxes,
   };
   const dimensions: Dimensions = { width, height };
