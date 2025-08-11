@@ -1,5 +1,10 @@
 import type { Selection } from "d3-selection";
-import { zoom as d3zoom, ZoomTransform, zoomIdentity } from "d3-zoom";
+import {
+  zoom as d3zoom,
+  ZoomTransform,
+  zoomIdentity,
+  zoomTransform,
+} from "d3-zoom";
 import type { D3ZoomEvent, ZoomBehavior } from "d3-zoom";
 import { drawProc } from "../utils/drawProc.ts";
 import type { RenderState } from "./render.ts";
@@ -113,6 +118,12 @@ export class ZoomState {
     this.validateScaleExtent(extent);
     this.scaleExtent = extent;
     this.zoomBehavior.scaleExtent(extent);
+    const current = zoomTransform(this.zoomArea.node()!);
+    const [min, max] = extent;
+    const clampedK = Math.max(min, Math.min(max, current.k));
+    if (clampedK !== current.k) {
+      this.zoomBehavior.scaleTo(this.zoomArea, clampedK);
+    }
   };
 
   public updateExtents = (dimensions: { width: number; height: number }) => {
