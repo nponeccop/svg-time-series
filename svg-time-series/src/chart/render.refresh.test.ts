@@ -83,7 +83,7 @@ describe("RenderState.refresh", () => {
       length: 3,
       seriesCount: 2,
       seriesAxes: [0, 1],
-      getSeries: (i, s) => (s === 0 ? [1, 2, 3][i] : [10, 20, 30][i]),
+      getSeries: (i, s) => (s === 0 ? [1, 2, 3][i]! : [10, 20, 30][i]!),
     };
     const data = new ChartData(source);
     const state = setupRender(svg, data);
@@ -92,15 +92,15 @@ describe("RenderState.refresh", () => {
 
     state.refresh(data);
 
-    expect(state.axes.y[state.series[0].axisIdx].scale.domain()).toEqual([
+    expect(state.axes.y[state.series[0]!.axisIdx]!.scale.domain()).toEqual([
       1, 3,
     ]);
-    expect(state.axes.y[state.series[1].axisIdx].scale.domain()).toEqual([
+    expect(state.axes.y[state.series[1]!.axisIdx]!.scale.domain()).toEqual([
       10, 30,
     ]);
     expect(updateNodeMock).toHaveBeenCalledTimes(state.series.length);
     state.series.forEach((s, i) => {
-      const t = state.axes.y[s.axisIdx].transform;
+      const t = state.axes.y[s.axisIdx]!.transform;
       expect(updateNodeMock).toHaveBeenNthCalledWith(i + 1, s.view, t.matrix);
     });
   });
@@ -113,7 +113,7 @@ describe("RenderState.refresh", () => {
       length: 3,
       seriesCount: 2,
       seriesAxes: [0, 0],
-      getSeries: (i, s) => (s === 0 ? [1, 2, 3][i] : [10, 20, 30][i]),
+      getSeries: (i, s) => (s === 0 ? [1, 2, 3][i]! : [10, 20, 30][i]!),
     };
     const data = new ChartData(source);
     const state = setupRender(svg, data);
@@ -132,7 +132,7 @@ describe("RenderState.refresh", () => {
       length: 3,
       seriesCount: 2,
       seriesAxes: [0, 1],
-      getSeries: (i, s) => (s === 0 ? [1, 2, 3][i] : [10, 20, 30][i]),
+      getSeries: (i, s) => (s === 0 ? [1, 2, 3][i]! : [10, 20, 30][i]!),
     };
     const data1 = new ChartData(source1);
     const state = setupRender(svg, data1);
@@ -143,7 +143,7 @@ describe("RenderState.refresh", () => {
       length: 3,
       seriesCount: 2,
       seriesAxes: [0, 1],
-      getSeries: (i, s) => (s === 0 ? [4, 5, 6][i] : [40, 50, 60][i]),
+      getSeries: (i, s) => (s === 0 ? [4, 5, 6][i]! : [40, 50, 60][i]!),
     };
     const data2 = new ChartData(source2);
     const updateNodeMock = vi.mocked(updateNode);
@@ -164,7 +164,7 @@ describe("RenderState.refresh", () => {
       length: 3,
       seriesCount: 1,
       seriesAxes: [0],
-      getSeries: (i) => [1, 2, 3][i],
+      getSeries: (i) => [1, 2, 3][i]!,
     };
     const data = new ChartData(source);
     const state = setupRender(svg, data);
