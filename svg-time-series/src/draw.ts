@@ -28,6 +28,7 @@ export class TimeSeriesChart {
   private zoomArea: Selection<SVGRectElement, unknown, HTMLElement, unknown>;
   private zoomState: ZoomState;
   private legendController: ILegendController;
+  private disposed = false;
 
   constructor(
     svg: Selection<SVGSVGElement, unknown, HTMLElement, unknown>,
@@ -93,11 +94,19 @@ export class TimeSeriesChart {
   }
 
   public updateChartWithNewData(...values: number[]): void {
+    if (this.disposed) {
+      return;
+    }
     this.data.append(...values);
     this.drawNewData();
   }
 
   public dispose() {
+    if (this.disposed) {
+      return;
+    }
+    this.disposed = true;
+
     this.zoomState.destroy();
     this.zoomArea.on("mousemove", null).on("mouseleave", null);
     this.zoomArea.remove();
@@ -107,33 +116,48 @@ export class TimeSeriesChart {
       s.path.remove();
       s.view.remove();
     }
-    this.state.series.length = 0;
+    this.state.series = [];
+    this.state.seriesRenderer.series = [];
     const axisX = this.state.axes.x;
     if (axisX.g) {
       axisX.g.remove();
-      axisX.g = undefined;
     }
+    axisX.g = undefined;
+    (axisX as unknown as { axis: null }).axis = null;
 
     for (const r of this.state.axisRenders) {
       r.g.remove();
     }
     this.state.axisRenders.length = 0;
     this.state.axes.y.length = 0;
+    this.state.axisManager.axes = [];
   }
 
   public zoom = (event: D3ZoomEvent<SVGRectElement, unknown>) => {
+    if (this.disposed) {
+      return;
+    }
     this.zoomState.zoom(event);
   };
 
   public resetZoom = () => {
+    if (this.disposed) {
+      return;
+    }
     this.zoomState.reset();
   };
 
   public setScaleExtent = (extent: [number, number]) => {
+    if (this.disposed) {
+      return;
+    }
     this.zoomState.setScaleExtent(extent);
   };
 
   public resize = (dimensions: { width: number; height: number }) => {
+    if (this.disposed) {
+      return;
+    }
     const { width, height } = dimensions;
     this.svg.attr("width", width).attr("height", height);
 
@@ -163,6 +187,9 @@ export class TimeSeriesChart {
   };
 
   public onHover = (x: number) => {
+    if (this.disposed) {
+      return;
+    }
     let idx = this.state.axes.y[0]!.transform.fromScreenToModelX(x);
     idx = this.data.clampIndex(idx);
     this.legendController.highlightIndex(idx);

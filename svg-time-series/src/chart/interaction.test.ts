@@ -19,6 +19,7 @@ import { TimeSeriesChart } from "../draw.ts";
 import type { IDataSource } from "../draw.ts";
 import { LegendController } from "../../../samples/LegendController.ts";
 import { Matrix } from "../setupDom.ts";
+import type { RenderState } from "./render.ts";
 
 const nodeTransforms = new Map<SVGGraphicsElement, Matrix>();
 let updateNodeCalls = 0;
@@ -386,5 +387,63 @@ describe("chart interaction", () => {
     mouseMoveHandler.mockClear();
     zoomRect.dispatchEvent(new MouseEvent("mousemove"));
     expect(mouseMoveHandler).not.toHaveBeenCalled();
+  });
+
+  it("interaction methods no-op after dispose", () => {
+    const { chart, zoom } = createChart([
+      [0, 0],
+      [1, 1],
+    ]);
+    vi.runAllTimers();
+
+    chart.dispose();
+    vi.runAllTimers();
+
+    expect(() =>
+      zoom({ transform: { x: 0, k: 1 } } as unknown as D3ZoomEvent<
+        SVGRectElement,
+        unknown
+      >),
+    ).not.toThrow();
+    expect(() => chart.onHover(1)).not.toThrow();
+    expect(() => chart.resetZoom()).not.toThrow();
+    expect(() => chart.setScaleExtent([0, 1])).not.toThrow();
+    expect(() => chart.updateChartWithNewData(1)).not.toThrow();
+    expect(() => chart.resize({ width: 5, height: 5 })).not.toThrow();
+  });
+
+  it("disposes multiple charts without leftover state", () => {
+    const first = createChart([
+      [0, 0],
+      [1, 1],
+    ]);
+    vi.runAllTimers();
+    first.chart.dispose();
+    vi.runAllTimers();
+
+    const state1 = (first.chart as unknown as { state: RenderState }).state;
+    expect(state1.series.length).toBe(0);
+    expect(state1.seriesRenderer.series.length).toBe(0);
+    expect(state1.axisManager.axes.length).toBe(0);
+    expect(state1.axes.x.axis).toBeNull();
+    expect(state1.axes.x.g).toBeUndefined();
+    expect(state1.axes.y.length).toBe(0);
+    expect(first.svgEl.querySelector("rect.zoom")).toBeNull();
+
+    const second = createChart([
+      [0, 0],
+      [1, 1],
+      [2, 2],
+    ]);
+    vi.runAllTimers();
+    second.chart.dispose();
+    vi.runAllTimers();
+
+    const state2 = (second.chart as unknown as { state: RenderState }).state;
+    expect(state2.series.length).toBe(0);
+    expect(state2.seriesRenderer.series.length).toBe(0);
+    expect(state2.axisManager.axes.length).toBe(0);
+    expect(state2.axes.y.length).toBe(0);
+    expect(second.svgEl.querySelector("rect.zoom")).toBeNull();
   });
 });
