@@ -27,6 +27,7 @@ export class TimeSeriesChart {
   private zoomArea: Selection<SVGRectElement, unknown, HTMLElement, unknown>;
   private zoomState: ZoomState;
   private legendController: ILegendController;
+  private disposed = false;
 
   constructor(
     svg: Selection<SVGSVGElement, unknown, HTMLElement, unknown>,
@@ -92,31 +93,40 @@ export class TimeSeriesChart {
   }
 
   public updateChartWithNewData(...values: number[]): void {
+    this.ensureNotDisposed();
     this.data.append(...values);
     this.drawNewData();
   }
 
   public dispose() {
+    if (this.disposed) {
+      return;
+    }
     this.zoomState.destroy();
     this.zoomArea.on("mousemove", null).on("mouseleave", null);
     this.zoomArea.remove();
     this.legendController.destroy();
     this.state.destroy();
+    this.disposed = true;
   }
 
   public zoom = (event: D3ZoomEvent<SVGRectElement, unknown>) => {
+    this.ensureNotDisposed();
     this.zoomState.zoom(event);
   };
 
   public resetZoom = () => {
+    this.ensureNotDisposed();
     this.zoomState.reset();
   };
 
   public setScaleExtent = (extent: [number, number]) => {
+    this.ensureNotDisposed();
     this.zoomState.setScaleExtent(extent);
   };
 
   public resize = (dimensions: { width: number; height: number }) => {
+    this.ensureNotDisposed();
     const { width, height } = dimensions;
     this.svg.attr("width", width).attr("height", height);
     this.state.resize(dimensions, this.zoomState);
@@ -125,6 +135,7 @@ export class TimeSeriesChart {
   };
 
   public onHover = (x: number) => {
+    this.ensureNotDisposed();
     let idx = this.state.axes.y[0]!.transform.fromScreenToModelX(x);
     idx = this.data.clampIndex(idx);
     this.legendController.highlightIndex(idx);
@@ -139,4 +150,10 @@ export class TimeSeriesChart {
     this.zoomState.refresh();
     this.legendController.refresh();
   };
+
+  private ensureNotDisposed() {
+    if (this.disposed) {
+      throw new Error("Chart has been disposed");
+    }
+  }
 }

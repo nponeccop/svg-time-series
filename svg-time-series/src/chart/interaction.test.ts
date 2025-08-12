@@ -387,4 +387,22 @@ describe("chart interaction", () => {
     zoomRect.dispatchEvent(new MouseEvent("mousemove"));
     expect(mouseMoveHandler).not.toHaveBeenCalled();
   });
+
+  it("throws when interacting after dispose", () => {
+    const { chart } = createChart([
+      [0, 0],
+      [1, 1],
+    ]);
+
+    chart.dispose();
+
+    expect(() =>
+      chart.interaction.zoom({} as D3ZoomEvent<SVGRectElement, unknown>),
+    ).toThrow();
+    expect(() => chart.interaction.onHover(0)).toThrow();
+    expect(() => chart.interaction.resetZoom()).toThrow();
+    expect(() => chart.interaction.setScaleExtent([0, 1])).toThrow();
+    expect(() => chart.updateChartWithNewData(1)).toThrow();
+    expect(() => chart.resize({ width: 1, height: 1 })).toThrow();
+  });
 });

@@ -45,8 +45,11 @@ describe("RenderState.destroy", () => {
     expect(svg.selectAll("path").nodes().length).toBe(0);
     expect(svg.selectAll("g.axis").nodes().length).toBe(0);
     expect(state.series.length).toBe(0);
+    expect(state.seriesRenderer.series.length).toBe(0);
     expect(state.axisRenders.length).toBe(0);
     expect(state.axes.y.length).toBe(0);
-    expect(state.axes.x.g).toBeUndefined();
+    expect(state.axes.x.g).toBeNull();
+    expect(state.axes.x.axis).toBeNull();
+    expect(state.axisManager.axes.length).toBe(0);
   });
 });

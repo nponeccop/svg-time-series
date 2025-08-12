@@ -91,18 +91,26 @@ function destroyRenderState(state: RenderState): void {
     s.view.remove();
   }
   state.series.length = 0;
+  state.seriesRenderer.series = [];
 
   const axisX = state.axes.x;
   if (axisX.g) {
     axisX.g.remove();
-    axisX.g = undefined;
   }
+  axisX.axis = null as unknown as MyAxis;
+  axisX.g = null as unknown as Selection<
+    SVGGElement,
+    unknown,
+    HTMLElement,
+    unknown
+  >;
 
   for (const r of state.axisRenders) {
     r.g.remove();
   }
   state.axisRenders.length = 0;
   state.axes.y.length = 0;
+  state.axisManager.axes.length = 0;
 }
 
 function resizeRenderState(
