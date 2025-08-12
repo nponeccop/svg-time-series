@@ -7,6 +7,7 @@ import { MyAxis, Orientation } from "../axis.ts";
 import { updateNode } from "../utils/domNodeTransform.ts";
 import type { AR1Basis } from "../math/affine.ts";
 import { DirectProductBasis, bPlaceholder } from "../math/affine.ts";
+import { ViewportTransform } from "../ViewportTransform.ts";
 
 import { AxisManager } from "./axisManager.ts";
 import type { AxisModel, AxisRenderState } from "./axisManager.ts";
@@ -60,6 +61,7 @@ export interface RenderState {
   axes: Axes;
   axisRenders: AxisRenderState[];
   screenXBasis: AR1Basis;
+  xTransform: ViewportTransform;
   dimensions: Dimensions;
   series: Series[];
   seriesRenderer: SeriesRenderer;
@@ -67,7 +69,12 @@ export interface RenderState {
 }
 
 export function refreshRenderState(state: RenderState, data: ChartData): void {
-  const bIndexVisible = state.axes.y[0]!.transform.fromScreenToModelBasisX(
+  const referenceBasis = DirectProductBasis.fromProjections(
+    data.bIndexFull,
+    bPlaceholder,
+  );
+  state.xTransform.onReferenceViewWindowResize(referenceBasis);
+  const bIndexVisible = state.xTransform.fromScreenToModelBasisX(
     state.screenXBasis,
   );
 
@@ -119,6 +126,9 @@ export function setupRender(
     a.transform.onViewPortResize(screenBasis);
     a.transform.onReferenceViewWindowResize(referenceBasis);
   }
+  const xTransform = new ViewportTransform();
+  xTransform.onViewPortResize(screenBasis);
+  xTransform.onReferenceViewWindowResize(referenceBasis);
 
   const series = createSeries(svg, data.seriesAxes);
   const seriesRenderer = new SeriesRenderer();
@@ -151,6 +161,7 @@ export function setupRender(
     axes,
     axisRenders,
     screenXBasis,
+    xTransform,
     dimensions,
     series,
     seriesRenderer,

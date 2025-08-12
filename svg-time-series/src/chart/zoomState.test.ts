@@ -123,6 +123,7 @@ describe("ZoomState", () => {
         y: [{ transform: y }, { transform: y2 }],
       },
       axisRenders: [],
+      xTransform: { onZoomPan: vi.fn<(t: unknown) => void>() },
     } as unknown as RenderState;
     const refresh = vi.fn();
     const zoomCb = vi.fn();
@@ -166,6 +167,7 @@ describe("ZoomState", () => {
         y: [{ transform: y }],
       },
       axisRenders: [],
+      xTransform: { onZoomPan: vi.fn<(t: unknown) => void>() },
     } as unknown as RenderState;
     const refresh = vi.fn();
     const zoomCb = vi.fn();
@@ -213,6 +215,7 @@ describe("ZoomState", () => {
         y: [{ transform: y }],
       },
       axisRenders: [],
+      xTransform: { onZoomPan: vi.fn<(t: unknown) => void>() },
     } as unknown as RenderState;
     const refresh = vi.fn();
     const zs = new ZoomState(
@@ -263,6 +266,7 @@ describe("ZoomState", () => {
       dimensions: { width: 10, height: 10 },
       axes: { x: { axis: {}, g: {}, scale: {} }, y: [] },
       axisRenders: [],
+      xTransform: { onZoomPan: vi.fn<(t: unknown) => void>() },
     } as unknown as RenderState;
     const zs2 = new ZoomState(
       rect2 as unknown as Selection<
@@ -326,6 +330,7 @@ describe("ZoomState", () => {
       dimensions: { width: 10, height: 10 },
       axes: { x: { axis: {}, g: {}, scale: {} }, y: [] },
       axisRenders: [],
+      xTransform: { onZoomPan: vi.fn<(t: unknown) => void>() },
     } as unknown as RenderState;
     const createZoomState = (
       rect: Selection<SVGRectElement, unknown, HTMLElement, unknown>,
@@ -393,6 +398,7 @@ describe("ZoomState", () => {
         y: [{ transform: y }],
       },
       axisRenders: [],
+      xTransform: { onZoomPan: vi.fn<(t: unknown) => void>() },
     } as unknown as RenderState;
     const refresh = vi.fn();
     const zs = new ZoomState(
@@ -434,6 +440,7 @@ describe("ZoomState", () => {
         y: [{ transform: y }],
       },
       axisRenders: [],
+      xTransform: { onZoomPan: vi.fn<(t: unknown) => void>() },
     } as unknown as RenderState;
     const refresh = vi.fn();
     const zs = new ZoomState(
@@ -475,6 +482,7 @@ describe("ZoomState", () => {
         y: [{ transform: y }],
       },
       axisRenders: [],
+      xTransform: { onZoomPan: vi.fn<(t: unknown) => void>() },
     } as unknown as RenderState;
     const refresh = vi.fn();
     const zs = new ZoomState(
@@ -523,6 +531,7 @@ describe("ZoomState", () => {
         y: [{ transform: y }],
       },
       axisRenders: [],
+      xTransform: { onZoomPan: vi.fn<(t: unknown) => void>() },
     } as unknown as RenderState;
     const zs = new ZoomState(
       rect as unknown as Selection<
@@ -566,6 +575,7 @@ describe("ZoomState", () => {
         y: [{ transform: y }],
       },
       axisRenders: [],
+      xTransform: { onZoomPan: vi.fn<(t: unknown) => void>() },
     } as unknown as RenderState;
     const zs = new ZoomState(
       rect as unknown as Selection<
@@ -600,6 +610,7 @@ describe("ZoomState", () => {
       dimensions: { width: 10, height: 10 },
       axes: { x: { axis: {}, g: {}, scale: {} }, y: [] },
       axisRenders: [],
+      xTransform: { onZoomPan: vi.fn<(t: unknown) => void>() },
     } as unknown as RenderState;
     const zs = new ZoomState(
       rect as unknown as Selection<
@@ -631,6 +642,7 @@ describe("ZoomState", () => {
       dimensions: { width: 10, height: 10 },
       axes: { x: { axis: {}, g: {}, scale: {} }, y: [] },
       axisRenders: [],
+      xTransform: { onZoomPan: vi.fn<(t: unknown) => void>() },
     } as unknown as RenderState;
     const zs = new ZoomState(
       rect as unknown as Selection<
@@ -664,6 +676,7 @@ describe("ZoomState", () => {
       dimensions: { width: 10, height: 10 },
       axes: { x: { axis: {}, g: {}, scale: {} }, y: [] },
       axisRenders: [],
+      xTransform: { onZoomPan: vi.fn<(t: unknown) => void>() },
     } as unknown as RenderState;
     const zs = new ZoomState(
       rect as unknown as Selection<
@@ -700,6 +713,7 @@ describe("ZoomState", () => {
       dimensions: { width: 10, height: 10 },
       axes: { x: { axis: {}, g: {}, scale: {} }, y: [] },
       axisRenders: [],
+      xTransform: { onZoomPan: vi.fn<(t: unknown) => void>() },
     } as unknown as RenderState;
     const zs = new ZoomState(
       rect as unknown as Selection<
@@ -732,6 +746,7 @@ describe("ZoomState", () => {
     const state = {
       dimensions: { width: 10, height: 10 },
       axisRenders: [],
+      xTransform: { onZoomPan: vi.fn<(t: unknown) => void>() },
     } as unknown as RenderState;
     const zs = new ZoomState(
       rect as unknown as Selection<
@@ -755,6 +770,7 @@ describe("ZoomState", () => {
     const state = {
       dimensions: { width: 10, height: 10 },
       axisRenders: [],
+      xTransform: { onZoomPan: vi.fn<(t: unknown) => void>() },
     } as unknown as RenderState;
     const zs = new ZoomState(
       rect as unknown as Selection<
@@ -792,6 +808,7 @@ describe("ZoomState", () => {
     const state = {
       dimensions: { width: 10, height: 10 },
       axisRenders: [],
+      xTransform: { onZoomPan: vi.fn<(t: unknown) => void>() },
     } as unknown as RenderState;
 
     expect(
@@ -817,6 +834,7 @@ describe("ZoomState", () => {
     const state = {
       dimensions: { width: 10, height: 10 },
       axisRenders: [],
+      xTransform: { onZoomPan: vi.fn<(t: unknown) => void>() },
     } as unknown as RenderState;
 
     expect(

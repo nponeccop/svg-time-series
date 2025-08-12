@@ -72,6 +72,7 @@ describe("ZoomState programmatic transforms", () => {
         y: [{ transform: y }],
       },
       axisRenders: [],
+      xTransform: { onZoomPan: vi.fn<(t: unknown) => void>() },
     } as unknown as RenderState;
     const refresh = vi.fn();
     const zs = new ZoomState(

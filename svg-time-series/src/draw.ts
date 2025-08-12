@@ -157,13 +157,14 @@ export class TimeSeriesChart {
       a.transform.onViewPortResize(bScreenVisible);
       a.scale.range([height, 0]);
     }
+    this.state.xTransform.onViewPortResize(bScreenVisible);
 
     this.state.refresh(this.data);
     this.refreshAll();
   };
 
   public onHover = (x: number) => {
-    let idx = this.state.axes.y[0]!.transform.fromScreenToModelX(x);
+    let idx = this.state.xTransform.fromScreenToModelX(x);
     idx = this.data.clampIndex(idx);
     this.legendController.highlightIndex(idx);
   };

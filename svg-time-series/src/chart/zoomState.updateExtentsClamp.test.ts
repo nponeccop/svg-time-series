@@ -110,6 +110,7 @@ describe("ZoomState.updateExtents clamp", () => {
       dimensions: { width: 100, height: 100 },
       axes: { x: { axis: {}, g: {}, scale: {} }, y: [] },
       axisRenders: [],
+      xTransform: { onZoomPan: vi.fn<(t: unknown) => void>() },
     } as unknown as RenderState;
     const zs = new ZoomState(
       rect as unknown as Selection<
