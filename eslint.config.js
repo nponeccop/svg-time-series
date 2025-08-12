@@ -23,6 +23,7 @@ export default tsEslint.config(
           "./samples/tsconfig.json",
           "./samples/demos/tsconfig.json",
           "./samples/misc/tsconfig.json",
+          "./test/tsconfig.json",
         ],
         tsconfigRootDir: import.meta.dirname,
       },
@@ -51,7 +52,6 @@ export default tsEslint.config(
       "prefer-spread": "error",
     },
   },
-  { files: ["test/**/*.ts"], ...tsEslint.configs.disableTypeChecked },
   {
     files: ["samples/**"],
     ...tsEslint.configs.disableTypeChecked,
