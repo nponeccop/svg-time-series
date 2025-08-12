@@ -4,8 +4,11 @@ import tsEslint from "typescript-eslint";
 import prettierConfig from "eslint-config-prettier";
 import vitest from "@vitest/eslint-plugin";
 import globals from "globals";
+import importPlugin from "eslint-plugin-import";
 
 const disableTypeChecked = tsEslint.configs.disableTypeChecked;
+const { languageOptions: _importLang, ...importRecommended } =
+  importPlugin.flatConfigs.recommended;
 
 export default tsEslint.config(
   {
@@ -25,10 +28,13 @@ export default tsEslint.config(
         ],
         tsconfigRootDir: import.meta.dirname,
       },
+      ecmaVersion: 2018,
+      sourceType: "module",
     },
   },
   ...tsEslint.configs.recommendedTypeChecked,
   ...tsEslint.configs.strictTypeChecked,
+  importRecommended,
   prettierConfig,
   {
     rules: {
@@ -43,12 +49,21 @@ export default tsEslint.config(
       "@typescript-eslint/no-useless-constructor": "error",
       "prefer-const": "error",
       "prefer-spread": "error",
+      "import/order": "error",
+      "import/no-unresolved": "error",
     },
   },
   { files: ["test/**/*.ts"], ...tsEslint.configs.disableTypeChecked },
   { files: ["samples/benchmarks/**"], ...tsEslint.configs.disableTypeChecked },
   { files: ["**/*.cjs", "**/*.mjs", "**/vite.config.ts"], ...tsEslint.configs.disableTypeChecked },
-  { files: ["eslint.config.js"], ...tsEslint.configs.disableTypeChecked },
+  {
+    files: ["eslint.config.js"],
+    ...disableTypeChecked,
+    rules: {
+      ...disableTypeChecked.rules,
+      "import/no-unresolved": "off",
+    },
+  },
   {
     files: ["samples/competitors/**"],
     languageOptions: {
