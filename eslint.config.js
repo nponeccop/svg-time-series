@@ -59,9 +59,9 @@ export default config(
   },
   ...configs.recommendedTypeChecked,
   ...configs.strictTypeChecked,
-    importPlugin.flatConfigs.recommended,
-    importPlugin.flatConfigs.typescript,
-    prettierConfig,
+  importPlugin.flatConfigs.recommended,
+  importPlugin.flatConfigs.typescript,
+  prettierConfig,
   {
     rules: {
       "import/no-unresolved": "error",
@@ -80,43 +80,43 @@ export default config(
       "prefer-spread": "error",
     },
   },
-    {
-      files: ["scripts/**", "**/*.config.*", "**/*.cjs", "**/*.mjs"],
-      ...nRecommended,
-      ...configs.disableTypeChecked,
-      settings: {
-        node: { version: ">=20.11.0" },
-      },
-      rules: {
-        ...nRecommended.rules,
-        ...disableTypeChecked.rules,
-        "n/no-extraneous-import": "off",
-        "n/no-process-exit": "off",
-        "n/process-exit-as-throw": "off",
-        "n/no-unsupported-features/node-builtins": "off",
-      },
+  {
+    files: ["scripts/**", "**/*.config.*", "**/*.cjs", "**/*.mjs"],
+    ...nRecommended,
+    ...disableTypeChecked,
+    settings: {
+      node: { version: ">=20.11.0" },
     },
-    {
-      files: ["**/*.cjs", "**/vite.config.ts"],
-      ...nodeOverride,
-      languageOptions: {
-        ...nodeOverride.languageOptions,
-        sourceType: "commonjs",
-      },
+    rules: {
+      ...nRecommended.rules,
+      ...disableTypeChecked.rules,
+      "n/no-extraneous-import": "off",
+      "n/no-process-exit": "off",
+      "n/process-exit-as-throw": "off",
+      "n/no-unsupported-features/node-builtins": "off",
     },
-    {
-      files: ["**/*.mjs"],
-      ...nodeOverride,
-      languageOptions: {
-        ...nodeOverride.languageOptions,
-        sourceType: "module",
-      },
+  },
+  {
+    files: ["**/*.cjs", "**/vite.config.ts"],
+    ...nodeOverride,
+    languageOptions: {
+      ...nodeOverride.languageOptions,
+      sourceType: "commonjs",
     },
-    {
-      files: ["samples/competitors/**"],
-      languageOptions: {
-        globals: { ...globals.browser, d3: "readonly" },
-      },
+  },
+  {
+    files: ["**/*.mjs"],
+    ...nodeOverride,
+    languageOptions: {
+      ...nodeOverride.languageOptions,
+      sourceType: "module",
+    },
+  },
+  {
+    files: ["samples/competitors/**"],
+    languageOptions: {
+      globals: { ...globals.browser, d3: "readonly" },
+    },
   },
   {
     files: ["**/*.test.ts"],
