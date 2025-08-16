@@ -167,7 +167,7 @@ describe("RenderState.refresh", () => {
 
     expect(state.axes.y[0]!.tree.query(0, 2)).toEqual({ min: 1, max: 3 });
 
-    data.append(4);
+    state.axisManager.appendData(4);
     state.refresh(data, zoomIdentity);
 
     expect(state.axes.y[0]!.tree.query(0, 2)).toEqual({ min: 2, max: 4 });

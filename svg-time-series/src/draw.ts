@@ -126,7 +126,7 @@ export class TimeSeriesChart {
   }
 
   public updateChartWithNewData(...values: number[]): void {
-    this.data.append(...values);
+    this.state.axisManager.appendData(...values);
     this.refreshAll();
   }
 

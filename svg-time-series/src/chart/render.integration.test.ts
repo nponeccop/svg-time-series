@@ -52,7 +52,7 @@ describe("RenderState.refresh integration", () => {
     const yNyBefore = state.axes.y[0]!.scale.domain().slice();
     const ySfBefore = state.axes.y[1]!.scale.domain().slice();
 
-    data.append(100, 200);
+    state.axisManager.appendData(100, 200);
     state.refresh(data, zoomIdentity);
 
     const yNyAfter = state.axes.y[0]!.scale.domain();

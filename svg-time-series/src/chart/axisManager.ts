@@ -82,6 +82,23 @@ export class AxisManager {
     this.x = scale;
   }
 
+  appendData(...values: number[]): void {
+    this.data.append(...values);
+    this.axes.forEach((_, axisIdx) => {
+      const seriesIdxs = this.data.seriesByAxis[axisIdx] ?? [];
+      if (seriesIdxs.length === 0) {
+        return;
+      }
+      const mm = seriesIdxs
+        .map((j) => {
+          const v = values[j]!;
+          return Number.isFinite(v) ? { min: v, max: v } : minMaxIdentity;
+        })
+        .reduce(buildMinMax, minMaxIdentity);
+      this.data.updateTree(axisIdx, mm);
+    });
+  }
+
   updateScales(transform: ZoomTransform): void {
     this.data.assertAxisBounds(this.axes.length);
     this.x.domain(this.data.timeDomainFull());

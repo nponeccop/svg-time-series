@@ -67,6 +67,7 @@ export class ChartData {
    * avoid reconstructing the scale for every call.
    */
   private readonly indexScale: ScaleLinear<number, number>;
+  private readonly axisTrees: [SegmentTree<IMinMax>, SegmentTree<IMinMax>];
 
   /**
    * Creates a new ChartData instance.
@@ -102,6 +103,7 @@ export class ChartData {
       .clamp(true)
       .domain(this.bIndexFull)
       .range([0, 1]);
+    this.axisTrees = [this.buildAxisTree(0), this.buildAxisTree(1)];
   }
 
   append(...values: number[]): void {
@@ -168,6 +170,15 @@ export class ChartData {
     });
   }
 
+  public updateTree(axisIdx: number, _value: IMinMax): void {
+    if (axisIdx !== 0 && axisIdx !== 1) {
+      throw new Error(
+        `ChartData.updateTree axisIdx must be 0 or 1; received ${String(axisIdx)}`,
+      );
+    }
+    this.axisTrees[axisIdx] = this.buildAxisTree(axisIdx);
+  }
+
   buildAxisTree(axis: number): SegmentTree<IMinMax> {
     if (axis !== 0 && axis !== 1) {
       throw new Error(
@@ -214,7 +225,12 @@ export class ChartData {
     tree: SegmentTree<IMinMax>;
     scale: ScaleLinear<number, number>;
   } {
-    const tree = this.buildAxisTree(axisIdx);
+    if (axisIdx !== 0 && axisIdx !== 1) {
+      throw new Error(
+        `ChartData.axisTransform axisIdx must be 0 or 1; received ${String(axisIdx)}`,
+      );
+    }
+    const tree = this.axisTrees[axisIdx];
     const scale = this.updateScaleY([dIndexVisible[0], dIndexVisible[1]], tree);
     let [min, max] = scale.domain() as [number, number];
     if (!Number.isFinite(min) || !Number.isFinite(max)) {
