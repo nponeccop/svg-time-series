@@ -15,6 +15,7 @@ vi.mock("./chart/zoomState.ts", () => {
       zoom: vi.fn(),
       reset: vi.fn(),
       updateExtents: vi.fn(),
+      zoomBehavior: { transform: vi.fn() },
     })),
   };
 });
@@ -182,5 +183,36 @@ describe("TimeSeriesChart", () => {
 
     expect(mouseMove).not.toHaveBeenCalled();
     expect(legend.destroy).toHaveBeenCalled();
+  });
+
+  it("enables and disables brush layer", () => {
+    const { chart } = createChart();
+    const internal = chart as unknown as {
+      brushLayer: Selection<SVGGElement, unknown, HTMLElement, unknown>;
+    };
+    chart.enableBrush();
+    expect(internal.brushLayer.style("display")).not.toBe("none");
+    chart.disableBrush();
+    expect(internal.brushLayer.style("display")).toBe("none");
+  });
+
+  it("records selection and clears brush", () => {
+    const { chart } = createChart();
+    chart.enableBrush();
+    const internal = chart as unknown as {
+      brushLayer: Selection<SVGGElement, unknown, HTMLElement, unknown>;
+      brushBehavior: { move: ReturnType<typeof vi.fn> };
+      zoomState: { zoomBehavior: { transform: ReturnType<typeof vi.fn> } };
+      state: { dimensions: { width: number; height: number } };
+    };
+    const moveSpy = vi.spyOn(internal.brushBehavior, "move");
+    const { width, height } = internal.state.dimensions;
+    internal.brushLayer.call(internal.brushBehavior.move, [
+      [0, 0],
+      [width / 2, height],
+    ]);
+    expect(internal.zoomState.zoomBehavior.transform).toHaveBeenCalled();
+    expect(moveSpy).toHaveBeenLastCalledWith(internal.brushLayer, null);
+    expect(chart.getSelectedTimeWindow()).toEqual([0, 1]);
   });
 });

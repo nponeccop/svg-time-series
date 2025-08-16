@@ -1,5 +1,8 @@
 import type { Selection } from "d3-selection";
+import { brush } from "d3-brush";
+import type { BrushBehavior, D3BrushEvent } from "d3-brush";
 import type { D3ZoomEvent } from "d3-zoom";
+import { zoomIdentity } from "d3-zoom";
 
 import { ChartData } from "./chart/data.ts";
 import type { IDataSource } from "./chart/data.ts";
@@ -18,6 +21,9 @@ export interface IPublicInteraction {
   onHover: (x: number) => void;
   resetZoom: () => void;
   setScaleExtent: (extent: [number, number]) => void;
+  enableBrush: () => void;
+  disableBrush: () => void;
+  getSelectedTimeWindow: () => [number, number] | null;
 }
 
 export class TimeSeriesChart {
@@ -27,6 +33,9 @@ export class TimeSeriesChart {
   private zoomArea: Selection<SVGRectElement, unknown, HTMLElement, unknown>;
   private zoomState: ZoomState;
   private legendController: ILegendController;
+  private brushLayer: Selection<SVGGElement, unknown, HTMLElement, unknown>;
+  private brushBehavior: BrushBehavior<unknown>;
+  private selectedTimeWindow: [number, number] | null = null;
 
   constructor(
     svg: Selection<SVGSVGElement, unknown, HTMLElement, unknown>,
@@ -78,6 +87,18 @@ export class TimeSeriesChart {
       zoomOptions,
     );
 
+    this.brushLayer = svg
+      .append("g")
+      .attr("class", "brush")
+      .style("display", "none");
+    this.brushBehavior = brush()
+      .extent([
+        [0, 0],
+        [this.state.dimensions.width, this.state.dimensions.height],
+      ])
+      .on("end", this.onBrushEnd);
+    this.brushLayer.call(this.brushBehavior);
+
     this.refreshAll();
     this.onHover(this.state.dimensions.width - 1);
   }
@@ -88,6 +109,9 @@ export class TimeSeriesChart {
       onHover: this.onHover,
       resetZoom: this.resetZoom,
       setScaleExtent: this.setScaleExtent,
+      enableBrush: this.enableBrush,
+      disableBrush: this.disableBrush,
+      getSelectedTimeWindow: this.getSelectedTimeWindow,
     };
   }
 
@@ -101,6 +125,7 @@ export class TimeSeriesChart {
     this.zoomArea.on("mousemove", null).on("mouseleave", null);
     this.state.destroy();
     this.zoomArea.remove();
+    this.brushLayer.on(".brush", null).remove();
     this.legendController.destroy();
   }
 
@@ -116,11 +141,30 @@ export class TimeSeriesChart {
     this.zoomState.setScaleExtent(extent);
   };
 
+  public enableBrush = () => {
+    this.brushLayer.style("display", null);
+  };
+
+  public disableBrush = () => {
+    this.brushLayer.style("display", "none");
+    this.brushLayer.call(
+      this.brushBehavior.move.bind(this.brushBehavior),
+      null,
+    );
+  };
+
+  public getSelectedTimeWindow = () => this.selectedTimeWindow;
+
   public resize = (dimensions: { width: number; height: number }) => {
     const { width, height } = dimensions;
     this.svg.attr("width", width).attr("height", height);
     this.state.resize(dimensions, this.zoomState);
     this.state.refresh(this.data);
+    this.brushBehavior.extent([
+      [0, 0],
+      [width, height],
+    ]);
+    this.brushLayer.call(this.brushBehavior);
     this.refreshAll();
   };
 
@@ -128,6 +172,58 @@ export class TimeSeriesChart {
     let idx = Math.round(this.state.xTransform.fromScreenToModelX(x));
     idx = this.data.clampIndex(idx);
     this.legendController.highlightIndex(idx);
+  };
+
+  private onBrushEnd = (event: D3BrushEvent<unknown>) => {
+    if (!event.selection) {
+      return;
+    }
+    const [[x0], [x1]] = event.selection as [
+      [number, number],
+      [number, number],
+    ];
+    if (x0 === x1) {
+      this.brushLayer.call(
+        this.brushBehavior.move.bind(this.brushBehavior),
+        null,
+      );
+      return;
+    }
+    let idx0 = this.data.clampIndex(
+      this.state.xTransform.fromScreenToModelX(x0),
+    );
+    let idx1 = this.data.clampIndex(
+      this.state.xTransform.fromScreenToModelX(x1),
+    );
+    if (idx0 === idx1) {
+      this.brushLayer.call(
+        this.brushBehavior.move.bind(this.brushBehavior),
+        null,
+      );
+      return;
+    }
+    if (idx0 > idx1) {
+      [idx0, idx1] = [idx1, idx0];
+    }
+    const sx0 = this.state.xTransform.toScreenFromModelX(idx0);
+    const sx1 = this.state.xTransform.toScreenFromModelX(idx1);
+    const k = this.state.dimensions.width / (sx1 - sx0);
+    const tx = -sx0 * k;
+    this.zoomState.zoomBehavior.transform(
+      this.zoomArea,
+      zoomIdentity.translate(tx, 0).scale(k),
+    );
+    const tTransform = this.data.indexToTime();
+    let t0 = tTransform.applyToPoint(idx0);
+    let t1 = tTransform.applyToPoint(idx1);
+    if (t0 > t1) {
+      [t0, t1] = [t1, t0];
+    }
+    this.selectedTimeWindow = [t0, t1];
+    this.brushLayer.call(
+      this.brushBehavior.move.bind(this.brushBehavior),
+      null,
+    );
   };
 
   private refreshAll(): void {
