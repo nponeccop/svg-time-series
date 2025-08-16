@@ -650,6 +650,7 @@ describe("ZoomState", () => {
       x: 0,
       y: 0,
     } as unknown as ZoomTransform);
+    vi.runAllTimers();
     expect(applyZoomTransform).toHaveBeenCalledWith({ k: 10, x: 0, y: 0 });
     const scaleSpy = vi.spyOn(zs.zoomBehavior, "scaleTo");
     scaleSpy.mockClear();
@@ -686,6 +687,7 @@ describe("ZoomState", () => {
       x: 0,
       y: 0,
     } as unknown as ZoomTransform);
+    vi.runAllTimers();
     expect(applyZoomTransform).toHaveBeenCalledWith({ k: 0.2, x: 0, y: 0 });
     const scaleSpy = vi.spyOn(zs.zoomBehavior, "scaleTo");
     scaleSpy.mockClear();

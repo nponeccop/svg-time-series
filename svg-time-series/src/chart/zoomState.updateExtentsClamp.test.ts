@@ -127,6 +127,7 @@ describe("ZoomState.updateExtents clamp", () => {
 
     const initial = zoomIdentity.translate(-120, -80).scale(2);
     zs.zoomBehavior.transform(rect, initial);
+    vi.runAllTimers();
     const transformSpy = vi.spyOn(zs.zoomBehavior, "transform");
     expect(applyZoomTransform).toHaveBeenCalledWith(initial);
     transformSpy.mockClear();

@@ -1,6 +1,7 @@
 import type { Selection } from "d3-selection";
 import { zoom as d3zoom, zoomIdentity, zoomTransform } from "d3-zoom";
 import type { D3ZoomEvent, ZoomBehavior, ZoomTransform } from "d3-zoom";
+import { drawProc } from "../utils/drawProc.ts";
 import { ZoomScheduler, sameTransform } from "./zoomScheduler.ts";
 import type { RenderState } from "./render.ts";
 
@@ -28,6 +29,8 @@ export class ZoomState {
   public zoomBehavior: ZoomBehavior<SVGRectElement, unknown>;
   private zoomScheduler: ZoomScheduler;
   private scaleExtent: [number, number];
+  private scheduleApply: (t: ZoomTransform) => void;
+  private cancelApply: () => void;
 
   public static validateScaleExtent(extent: unknown): [number, number] {
     const error = () =>
@@ -86,10 +89,16 @@ export class ZoomState {
     this.zoomScheduler = new ZoomScheduler((t: ZoomTransform) => {
       this.zoomBehavior.transform(this.zoomArea, t);
     }, this.refreshChart);
+
+    const { wrapped, cancel } = drawProc((t: unknown) => {
+      this.state.applyZoomTransform(t as ZoomTransform);
+    });
+    this.scheduleApply = wrapped as (t: ZoomTransform) => void;
+    this.cancelApply = cancel;
   }
 
   public zoom = (event: D3ZoomEvent<SVGRectElement, unknown>) => {
-    this.state.applyZoomTransform(event.transform);
+    this.scheduleApply(event.transform);
     if (!this.zoomScheduler.zoom(event.transform, event.sourceEvent)) {
       return;
     }
@@ -137,6 +146,7 @@ export class ZoomState {
 
   public destroy = () => {
     this.zoomScheduler.destroy();
+    this.cancelApply();
     this.zoomArea.on(".zoom", null);
     this.zoomBehavior.on("zoom", null);
   };
