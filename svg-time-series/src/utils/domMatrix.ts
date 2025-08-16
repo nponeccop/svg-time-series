@@ -1,18 +1,34 @@
 import type { ScaleContinuousNumeric } from "d3-scale";
+import { zoomIdentity, type ZoomTransform } from "d3-zoom";
 
-function matrixFromDomainRange(
-  domain: [number, number],
-  range: [number, number],
+function zoomTransformFromScale(
+  scale: ScaleContinuousNumeric<number, number>,
   axis: "x" | "y",
-  sm: DOMMatrix,
-): DOMMatrix {
-  const [d0, d1] = domain;
-  const [r0, r1] = range;
-  const a = (r1 - r0) / (d1 - d0);
-  const b = r0 - d0 * a;
+): ZoomTransform {
+  const [d0, d1] = scale.domain() as [number, number];
+  const [r0, r1] = scale.range() as [number, number];
+  const k = (r1 - r0) / (d1 - d0);
+  const b = r0 - d0 * k;
   return axis === "x"
-    ? sm.translate(b, 0).scale(a, 1)
-    : sm.translate(0, b).scale(1, a);
+    ? zoomIdentity.translate(b, 0).scale(k)
+    : zoomIdentity.translate(0, b).scale(k);
+}
+
+function fromInit(init: DOMMatrixInit): DOMMatrix {
+  const ctor = DOMMatrix as unknown as {
+    fromMatrix?: (init: DOMMatrixInit) => DOMMatrix;
+  };
+  if (typeof ctor.fromMatrix === "function") {
+    return ctor.fromMatrix(init);
+  }
+  const m = new DOMMatrix();
+  m.a = init.a ?? 1;
+  m.b = init.b ?? 0;
+  m.c = init.c ?? 0;
+  m.d = init.d ?? 1;
+  m.e = init.e ?? 0;
+  m.f = init.f ?? 0;
+  return m;
 }
 
 /**
@@ -21,14 +37,13 @@ function matrixFromDomainRange(
 export function scaleToDomMatrix(
   scale: ScaleContinuousNumeric<number, number>,
   axis: "x" | "y" = "x",
-  sm: DOMMatrix = new DOMMatrix(),
 ): DOMMatrix {
-  return matrixFromDomainRange(
-    scale.domain() as [number, number],
-    scale.range() as [number, number],
-    axis,
-    sm,
-  );
+  const t = zoomTransformFromScale(scale, axis);
+  const init =
+    axis === "x"
+      ? { a: t.k, d: 1, e: t.x, f: t.y }
+      : { a: 1, d: t.k, e: t.x, f: t.y };
+  return fromInit(init);
 }
 
 /**
@@ -37,7 +52,8 @@ export function scaleToDomMatrix(
 export function scalesToDomMatrix(
   scaleX: ScaleContinuousNumeric<number, number>,
   scaleY: ScaleContinuousNumeric<number, number>,
-  sm: DOMMatrix = new DOMMatrix(),
 ): DOMMatrix {
-  return scaleToDomMatrix(scaleY, "y", scaleToDomMatrix(scaleX, "x", sm));
+  const tx = zoomTransformFromScale(scaleX, "x");
+  const ty = zoomTransformFromScale(scaleY, "y");
+  return fromInit({ a: tx.k, d: ty.k, e: tx.x, f: ty.y });
 }
