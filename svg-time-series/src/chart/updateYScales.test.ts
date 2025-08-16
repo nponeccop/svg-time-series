@@ -22,11 +22,10 @@ describe("updateScales", () => {
     };
     const data = new ChartData(source);
     const axisManager = new AxisManager(2, data);
-    axisManager.setXAxis(scaleTime().range([0, 1]));
+    axisManager.setXAxis(scaleTime().range([0, 1]).domain([0, 1]));
     axisManager.axes.forEach((a) => a.scale.range([0, 1]));
 
-    const bIndexVisible = new AR1Basis(0, 1);
-    axisManager.updateScales(bIndexVisible);
+    axisManager.updateScales();
 
     expect(axisManager.axes[0]!.scale.domain()).toEqual([1, 3]);
     expect(axisManager.axes[1]!.scale.domain()).toEqual([10, 30]);
@@ -96,13 +95,15 @@ describe("updateScales", () => {
         );
         return { tree, min, max, dpRef };
       },
+      timeToIndex(t: number) {
+        return t;
+      },
     };
     const axisManager = new AxisManager(3, data as unknown as ChartData);
-    axisManager.setXAxis(scaleTime().range([0, 1]));
+    axisManager.setXAxis(scaleTime().range([0, 1]).domain([0, 1]));
     axisManager.axes.forEach((a) => a.scale.range([0, 1]));
 
-    const bIndexVisible = new AR1Basis(0, 1);
-    axisManager.updateScales(bIndexVisible);
+    axisManager.updateScales();
 
     expect(axisManager.axes[0]!.scale.domain()).toEqual([1, 3]);
     expect(axisManager.axes[1]!.scale.domain()).toEqual([10, 30]);
@@ -173,14 +174,16 @@ describe("updateScales", () => {
         );
         return { tree, min, max, dpRef };
       },
+      timeToIndex(t: number) {
+        return t;
+      },
     };
     const axisManager = new AxisManager(2, data as unknown as ChartData);
-    axisManager.setXAxis(scaleTime().range([0, 1]));
+    axisManager.setXAxis(scaleTime().range([0, 1]).domain([0, 1]));
     axisManager.axes.forEach((a) => a.scale.range([0, 1]));
 
-    const bIndexVisible = new AR1Basis(0, 1);
     expect(() => {
-      axisManager.updateScales(bIndexVisible);
+      axisManager.updateScales();
     }).toThrow(/axis index 2/i);
   });
 });

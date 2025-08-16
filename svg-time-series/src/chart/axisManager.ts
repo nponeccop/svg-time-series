@@ -5,9 +5,8 @@ import { SegmentTree } from "segment-tree-rmq";
 
 import type { MyAxis } from "../axis.ts";
 import { ViewportTransform } from "../ViewportTransform.ts";
-import type { AR1Basis } from "../math/affine.ts";
+import { AR1Basis } from "../math/affine.ts";
 import type { ChartData, IMinMax } from "./data.ts";
-import { updateScaleX } from "./render/utils.ts";
 import { buildMinMax, minMaxIdentity } from "./minMax.ts";
 
 export class AxisModel {
@@ -74,9 +73,15 @@ export class AxisManager {
     this.x = scale;
   }
 
-  updateScales(bIndex: AR1Basis): void {
+  updateScales(): void {
     this.data.assertAxisBounds(this.axes.length);
-    updateScaleX(this.x, bIndex, this.data);
+    const [d0, d1] = this.x.domain();
+    const t0 = d0 instanceof Date ? d0.getTime() : Number(d0);
+    const t1 = d1 instanceof Date ? d1.getTime() : Number(d1);
+    const bIndex = new AR1Basis(
+      this.data.timeToIndex(t0),
+      this.data.timeToIndex(t1),
+    );
     for (const [i, idxs] of this.data.seriesByAxis.entries()) {
       if (idxs.length === 0) {
         continue;

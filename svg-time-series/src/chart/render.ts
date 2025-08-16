@@ -61,7 +61,6 @@ export interface RenderState {
   axes: Axes;
   axisRenders: AxisRenderState[];
   xTransform: ViewportTransform;
-  screenXBasis: AR1Basis;
   dimensions: Dimensions;
   series: Series[];
   seriesRenderer: SeriesRenderer;
@@ -76,12 +75,18 @@ export function refreshRenderState(state: RenderState, data: ChartData): void {
     bPlaceholder,
   );
   state.xTransform.onReferenceViewWindowResize(referenceBasis);
-  const bIndexVisible = state.xTransform.fromScreenToModelBasisX(
-    state.screenXBasis,
+  const [d0, d1] = state.axes.x.scale.domain();
+  const t0 = d0 instanceof Date ? d0.getTime() : Number(d0);
+  const t1 = d1 instanceof Date ? d1.getTime() : Number(d1);
+  const bIndexVisible = new AR1Basis(
+    data.timeToIndex(t0),
+    data.timeToIndex(t1),
   );
+  const bTimeVisible = bIndexVisible.transformWith(data.indexToTime());
+  state.axes.x.scale.domain(bTimeVisible.toArr());
 
   state.axisManager.setData(data);
-  state.axisManager.updateScales(bIndexVisible);
+  state.axisManager.updateScales();
 
   for (const s of state.series) {
     const t = state.axes.y[s.axisIdx]!.transform;
@@ -127,7 +132,6 @@ function resizeRenderState(
   );
 
   state.axes.x.scale.range([0, width]);
-  state.screenXBasis = bScreenXVisible;
 
   zoomState.updateExtents(dimensions);
 
@@ -143,8 +147,7 @@ export function setupRender(
   data: ChartData,
 ): RenderState {
   const screenBasis = createDimensions(svg);
-  const screenXBasis = screenBasis.x();
-  const width = screenXBasis.getRange();
+  const width = screenBasis.x().getRange();
   const height = screenBasis.y().getRange();
   const maxAxisIdx = data.seriesAxes.reduce(
     (max, idx) => Math.max(max, idx),
@@ -164,7 +167,9 @@ export function setupRender(
   for (const a of yAxes) {
     a.scale.range(yRange);
   }
-  axisManager.updateScales(data.bIndexFull);
+  const bTimeFull = data.bIndexFull.transformWith(data.indexToTime());
+  xScale.domain(bTimeFull.toArr());
+  axisManager.updateScales();
 
   const referenceBasis = DirectProductBasis.fromProjections(
     data.bIndexFull,
@@ -209,7 +214,6 @@ export function setupRender(
     axes,
     axisRenders,
     xTransform,
-    screenXBasis,
     dimensions,
     series,
     seriesRenderer,
