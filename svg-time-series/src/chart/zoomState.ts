@@ -1,7 +1,7 @@
 import type { Selection } from "d3-selection";
 import { zoom as d3zoom, zoomIdentity, zoomTransform } from "d3-zoom";
 import type { D3ZoomEvent, ZoomBehavior, ZoomTransform } from "d3-zoom";
-import type { ScaleLinear } from "d3-scale";
+import type { ScaleLinear, ScaleTime } from "d3-scale";
 import { ZoomScheduler, sameTransform } from "./zoomScheduler.ts";
 import type { RenderState } from "./render.ts";
 import { assertPositiveFinite, assertTupleSize } from "./validation.ts";
@@ -82,9 +82,7 @@ export class ZoomState {
       return;
     }
     const t = event.transform as ZoomTransform & {
-      rescaleX?: (
-        s: ScaleLinear<number, number>,
-      ) => ScaleLinear<number, number>;
+      rescaleX?: (s: ScaleTime<number, number>) => ScaleTime<number, number>;
       rescaleY?: (
         s: ScaleLinear<number, number>,
       ) => ScaleLinear<number, number>;
