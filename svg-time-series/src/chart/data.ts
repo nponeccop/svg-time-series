@@ -3,7 +3,6 @@ import { SegmentTree } from "segment-tree-rmq";
 import { scaleLinear, type ScaleLinear } from "d3-scale";
 import type { ZoomTransform } from "d3-zoom";
 import type { Basis, DirectProductBasis } from "../basis.ts";
-import { toDirectProductBasis } from "../basis.ts";
 import { SlidingWindow } from "./slidingWindow.ts";
 import { assertFiniteNumber, assertPositiveInteger } from "./validation.ts";
 import { buildMinMax, minMaxIdentity } from "./minMax.ts";
@@ -199,7 +198,7 @@ export class ChartData {
     tree: SegmentTree<IMinMax>,
   ): DirectProductBasis {
     const bAxisVisible = this.bAxisVisible(bIndexVisible, tree);
-    return toDirectProductBasis(bIndexVisible, bAxisVisible);
+    return [bIndexVisible, bAxisVisible];
   }
 
   axisTransform(
@@ -220,7 +219,7 @@ export class ChartData {
       max = 1;
     }
     const b: Basis = [min, max];
-    const dpRef = toDirectProductBasis(this.bIndexFull, b);
+    const dpRef: DirectProductBasis = [this.bIndexFull, b];
     return { tree, min, max, dpRef };
   }
 
@@ -237,7 +236,7 @@ export class ChartData {
     const [min0, max0] = b0;
     const [min1, max1] = b1;
     const combined: Basis = [Math.min(min0, min1), Math.max(max0, max1)];
-    const dp = toDirectProductBasis(this.bIndexFull, combined);
+    const dp: DirectProductBasis = [this.bIndexFull, combined];
     return { combined, dp };
   }
 }

@@ -1,5 +1,4 @@
 import type { Selection } from "d3-selection";
-// createDimensions no longer returns basis objects; only width and height
 
 export function createDimensions(
   svg: Selection<SVGSVGElement, unknown, HTMLElement, unknown>,
