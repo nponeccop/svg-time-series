@@ -5,6 +5,7 @@ import type { Line } from "d3-shape";
 
 import { MyAxis, Orientation } from "../axis.ts";
 import { updateNode } from "../utils/domNodeTransform.ts";
+import type { AR1 } from "../math/affine.ts";
 import { AR1Basis, DirectProductBasis, bPlaceholder } from "../math/affine.ts";
 
 import { ViewportTransform } from "../ViewportTransform.ts";
@@ -78,12 +79,16 @@ export function refreshRenderState(state: RenderState, data: ChartData): void {
   const [d0, d1] = state.axes.x.scale.domain();
   const t0 = d0 instanceof Date ? d0.getTime() : Number(d0);
   const t1 = d1 instanceof Date ? d1.getTime() : Number(d1);
-  const bIndexVisible = new AR1Basis(
-    data.timeToIndex(t0),
-    data.timeToIndex(t1),
-  );
-  const bTimeVisible = bIndexVisible.transformWith(data.indexToTime());
-  state.axes.x.scale.domain(bTimeVisible.toArr());
+  const i0 = data.timeToIndex(t0);
+  const i1 = data.timeToIndex(t1);
+  const transform: AR1 | ((i: number) => number) = data.indexToTime() as
+    | AR1
+    | ((i: number) => number);
+  const toTime =
+    typeof transform === "function"
+      ? (i: number) => transform(i)
+      : (i: number) => transform.applyToPoint(i);
+  state.axes.x.scale.domain([toTime(i0), toTime(i1)]);
 
   state.axisManager.setData(data);
   state.axisManager.updateScales();
@@ -167,8 +172,15 @@ export function setupRender(
   for (const a of yAxes) {
     a.scale.range(yRange);
   }
-  const bTimeFull = data.bIndexFull.transformWith(data.indexToTime());
-  xScale.domain(bTimeFull.toArr());
+  const [iStart, iEnd] = data.bIndexFull.toArr();
+  const idxToTime: AR1 | ((i: number) => number) = data.indexToTime() as
+    | AR1
+    | ((i: number) => number);
+  const toTimeFull =
+    typeof idxToTime === "function"
+      ? (i: number) => idxToTime(i)
+      : (i: number) => idxToTime.applyToPoint(i);
+  xScale.domain([toTimeFull(iStart), toTimeFull(iEnd)]);
   axisManager.updateScales();
 
   const referenceBasis = DirectProductBasis.fromProjections(

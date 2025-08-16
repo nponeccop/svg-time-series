@@ -1,5 +1,6 @@
 import type { Selection } from "d3-selection";
 import type { ScaleTime } from "d3-scale";
+import type { AR1 } from "../../math/affine.ts";
 import { AR1Basis, DirectProductBasis } from "../../math/affine.ts";
 import type { ChartData } from "../data.ts";
 
@@ -35,9 +36,15 @@ export function updateScaleX(
   bIndexVisible: AR1Basis,
   data: ChartData,
 ) {
-  const transform = data.indexToTime();
-  const bTimeVisible = bIndexVisible.transformWith(transform);
-  x.domain(bTimeVisible.toArr());
+  const transform: AR1 | ((i: number) => number) = data.indexToTime() as
+    | AR1
+    | ((i: number) => number);
+  const toTime =
+    typeof transform === "function"
+      ? (i: number) => transform(i)
+      : (i: number) => transform.applyToPoint(i);
+  const [i0, i1] = bIndexVisible.toArr();
+  x.domain([toTime(i0), toTime(i1)]);
 }
 
 export function createSeriesNodes(
