@@ -1,9 +1,9 @@
 import { SegmentTree } from "segment-tree-rmq";
 
 import { scaleLinear, type ScaleLinear } from "d3-scale";
+import { extent } from "d3-array";
 import type { ZoomTransform } from "d3-zoom";
-import type { Basis, DirectProductBasis } from "../basis.ts";
-import { toDirectProductBasis } from "../basis.ts";
+import type { Basis } from "../basis.ts";
 import { SlidingWindow } from "./slidingWindow.ts";
 import { assertFiniteNumber, assertPositiveInteger } from "./validation.ts";
 import { buildMinMax, minMaxIdentity } from "./minMax.ts";
@@ -197,9 +197,9 @@ export class ChartData {
   updateScaleY(
     bIndexVisible: Basis,
     tree: SegmentTree<IMinMax>,
-  ): DirectProductBasis {
+  ): ScaleLinear<number, number> {
     const bAxisVisible = this.bAxisVisible(bIndexVisible, tree);
-    return toDirectProductBasis(bIndexVisible, bAxisVisible);
+    return scaleLinear<number, number>().domain(bAxisVisible);
   }
 
   axisTransform(
@@ -207,37 +207,30 @@ export class ChartData {
     dIndexVisible: [number, number],
   ): {
     tree: SegmentTree<IMinMax>;
-    min: number;
-    max: number;
-    dpRef: DirectProductBasis;
+    scale: ScaleLinear<number, number>;
   } {
     const tree = this.buildAxisTree(axisIdx);
     const bIndexVisible: Basis = [dIndexVisible[0], dIndexVisible[1]];
-    const dp = this.updateScaleY(bIndexVisible, tree);
-    let [min, max] = dp[1];
+    const scale = this.updateScaleY(bIndexVisible, tree);
+    let [min, max] = scale.domain() as [number, number];
     if (!Number.isFinite(min) || !Number.isFinite(max)) {
       min = 0;
       max = 1;
+      scale.domain([min, max]);
     }
-    const b: Basis = [min, max];
-    const dpRef = toDirectProductBasis(this.bIndexFull, b);
-    return { tree, min, max, dpRef };
+    return { tree, scale };
   }
 
   combinedAxisDp(
     bIndexVisible: Basis,
     tree0: SegmentTree<IMinMax>,
     tree1: SegmentTree<IMinMax>,
-  ): {
-    combined: Basis;
-    dp: DirectProductBasis;
-  } {
+    scale: ScaleLinear<number, number>,
+  ): Basis {
     const b0 = this.bAxisVisible(bIndexVisible, tree0);
     const b1 = this.bAxisVisible(bIndexVisible, tree1);
-    const [min0, max0] = b0;
-    const [min1, max1] = b1;
-    const combined: Basis = [Math.min(min0, min1), Math.max(max0, max1)];
-    const dp = toDirectProductBasis(this.bIndexFull, combined);
-    return { combined, dp };
+    const combined = extent([...b0, ...b1]) as Basis;
+    scale.domain(combined);
+    return combined;
   }
 }

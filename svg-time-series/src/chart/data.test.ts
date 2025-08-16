@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { scaleLinear } from "d3-scale";
 import type { Basis } from "../basis.ts";
 import type { IDataSource } from "./data.ts";
 import { ChartData } from "./data.ts";
@@ -400,7 +401,7 @@ describe("ChartData", () => {
     expect(cd.bAxisVisible(rightRange, tree1)).toEqual([60, 60]);
   });
 
-  it("computes combined temperature basis and direct product", () => {
+  it("computes combined temperature extent and updates scale", () => {
     const cd = new ChartData(
       makeSource(
         [
@@ -413,10 +414,10 @@ describe("ChartData", () => {
     );
     const tree0 = cd.buildAxisTree(0);
     const tree1 = cd.buildAxisTree(1);
-    const { combined, dp } = cd.combinedAxisDp(cd.bIndexFull, tree0, tree1);
+    const scale = scaleLinear<number, number>();
+    const combined = cd.combinedAxisDp(cd.bIndexFull, tree0, tree1, scale);
     expect(combined).toEqual([-3, 10]);
-    expect(dp[0]).toEqual([0, 2]);
-    expect(dp[1]).toEqual([-3, 10]);
+    expect(scale.domain()).toEqual([-3, 10]);
   });
 
   it("throws when initial data contains infinite values", () => {

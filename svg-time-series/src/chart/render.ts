@@ -90,9 +90,6 @@ export class RenderState {
   }
 
   public refresh(data: ChartData, transform: ZoomTransform): void {
-    const referenceBasis = toDirectProductBasis(data.bIndexFull, bPlaceholder);
-    this.xTransform.onReferenceViewWindowResize(referenceBasis);
-
     this.axisManager.setData(data);
     this.axisManager.updateScales(transform);
 
