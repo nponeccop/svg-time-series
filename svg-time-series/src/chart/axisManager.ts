@@ -51,10 +51,10 @@ export class AxisModel {
     const range = this.baseScale.range() as [number, number];
     scale.range(range);
     this.baseScale = scale;
-    this.transform.onReferenceViewWindowResize([
-      data.bIndexFull,
+    this.transform.onReferenceViewWindowResize(
+      data.indexDomain,
       scale.domain() as [number, number],
-    ]);
+    );
     this.scale = transform.rescaleY(scale).copy();
   }
 }

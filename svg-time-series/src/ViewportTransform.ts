@@ -1,6 +1,9 @@
-import { scaleLinear, type ScaleLinear } from "d3-scale";
+import {
+  scaleLinear,
+  type ScaleContinuousNumeric,
+  type ScaleLinear,
+} from "d3-scale";
 import { zoomIdentity, type ZoomTransform } from "d3-zoom";
-import type { Basis, DirectProductBasis } from "./basis.ts";
 import { scalesToDomMatrix } from "./utils/domMatrix.ts";
 
 export class ViewportTransform {
@@ -27,18 +30,30 @@ export class ViewportTransform {
     );
   }
 
-  public onViewPortResize(bScreenVisible: DirectProductBasis): this {
-    const [viewX, viewY] = bScreenVisible;
-    this.baseScaleX = this.baseScaleX.copy().range(viewX);
-    this.baseScaleY = this.baseScaleY.copy().range(viewY);
+  public onViewPortResize(
+    rangeX: ScaleContinuousNumeric<number, number> | [number, number],
+    rangeY: ScaleContinuousNumeric<number, number> | [number, number],
+  ): this {
+    this.baseScaleX = Array.isArray(rangeX)
+      ? this.baseScaleX.copy().range(rangeX)
+      : (rangeX.copy() as ScaleLinear<number, number>);
+    this.baseScaleY = Array.isArray(rangeY)
+      ? this.baseScaleY.copy().range(rangeY)
+      : (rangeY.copy() as ScaleLinear<number, number>);
     this.updateScales();
     return this;
   }
 
-  public onReferenceViewWindowResize(newPoints: DirectProductBasis): this {
-    const [refX, refY] = newPoints;
-    this.baseScaleX = this.baseScaleX.copy().domain(refX);
-    this.baseScaleY = this.baseScaleY.copy().domain(refY);
+  public onReferenceViewWindowResize(
+    domainX: ScaleContinuousNumeric<number, number> | [number, number],
+    domainY: ScaleContinuousNumeric<number, number> | [number, number],
+  ): this {
+    this.baseScaleX = Array.isArray(domainX)
+      ? this.baseScaleX.copy().domain(domainX)
+      : (domainX.copy() as ScaleLinear<number, number>);
+    this.baseScaleY = Array.isArray(domainY)
+      ? this.baseScaleY.copy().domain(domainY)
+      : (domainY.copy() as ScaleLinear<number, number>);
     this.updateScales();
     return this;
   }
@@ -79,7 +94,7 @@ export class ViewportTransform {
     return this.scaleY.invert(y);
   }
 
-  public fromScreenToModelBasisX(b: Basis): Basis {
+  public fromScreenToModelBasisX(b: [number, number]): [number, number] {
     this.assertInvertible(this.scaleX);
     const [bp1, bp2] = b;
     const p1 = this.scaleX.invert(bp1);
@@ -95,7 +110,7 @@ export class ViewportTransform {
     return this.toScreenPoint(0, y).y;
   }
 
-  public toScreenFromModelBasisX(b: Basis): Basis {
+  public toScreenFromModelBasisX(b: [number, number]): [number, number] {
     const transformPoint = (x: number) => this.toScreenPoint(x, 0).x;
     const [bp1, bp2] = b;
     const p1 = transformPoint(bp1);

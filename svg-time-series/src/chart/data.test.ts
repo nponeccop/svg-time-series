@@ -1,6 +1,5 @@
 import { describe, it, expect } from "vitest";
 import { scaleLinear } from "d3-scale";
-import type { Basis } from "../basis.ts";
 import type { IDataSource } from "./data.ts";
 import { ChartData } from "./data.ts";
 
@@ -293,7 +292,7 @@ describe("ChartData", () => {
         [0, 1],
       ),
     );
-    const range: Basis = [0, 2];
+    const range: [number, number] = [0, 2];
     const tree0 = cd.buildAxisTree(0);
     const tree1 = cd.buildAxisTree(1);
     expect(cd.bAxisVisible(range, tree0)).toEqual([10, 50]);
@@ -314,7 +313,7 @@ describe("ChartData", () => {
     const tree0 = cd.buildAxisTree(0);
     const tree1 = cd.buildAxisTree(1);
 
-    const fractionalRange: Basis = [0.49, 1.49];
+    const fractionalRange: [number, number] = [0.49, 1.49];
     expect(cd.bAxisVisible(fractionalRange, tree0)).toEqual([10, 50]);
     expect(cd.bAxisVisible(fractionalRange, tree1)).toEqual([20, 60]);
   });
@@ -333,7 +332,7 @@ describe("ChartData", () => {
     const tree0 = cd.buildAxisTree(0);
     const tree1 = cd.buildAxisTree(1);
 
-    const fractionalRange: Basis = [1.1, 1.7];
+    const fractionalRange: [number, number] = [1.1, 1.7];
     expect(cd.bAxisVisible(fractionalRange, tree0)).toEqual([30, 50]);
     expect(cd.bAxisVisible(fractionalRange, tree1)).toEqual([40, 60]);
   });
@@ -352,7 +351,7 @@ describe("ChartData", () => {
     const tree0 = cd.buildAxisTree(0);
     const tree1 = cd.buildAxisTree(1);
 
-    const outOfRange: Basis = [-0.5, 3.5];
+    const outOfRange: [number, number] = [-0.5, 3.5];
     expect(() => cd.bAxisVisible(outOfRange, tree0)).not.toThrow();
     expect(() => cd.bAxisVisible(outOfRange, tree1)).not.toThrow();
     expect(cd.bAxisVisible(outOfRange, tree0)).toEqual([10, 50]);
@@ -373,7 +372,7 @@ describe("ChartData", () => {
     const tree0 = cd.buildAxisTree(0);
     const tree1 = cd.buildAxisTree(1);
 
-    const leftRange: Basis = [-5, -1];
+    const leftRange: [number, number] = [-5, -1];
     expect(() => cd.bAxisVisible(leftRange, tree0)).not.toThrow();
     expect(() => cd.bAxisVisible(leftRange, tree1)).not.toThrow();
     expect(cd.bAxisVisible(leftRange, tree0)).toEqual([10, 10]);
@@ -394,7 +393,7 @@ describe("ChartData", () => {
     const tree0 = cd.buildAxisTree(0);
     const tree1 = cd.buildAxisTree(1);
 
-    const rightRange: Basis = [5, 10];
+    const rightRange: [number, number] = [5, 10];
     expect(() => cd.bAxisVisible(rightRange, tree0)).not.toThrow();
     expect(() => cd.bAxisVisible(rightRange, tree1)).not.toThrow();
     expect(cd.bAxisVisible(rightRange, tree0)).toEqual([50, 50]);
@@ -415,7 +414,7 @@ describe("ChartData", () => {
     const tree0 = cd.buildAxisTree(0);
     const tree1 = cd.buildAxisTree(1);
     const scale = scaleLinear<number, number>();
-    cd.combinedAxisDp(cd.bIndexFull, tree0, tree1, scale);
+    cd.combinedAxisDp(cd.indexDomain, tree0, tree1, scale);
     expect(scale.domain()).toEqual([-3, 10]);
   });
 

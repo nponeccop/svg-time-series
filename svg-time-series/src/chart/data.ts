@@ -3,7 +3,6 @@ import { SegmentTree } from "segment-tree-rmq";
 import { scaleLinear, type ScaleLinear } from "d3-scale";
 import { extent } from "d3-array";
 import type { ZoomTransform } from "d3-zoom";
-import type { Basis } from "../basis.ts";
 import { SlidingWindow } from "./slidingWindow.ts";
 import { assertFiniteNumber, assertPositiveInteger } from "./validation.ts";
 import { buildMinMax, minMaxIdentity } from "./minMax.ts";
@@ -50,7 +49,7 @@ export class ChartData {
 
   private readonly window: SlidingWindow;
   public readonly seriesByAxis: [number[], number[]] = [[], []];
-  public bIndexFull: Basis;
+  public readonly indexDomain: [number, number];
   public readonly startTime: number;
   public readonly timeStep: number;
   public readonly seriesCount: number;
@@ -88,14 +87,14 @@ export class ChartData {
     this.window = new SlidingWindow(initialData);
     this.startTime = source.startTime;
     this.timeStep = source.timeStep;
-    // bIndexFull represents the full range of data indices and remains constant
+    // indexDomain represents the full range of data indices and remains constant
     // since append() maintains a sliding window of fixed length
-    this.bIndexFull = [0, this.window.length - 1];
+    this.indexDomain = [0, this.window.length - 1];
     this.indexToTime = scaleLinear<number, number>()
       .domain([0, 1])
       .range([this.startTime, this.startTime + this.timeStep]);
     this.indexScale = scaleLinear<number, number>()
-      .domain(this.bIndexFull)
+      .domain(this.indexDomain)
       .range([0, 1]);
   }
 
@@ -135,7 +134,7 @@ export class ChartData {
 
   timeDomainFull(): [Date, Date] {
     const toTime = this.indexToTime;
-    return this.bIndexFull.map((i) => new Date(toTime(i))) as [Date, Date];
+    return this.indexDomain.map((i) => new Date(toTime(i))) as [Date, Date];
   }
 
   bIndexFromTransform(
@@ -181,8 +180,11 @@ export class ChartData {
     );
     return new SegmentTree(arr, buildMinMax, minMaxIdentity);
   }
-  bAxisVisible(bIndexVisible: Basis, tree: SegmentTree<IMinMax>): Basis {
-    const [minIdxX, maxIdxX] = bIndexVisible;
+  bAxisVisible(
+    indexRange: [number, number],
+    tree: SegmentTree<IMinMax>,
+  ): [number, number] {
+    const [minIdxX, maxIdxX] = indexRange;
     let startIdx = Math.floor(minIdxX);
     let endIdx = Math.ceil(maxIdxX);
     startIdx = this.clampIndex(startIdx);
@@ -199,10 +201,10 @@ export class ChartData {
   }
 
   updateScaleY(
-    bIndexVisible: Basis,
+    indexRange: [number, number],
     tree: SegmentTree<IMinMax>,
   ): ScaleLinear<number, number> {
-    const [min, max] = this.bAxisVisible(bIndexVisible, tree);
+    const [min, max] = this.bAxisVisible(indexRange, tree);
     return scaleLinear<number, number>().domain([min, max]);
   }
 
@@ -225,13 +227,13 @@ export class ChartData {
   }
 
   combinedAxisDp(
-    bIndexVisible: Basis,
+    indexRange: [number, number],
     tree0: SegmentTree<IMinMax>,
     tree1: SegmentTree<IMinMax>,
     scale: ScaleLinear<number, number>,
   ): ScaleLinear<number, number> {
-    const b0 = this.bAxisVisible(bIndexVisible, tree0);
-    const b1 = this.bAxisVisible(bIndexVisible, tree1);
+    const b0 = this.bAxisVisible(indexRange, tree0);
+    const b1 = this.bAxisVisible(indexRange, tree1);
     const [min, max] = extent([...b0, ...b1]) as [
       number | undefined,
       number | undefined,
