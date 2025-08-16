@@ -1,7 +1,7 @@
 import { bench, describe } from "vitest";
 import { zoomIdentity } from "d3-zoom";
+import { scaleLinear } from "d3-scale";
 import { ViewportTransform } from "../src/ViewportTransform.ts";
-import { toDirectProductBasis } from "../src/basis.ts";
 
 class Matrix {
   constructor(
@@ -69,8 +69,14 @@ globalObj.DOMPoint = Point;
 
 describe("ViewportTransform performance", () => {
   const vt = new ViewportTransform();
-  vt.onViewPortResize(toDirectProductBasis([0, 100], [0, 100]));
-  vt.onReferenceViewWindowResize(toDirectProductBasis([0, 10], [0, 10]));
+  vt.onViewPortResize([
+    scaleLinear().range([0, 100]),
+    scaleLinear().range([0, 100]),
+  ]);
+  vt.onReferenceViewWindowResize([
+    scaleLinear().domain([0, 10]),
+    scaleLinear().domain([0, 10]),
+  ]);
 
   const t = zoomIdentity.translate(10, 0).scale(2);
 

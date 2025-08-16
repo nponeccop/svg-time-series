@@ -52,8 +52,8 @@ export class AxisModel {
     scale.range(range);
     this.baseScale = scale;
     this.transform.onReferenceViewWindowResize([
-      data.bIndexFull,
-      scale.domain() as [number, number],
+      scaleLinear().domain(data.bIndexFull),
+      scaleLinear().domain(scale.domain() as [number, number]),
     ]);
     this.scale = transform.rescaleY(scale).copy();
   }

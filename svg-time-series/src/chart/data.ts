@@ -3,7 +3,6 @@ import { SegmentTree } from "segment-tree-rmq";
 import { scaleLinear, type ScaleLinear } from "d3-scale";
 import { extent } from "d3-array";
 import type { ZoomTransform } from "d3-zoom";
-import type { Basis } from "../basis.ts";
 import { SlidingWindow } from "./slidingWindow.ts";
 import { assertFiniteNumber, assertPositiveInteger } from "./validation.ts";
 import { buildMinMax, minMaxIdentity } from "./minMax.ts";
@@ -50,7 +49,7 @@ export class ChartData {
 
   private readonly window: SlidingWindow;
   public readonly seriesByAxis: [number[], number[]] = [[], []];
-  public bIndexFull: Basis;
+  public bIndexFull: [number, number];
   public readonly startTime: number;
   public readonly timeStep: number;
   public readonly seriesCount: number;
@@ -185,7 +184,10 @@ export class ChartData {
     );
     return new SegmentTree(arr, buildMinMax, minMaxIdentity);
   }
-  bAxisVisible(bIndexVisible: Basis, tree: SegmentTree<IMinMax>): Basis {
+  bAxisVisible(
+    bIndexVisible: [number, number],
+    tree: SegmentTree<IMinMax>,
+  ): [number, number] {
     const [minIdxX, maxIdxX] = bIndexVisible;
     const i0 = this.clampIndex(minIdxX);
     const i1 = this.clampIndex(maxIdxX);
@@ -200,7 +202,7 @@ export class ChartData {
   }
 
   updateScaleY(
-    bIndexVisible: Basis,
+    bIndexVisible: [number, number],
     tree: SegmentTree<IMinMax>,
   ): ScaleLinear<number, number> {
     const [min, max] = this.bAxisVisible(bIndexVisible, tree);
@@ -226,7 +228,7 @@ export class ChartData {
   }
 
   combinedAxisDp(
-    bIndexVisible: Basis,
+    bIndexVisible: [number, number],
     tree0: SegmentTree<IMinMax>,
     tree1: SegmentTree<IMinMax>,
     scale: ScaleLinear<number, number>,
