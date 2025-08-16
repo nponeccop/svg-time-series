@@ -1,7 +1,11 @@
 import type { Selection } from "d3-selection";
 import { zoom as d3zoom, zoomIdentity, zoomTransform } from "d3-zoom";
-import type { D3ZoomEvent, ZoomBehavior, ZoomTransform } from "d3-zoom";
-import type { ScaleLinear, ScaleTime } from "d3-scale";
+import type {
+  D3ZoomEvent,
+  ZoomBehavior,
+  ZoomTransform,
+  ZoomScale,
+} from "d3-zoom";
 import { ZoomScheduler, sameTransform } from "./zoomScheduler.ts";
 import type { RenderState } from "./render.ts";
 import { assertPositiveFinite, assertTupleSize } from "./validation.ts";
@@ -82,21 +86,21 @@ export class ZoomState {
       return;
     }
     const t = event.transform as ZoomTransform & {
-      rescaleX?: (s: ScaleTime<number, number>) => ScaleTime<number, number>;
-      rescaleY?: (
-        s: ScaleLinear<number, number>,
-      ) => ScaleLinear<number, number>;
+      rescaleX?: (x: ZoomScale) => ZoomScale;
+      rescaleY?: (y: ZoomScale) => ZoomScale;
     };
     this.state.xTransform.onZoomPan(t);
     this.state.axes.y.forEach((a) => a.transform.onZoomPan(t));
-    const xRescaled = t.rescaleX?.(this.state.axes.x.scale);
+    const xRescaled = t.rescaleX?.(
+      this.state.axes.x.scale as unknown as ZoomScale,
+    );
     if (xRescaled) {
-      this.state.axes.x.scale.domain(xRescaled.domain());
+      this.state.axes.x.scale.domain(xRescaled.domain() as [number, number]);
     }
     this.state.axes.y.forEach((a) => {
-      const yRescaled = t.rescaleY?.(a.scale);
+      const yRescaled = t.rescaleY?.(a.scale as unknown as ZoomScale);
       if (yRescaled) {
-        a.scale.domain(yRescaled.domain());
+        a.scale.domain(yRescaled.domain() as [number, number]);
       }
     });
     if (!this.zoomScheduler.zoom(t, event.sourceEvent)) {
