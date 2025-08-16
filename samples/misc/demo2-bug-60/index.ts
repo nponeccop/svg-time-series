@@ -14,9 +14,7 @@ import type { IMinMax } from "../../../svg-time-series/src/chart/data.ts";
 import type { AR1 } from "../../../svg-time-series/src/math/affine.ts";
 import {
   AR1Basis,
-  DirectProductBasis,
   betweenTBasesAR1,
-  bPlaceholder,
   bUnit,
 } from "../../../svg-time-series/src/math/affine.ts";
 import { updateNode } from "../../../svg-time-series/src/utils/domNodeTransform.ts";
@@ -238,10 +236,8 @@ export class TimeSeriesChart {
       // ����������� �� � � Y � ������� ������������
       // ������e��� �� ������ �������������
       pathTransform.onReferenceViewWindowResize(
-        DirectProductBasis.fromProjections(
-          this.bIndexFull,
-          bTemperatureVisible,
-        ),
+        this.bIndexFull.toArr(),
+        bTemperatureVisible.toArr(),
       );
 
       const bTimeVisible = bIndexVisible.transformWith(this.idxToTime);
@@ -283,10 +279,12 @@ export class TimeSeriesChart {
       yAxis.axisUp(gY);
     });
     pathTransform.onViewPortResize(
-      DirectProductBasis.fromProjections(bScreenXVisible, bScreenYVisible),
+      bScreenXVisible.toArr(),
+      bScreenYVisible.toArr(),
     );
     pathTransform.onReferenceViewWindowResize(
-      DirectProductBasis.fromProjections(this.bIndexFull, bPlaceholder),
+      this.bIndexFull.toArr(),
+      bUnit.toArr(),
     );
     svg
       .append("rect")

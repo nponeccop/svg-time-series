@@ -1,13 +1,11 @@
 import type { Selection } from "d3-selection";
-import { scaleTime } from "d3-scale";
+import { scaleLinear, scaleTime } from "d3-scale";
 import type { ScaleTime, ScaleLinear } from "d3-scale";
 import type { Line } from "d3-shape";
 import { zoomIdentity, type ZoomTransform } from "d3-zoom";
 
 import { MyAxis, Orientation } from "../axis.ts";
 import { updateNode } from "../utils/domNodeTransform.ts";
-import type { Basis } from "../basis.ts";
-import { bPlaceholder, toDirectProductBasis } from "../basis.ts";
 
 import { ViewportTransform } from "../ViewportTransform.ts";
 import { AxisManager } from "./axisManager.ts";
@@ -64,7 +62,7 @@ export class RenderState {
   public axes: Axes;
   public axisRenders: AxisRenderState[];
   public xTransform: ViewportTransform;
-  public screenXBasis: Basis;
+  public screenXRange: [number, number];
   public dimensions: Dimensions;
   public series: Series[];
   public seriesRenderer: SeriesRenderer;
@@ -74,7 +72,7 @@ export class RenderState {
     axes: Axes,
     axisRenders: AxisRenderState[],
     xTransform: ViewportTransform,
-    screenXBasis: Basis,
+    screenXRange: [number, number],
     dimensions: Dimensions,
     series: Series[],
     seriesRenderer: SeriesRenderer,
@@ -83,15 +81,17 @@ export class RenderState {
     this.axes = axes;
     this.axisRenders = axisRenders;
     this.xTransform = xTransform;
-    this.screenXBasis = screenXBasis;
+    this.screenXRange = screenXRange;
     this.dimensions = dimensions;
     this.series = series;
     this.seriesRenderer = seriesRenderer;
   }
 
   public refresh(data: ChartData, transform: ZoomTransform): void {
-    const referenceBasis = toDirectProductBasis(data.bIndexFull, bPlaceholder);
-    this.xTransform.onReferenceViewWindowResize(referenceBasis);
+    this.xTransform.onReferenceViewWindowResize(
+      scaleLinear().domain(data.indexDomain),
+      scaleLinear(),
+    );
 
     this.axisManager.setData(data);
     this.axisManager.updateScales(transform);
@@ -132,25 +132,24 @@ export class RenderState {
 
   public resize(dimensions: Dimensions, zoomState: ZoomState): void {
     const { width, height } = dimensions;
-    const bScreenXVisible: Basis = [0, width];
-    const bScreenYVisible: Basis = [height, 0];
-    const bScreenVisible = toDirectProductBasis(
-      bScreenXVisible,
-      bScreenYVisible,
-    );
+    const xRange: [number, number] = [0, width];
+    const yRange: [number, number] = [height, 0];
 
-    this.axes.x.scale.range([0, width]);
+    this.axes.x.scale.range(xRange);
     this.axes.x.axis.setScale(this.axes.x.scale);
     this.axisManager.setXAxis(this.axes.x.scale);
-    this.screenXBasis = bScreenXVisible;
+    this.screenXRange = xRange;
 
     zoomState.updateExtents(dimensions);
 
-    this.xTransform.onViewPortResize(bScreenVisible);
+    const xScale = scaleLinear().range(xRange);
+    const yScale = scaleLinear().range(yRange);
+
+    this.xTransform.onViewPortResize(xScale, yScale);
     for (const a of this.axes.y) {
-      a.transform.onViewPortResize(bScreenVisible);
-      a.scale.range([height, 0]);
-      a.baseScale.range([height, 0]);
+      a.transform.onViewPortResize(xScale, yScale);
+      a.scale.range(yRange);
+      a.baseScale.range(yRange);
     }
   }
 
@@ -193,9 +192,8 @@ export function setupRender(
   data: ChartData,
 ): RenderState {
   const { width, height } = createDimensions(svg);
-  const screenXBasis: Basis = [0, width];
-  const screenYBasis: Basis = [height, 0];
-  const screenBasis = toDirectProductBasis(screenXBasis, screenYBasis);
+  const screenXRange: [number, number] = [0, width];
+  const screenYRange: [number, number] = [height, 0];
   const maxAxisIdx = data.seriesAxes.reduce(
     (max, idx) => Math.max(max, idx),
     0,
@@ -206,19 +204,22 @@ export function setupRender(
   axisManager.setXAxis(scaleTime().range([0, width]));
   const yAxes = axisManager.axes;
   for (const a of yAxes) {
-    a.scale.range([height, 0]);
-    a.baseScale.range([height, 0]);
+    a.scale.range(screenYRange);
+    a.baseScale.range(screenYRange);
   }
   axisManager.updateScales(zoomIdentity);
 
-  const referenceBasis = toDirectProductBasis(data.bIndexFull, bPlaceholder);
+  const xScale = scaleLinear().range(screenXRange);
+  const yScale = scaleLinear().range(screenYRange);
+  const refX = scaleLinear().domain(data.indexDomain);
+  const refY = scaleLinear();
   for (const a of yAxes) {
-    a.transform.onViewPortResize(screenBasis);
-    a.transform.onReferenceViewWindowResize(referenceBasis);
+    a.transform.onViewPortResize(xScale, yScale);
+    a.transform.onReferenceViewWindowResize(refX, refY);
   }
   const xTransform = new ViewportTransform();
-  xTransform.onViewPortResize(screenBasis);
-  xTransform.onReferenceViewWindowResize(referenceBasis);
+  xTransform.onViewPortResize(xScale, yScale);
+  xTransform.onReferenceViewWindowResize(refX, refY);
 
   const series = createSeries(svg, data.seriesAxes);
   const seriesRenderer = new SeriesRenderer();
@@ -250,7 +251,7 @@ export function setupRender(
     axes,
     axisRenders,
     xTransform,
-    screenXBasis,
+    screenXRange,
     dimensions,
     series,
     seriesRenderer,

@@ -49,7 +49,7 @@ export class AxisModel {
   ): void {
     const { tree, min, max } = data.axisTransform(axisIdx, dIndex);
     this.tree = tree;
-    this.transform.onReferenceViewWindowResize([data.bIndexFull, [min, max]]);
+    this.transform.onReferenceViewWindowResize(data.indexDomain, [min, max]);
     const full = tree.query(0, data.length - 1);
     const [fullMin, fullMax] = extent([full.min, full.max]) as [number, number];
     this.baseScale.domain([fullMin, fullMax]);
@@ -84,7 +84,7 @@ export class AxisManager {
   updateScales(transform: ZoomTransform): void {
     this.data.assertAxisBounds(this.axes.length);
     this.x.domain(this.data.timeDomainFull());
-    const indexScale = this.data.bIndexFromTransform(
+    const indexScale = this.data.indexScaleFromTransform(
       transform,
       this.x.range() as [number, number],
     );

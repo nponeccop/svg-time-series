@@ -3,7 +3,6 @@ import { SegmentTree } from "segment-tree-rmq";
 import { scaleLinear, type ScaleLinear } from "d3-scale";
 import { extent } from "d3-array";
 import type { ZoomTransform } from "d3-zoom";
-import type { Basis } from "../basis.ts";
 import { SlidingWindow } from "./slidingWindow.ts";
 import { assertFiniteNumber, assertPositiveInteger } from "./validation.ts";
 import { buildMinMax, minMaxIdentity } from "./minMax.ts";
@@ -50,7 +49,7 @@ function validateSource(source: IDataSource): void {
 export class ChartData {
   private readonly window: SlidingWindow;
   public readonly seriesByAxis: [number[], number[]] = [[], []];
-  public bIndexFull: Basis;
+  public indexDomain: [number, number];
   public readonly startTime: number;
   public readonly timeStep: number;
   public readonly seriesCount: number;
@@ -63,7 +62,7 @@ export class ChartData {
   public readonly indexToTime: ScaleLinear<number, number>;
   /**
    * Persistent mapping from data index to screen range. The domain never
-   * changes, and the range is updated on demand in `bIndexFromTransform` to
+   * changes, and the range is updated on demand in `indexScaleFromTransform` to
    * avoid reconstructing the scale for every call.
    */
   private readonly indexScale: ScaleLinear<number, number>;
@@ -88,14 +87,14 @@ export class ChartData {
     this.window = new SlidingWindow(initialData);
     this.startTime = source.startTime;
     this.timeStep = source.timeStep;
-    // bIndexFull represents the full range of data indices and remains constant
+    // indexDomain represents the full range of data indices and remains constant
     // since append() maintains a sliding window of fixed length
-    this.bIndexFull = [0, this.window.length - 1];
+    this.indexDomain = [0, this.window.length - 1];
     this.indexToTime = scaleLinear<number, number>()
       .domain([0, 1])
       .range([this.startTime, this.startTime + this.timeStep]);
     this.indexScale = scaleLinear<number, number>()
-      .domain(this.bIndexFull)
+      .domain(this.indexDomain)
       .range([0, 1]);
   }
 
@@ -135,10 +134,10 @@ export class ChartData {
 
   timeDomainFull(): [Date, Date] {
     const toTime = this.indexToTime;
-    return this.bIndexFull.map((i) => new Date(toTime(i))) as [Date, Date];
+    return this.indexDomain.map((i) => new Date(toTime(i))) as [Date, Date];
   }
 
-  bIndexFromTransform(
+  indexScaleFromTransform(
     transform: ZoomTransform,
     range: [number, number],
   ): ScaleLinear<number, number> {
@@ -181,7 +180,10 @@ export class ChartData {
     );
     return new SegmentTree(arr, buildMinMax, minMaxIdentity);
   }
-  bAxisVisible(bIndexVisible: Basis, tree: SegmentTree<IMinMax>): Basis {
+  axisDomain(
+    bIndexVisible: [number, number],
+    tree: SegmentTree<IMinMax>,
+  ): [number, number] {
     const [minIdxX, maxIdxX] = bIndexVisible;
     let startIdx = Math.floor(minIdxX);
     let endIdx = Math.ceil(maxIdxX);
@@ -198,8 +200,11 @@ export class ChartData {
     return [y0 ?? NaN, y1 ?? NaN];
   }
 
-  updateScaleY(bIndexVisible: Basis, tree: SegmentTree<IMinMax>): Basis {
-    return this.bAxisVisible(bIndexVisible, tree);
+  updateScaleY(
+    bIndexVisible: [number, number],
+    tree: SegmentTree<IMinMax>,
+  ): [number, number] {
+    return this.axisDomain(bIndexVisible, tree);
   }
 
   axisTransform(
@@ -224,12 +229,12 @@ export class ChartData {
   }
 
   combinedAxisDomain(
-    bIndexVisible: Basis,
+    bIndexVisible: [number, number],
     tree0: SegmentTree<IMinMax>,
     tree1: SegmentTree<IMinMax>,
-  ): Basis {
-    const b0 = this.bAxisVisible(bIndexVisible, tree0);
-    const b1 = this.bAxisVisible(bIndexVisible, tree1);
+  ): [number, number] {
+    const b0 = this.axisDomain(bIndexVisible, tree0);
+    const b1 = this.axisDomain(bIndexVisible, tree1);
     const [min0, max0] = b0;
     const [min1, max1] = b1;
     return [Math.min(min0, min1), Math.max(max0, max1)];

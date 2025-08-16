@@ -1,8 +1,6 @@
 import "./setupDom.ts";
 import { beforeAll, describe, expect, it } from "vitest";
 import { zoomIdentity } from "d3-zoom";
-import type { Basis } from "./basis.ts";
-import { toDirectProductBasis } from "./basis.ts";
 import type { ViewportTransform as ViewportTransformClass } from "./ViewportTransform.ts";
 
 let ViewportTransform: typeof ViewportTransformClass;
@@ -15,8 +13,8 @@ describe("ViewportTransform", () => {
   it("composes zoom and reference transforms and inverts them", () => {
     const vt = new ViewportTransform();
 
-    vt.onViewPortResize(toDirectProductBasis([0, 100], [0, 100]));
-    vt.onReferenceViewWindowResize(toDirectProductBasis([0, 10], [0, 10]));
+    vt.onViewPortResize([0, 100], [0, 100]);
+    vt.onReferenceViewWindowResize([0, 10], [0, 10]);
 
     // without zoom
     expect(vt.fromScreenToModelX(50)).toBeCloseTo(5);
@@ -31,8 +29,8 @@ describe("ViewportTransform", () => {
   it("maps screen bases back to model bases through inverse transforms", () => {
     const vt = new ViewportTransform();
 
-    vt.onViewPortResize(toDirectProductBasis([0, 100], [0, 100]));
-    vt.onReferenceViewWindowResize(toDirectProductBasis([0, 10], [0, 10]));
+    vt.onViewPortResize([0, 100], [0, 100]);
+    vt.onReferenceViewWindowResize([0, 10], [0, 10]);
     vt.onZoomPan(zoomIdentity.translate(10, 0).scale(2));
 
     const basis = vt.fromScreenToModelBasisX([20, 40]);
@@ -44,8 +42,8 @@ describe("ViewportTransform", () => {
   it("converts screen points to model points", () => {
     const vt = new ViewportTransform();
 
-    vt.onViewPortResize(toDirectProductBasis([0, 100], [0, 100]));
-    vt.onReferenceViewWindowResize(toDirectProductBasis([0, 10], [0, 10]));
+    vt.onViewPortResize([0, 100], [0, 100]);
+    vt.onReferenceViewWindowResize([0, 10], [0, 10]);
     vt.onZoomPan(zoomIdentity.translate(10, 0).scale(2));
 
     const x = vt.fromScreenToModelX(70);
@@ -57,8 +55,8 @@ describe("ViewportTransform", () => {
   it("round-trips between screen and model coordinates", () => {
     const vt = new ViewportTransform();
 
-    vt.onViewPortResize(toDirectProductBasis([0, 100], [0, 100]));
-    vt.onReferenceViewWindowResize(toDirectProductBasis([0, 10], [0, 10]));
+    vt.onViewPortResize([0, 100], [0, 100]);
+    vt.onReferenceViewWindowResize([0, 10], [0, 10]);
     vt.onZoomPan(zoomIdentity.translate(10, 0).scale(2));
 
     const xScreen = 70;
@@ -69,7 +67,7 @@ describe("ViewportTransform", () => {
     const yModel = vt.fromScreenToModelY(yScreen);
     expect(vt.toScreenFromModelY(yModel)).toBeCloseTo(yScreen);
 
-    const basisScreen: Basis = [20, 40];
+    const basisScreen: [number, number] = [20, 40];
     const basisModel = vt.fromScreenToModelBasisX(basisScreen);
     const roundTrip = vt.toScreenFromModelBasisX(basisModel);
     const [p1, p2] = roundTrip;
@@ -90,8 +88,8 @@ describe("ViewportTransform", () => {
   it("throws a helpful error when scale is zero", () => {
     const vt = new ViewportTransform();
 
-    vt.onViewPortResize(toDirectProductBasis([0, 100], [0, 100]));
-    vt.onReferenceViewWindowResize(toDirectProductBasis([0, 10], [0, 10]));
+    vt.onViewPortResize([0, 100], [0, 100]);
+    vt.onReferenceViewWindowResize([0, 10], [0, 10]);
 
     vt.onZoomPan(zoomIdentity.scale(0));
     expect(() => vt.fromScreenToModelX(10)).toThrow(/not invertible/);
@@ -100,8 +98,8 @@ describe("ViewportTransform", () => {
   it("throws a helpful error when scale is near zero", () => {
     const vt = new ViewportTransform();
 
-    vt.onViewPortResize(toDirectProductBasis([0, 100], [0, 100]));
-    vt.onReferenceViewWindowResize(toDirectProductBasis([0, 10], [0, 10]));
+    vt.onViewPortResize([0, 100], [0, 100]);
+    vt.onReferenceViewWindowResize([0, 10], [0, 10]);
 
     vt.onZoomPan(zoomIdentity.scale(1e-15));
     expect(() => vt.fromScreenToModelX(10)).toThrow(/not invertible/);
