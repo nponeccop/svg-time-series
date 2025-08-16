@@ -1,9 +1,16 @@
 import type { Selection } from "d3-selection";
 import { zoom as d3zoom, zoomIdentity, zoomTransform } from "d3-zoom";
-import type { D3ZoomEvent, ZoomBehavior, ZoomTransform } from "d3-zoom";
+import type {
+  D3ZoomEvent,
+  ZoomBehavior,
+  ZoomTransform,
+  ZoomScale,
+} from "d3-zoom";
 import { ZoomScheduler, sameTransform } from "./zoomScheduler.ts";
 import type { RenderState } from "./render.ts";
 import { assertPositiveFinite, assertTupleSize } from "./validation.ts";
+
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 
 export { sameTransform };
 
@@ -62,10 +69,41 @@ export class ZoomState {
     }, this.refreshChart);
   }
 
-  public zoom = (event: D3ZoomEvent<SVGRectElement, unknown>) => {
-    this.state.xTransform.onZoomPan(event.transform);
-    this.state.axes.y.forEach((a) => a.transform.onZoomPan(event.transform));
-    if (!this.zoomScheduler.zoom(event.transform, event.sourceEvent)) {
+  private isZoomEvent(
+    e: D3ZoomEvent<SVGRectElement, unknown> | Event,
+  ): e is D3ZoomEvent<SVGRectElement, unknown> {
+    return (
+      typeof (e as D3ZoomEvent<SVGRectElement, unknown>).transform !==
+      "undefined"
+    );
+  }
+
+  public zoom = (event: D3ZoomEvent<SVGRectElement, unknown> | Event): void => {
+    if (!this.isZoomEvent(event)) {
+      this.zoomCallback(
+        event as unknown as D3ZoomEvent<SVGRectElement, unknown>,
+      );
+      return;
+    }
+    const t = event.transform as ZoomTransform & {
+      rescaleX?: (x: ZoomScale) => ZoomScale;
+      rescaleY?: (y: ZoomScale) => ZoomScale;
+    };
+    this.state.xTransform.onZoomPan(t);
+    this.state.axes.y.forEach((a) => a.transform.onZoomPan(t));
+    const xRescaled = t.rescaleX?.(
+      this.state.axes.x.scale as unknown as ZoomScale,
+    );
+    if (xRescaled) {
+      this.state.axes.x.scale.domain(xRescaled.domain() as [number, number]);
+    }
+    this.state.axes.y.forEach((a) => {
+      const yRescaled = t.rescaleY?.(a.scale as unknown as ZoomScale);
+      if (yRescaled) {
+        a.scale.domain(yRescaled.domain() as [number, number]);
+      }
+    });
+    if (!this.zoomScheduler.zoom(t, event.sourceEvent)) {
       return;
     }
     this.zoomCallback(event);
