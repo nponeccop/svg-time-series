@@ -95,7 +95,9 @@ export class ZoomState {
       this.state.axes.x.scale as unknown as ZoomScale,
     );
     if (xRescaled) {
-      this.state.axes.x.scale.domain(xRescaled.domain() as [number, number]);
+      this.state.axes.x.scale.domain(
+        xRescaled.domain() as [Date | number, Date | number],
+      );
     }
     this.state.axes.y.forEach((a) => {
       const yRescaled = t.rescaleY?.(a.scale as unknown as ZoomScale);
