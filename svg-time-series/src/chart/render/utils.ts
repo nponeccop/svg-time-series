@@ -1,6 +1,5 @@
 import type { Selection } from "d3-selection";
 import type { Basis, DirectProductBasis } from "../../basis.ts";
-import { toDirectProductBasis } from "../../basis.ts";
 
 export function createDimensions(
   svg: Selection<SVGSVGElement, unknown, HTMLElement, unknown>,
@@ -26,7 +25,7 @@ export function createDimensions(
   const bScreenXVisible: Basis = [0, width];
   const bScreenYVisible: Basis = [height, 0];
 
-  return toDirectProductBasis(bScreenXVisible, bScreenYVisible);
+  return [bScreenXVisible, bScreenYVisible];
 }
 
 export function createSeriesNodes(

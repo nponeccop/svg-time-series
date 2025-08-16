@@ -1,6 +1,6 @@
 import { scaleLinear, type ScaleLinear } from "d3-scale";
 import { zoomIdentity, type ZoomTransform } from "d3-zoom";
-import type { Basis, DirectProductBasis } from "./basis.ts";
+import type { Basis } from "./basis.ts";
 import { scalesToDomMatrix } from "./utils/domMatrix.ts";
 
 export class ViewportTransform {
@@ -27,18 +27,16 @@ export class ViewportTransform {
     );
   }
 
-  public onViewPortResize(bScreenVisible: DirectProductBasis): this {
-    const [viewX, viewY] = bScreenVisible;
-    this.baseScaleX = this.baseScaleX.copy().range(viewX);
-    this.baseScaleY = this.baseScaleY.copy().range(viewY);
+  public onViewPortResize(rangeX: Basis, rangeY: Basis): this {
+    this.baseScaleX.range(rangeX);
+    this.baseScaleY.range(rangeY);
     this.updateScales();
     return this;
   }
 
-  public onReferenceViewWindowResize(newPoints: DirectProductBasis): this {
-    const [refX, refY] = newPoints;
-    this.baseScaleX = this.baseScaleX.copy().domain(refX);
-    this.baseScaleY = this.baseScaleY.copy().domain(refY);
+  public onReferenceViewWindowResize(domainX: Basis, domainY: Basis): this {
+    this.baseScaleX.domain(domainX);
+    this.baseScaleY.domain(domainY);
     this.updateScales();
     return this;
   }

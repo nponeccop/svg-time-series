@@ -7,7 +7,7 @@ import { zoomIdentity, type ZoomTransform } from "d3-zoom";
 import { MyAxis, Orientation } from "../axis.ts";
 import { updateNode } from "../utils/domNodeTransform.ts";
 import type { Basis } from "../basis.ts";
-import { bPlaceholder, toDirectProductBasis, basisRange } from "../basis.ts";
+import { bPlaceholder, basisRange } from "../basis.ts";
 
 import { ViewportTransform } from "../ViewportTransform.ts";
 import { AxisManager } from "./axisManager.ts";
@@ -90,8 +90,7 @@ export class RenderState {
   }
 
   public refresh(data: ChartData, transform: ZoomTransform): void {
-    const referenceBasis = toDirectProductBasis(data.bIndexFull, bPlaceholder);
-    this.xTransform.onReferenceViewWindowResize(referenceBasis);
+    this.xTransform.onReferenceViewWindowResize(data.bIndexFull, bPlaceholder);
 
     this.axisManager.setData(data);
     this.axisManager.updateScales(transform);
@@ -134,10 +133,6 @@ export class RenderState {
     const { width, height } = dimensions;
     const bScreenXVisible: Basis = [0, width];
     const bScreenYVisible: Basis = [height, 0];
-    const bScreenVisible = toDirectProductBasis(
-      bScreenXVisible,
-      bScreenYVisible,
-    );
 
     this.axes.x.scale.range([0, width]);
     this.axes.x.axis.setScale(this.axes.x.scale);
@@ -146,9 +141,9 @@ export class RenderState {
 
     zoomState.updateExtents(dimensions);
 
-    this.xTransform.onViewPortResize(bScreenVisible);
+    this.xTransform.onViewPortResize(bScreenXVisible, bScreenYVisible);
     for (const a of this.axes.y) {
-      a.transform.onViewPortResize(bScreenVisible);
+      a.transform.onViewPortResize(bScreenXVisible, bScreenYVisible);
       a.scale.range([height, 0]);
       a.baseScale.range([height, 0]);
     }
@@ -212,14 +207,13 @@ export function setupRender(
   }
   axisManager.updateScales(zoomIdentity);
 
-  const referenceBasis = toDirectProductBasis(data.bIndexFull, bPlaceholder);
   for (const a of yAxes) {
-    a.transform.onViewPortResize(screenBasis);
-    a.transform.onReferenceViewWindowResize(referenceBasis);
+    a.transform.onViewPortResize(xRange, yRange);
+    a.transform.onReferenceViewWindowResize(data.bIndexFull, bPlaceholder);
   }
   const xTransform = new ViewportTransform();
-  xTransform.onViewPortResize(screenBasis);
-  xTransform.onReferenceViewWindowResize(referenceBasis);
+  xTransform.onViewPortResize(xRange, yRange);
+  xTransform.onReferenceViewWindowResize(data.bIndexFull, bPlaceholder);
 
   const series = createSeries(svg, data.seriesAxes);
   const seriesRenderer = new SeriesRenderer();

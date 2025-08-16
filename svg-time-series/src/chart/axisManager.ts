@@ -48,7 +48,7 @@ export class AxisModel {
   ): void {
     const { tree, dpRef } = data.axisTransform(axisIdx, dIndex);
     this.tree = tree;
-    this.transform.onReferenceViewWindowResize(dpRef);
+    this.transform.onReferenceViewWindowResize(dpRef[0], dpRef[1]);
     const full = tree.query(0, data.length - 1);
     this.baseScale.domain([full.min, full.max]);
     const scaled = transform.rescaleY(this.baseScale);
