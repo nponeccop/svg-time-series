@@ -1,12 +1,11 @@
 import type { Selection } from "d3-selection";
-import { scaleTime } from "d3-scale";
+import { scaleLinear, scaleTime } from "d3-scale";
 import type { ScaleTime, ScaleLinear } from "d3-scale";
 import type { Line } from "d3-shape";
 import { zoomIdentity, type ZoomTransform } from "d3-zoom";
 
 import { MyAxis, Orientation } from "../axis.ts";
 import { updateNode } from "../utils/domNodeTransform.ts";
-import type { Basis } from "../basis.ts";
 
 import { ViewportTransform } from "../ViewportTransform.ts";
 import { AxisManager } from "./axisManager.ts";
@@ -62,7 +61,6 @@ export class RenderState {
   public axes: Axes;
   public axisRenders: AxisRenderState[];
   public xTransform: ViewportTransform;
-  public screenXBasis: Basis;
   public dimensions: Dimensions;
   public series: Series[];
   public seriesRenderer: SeriesRenderer;
@@ -72,7 +70,6 @@ export class RenderState {
     axes: Axes,
     axisRenders: AxisRenderState[],
     xTransform: ViewportTransform,
-    screenXBasis: Basis,
     dimensions: Dimensions,
     series: Series[],
     seriesRenderer: SeriesRenderer,
@@ -81,14 +78,13 @@ export class RenderState {
     this.axes = axes;
     this.axisRenders = axisRenders;
     this.xTransform = xTransform;
-    this.screenXBasis = screenXBasis;
     this.dimensions = dimensions;
     this.series = series;
     this.seriesRenderer = seriesRenderer;
   }
 
   public refresh(data: ChartData, transform: ZoomTransform): void {
-    this.xTransform.onReferenceViewWindowResize([data.bIndexFull, [0, 1]]);
+    this.xTransform.onReferenceViewWindowResize(data.bIndexFull, [0, 1]);
 
     this.axisManager.setData(data);
     this.axisManager.updateScales(transform);
@@ -132,22 +128,19 @@ export class RenderState {
     zoomOverlay: Selection<SVGRectElement, unknown, HTMLElement, unknown>,
   ): void {
     const { width, height } = dimensions;
-    const bScreenXVisible: Basis = [0, width];
-    const bScreenYVisible: Basis = [height, 0];
-    const bScreenVisible: [Basis, Basis] = [bScreenXVisible, bScreenYVisible];
-
     this.dimensions.width = width;
     this.dimensions.height = height;
     zoomOverlay.attr("width", width).attr("height", height);
+    const screenXScale = scaleLinear<number, number>().range([0, width]);
+    const screenYScale = scaleLinear<number, number>().range([height, 0]);
 
     this.axes.x.scale.range([0, width]);
     this.axes.x.axis.setScale(this.axes.x.scale);
     this.axisManager.setXAxis(this.axes.x.scale);
-    this.screenXBasis = bScreenXVisible;
 
-    this.xTransform.onViewPortResize(bScreenVisible);
+    this.xTransform.onViewPortResize(screenXScale, screenYScale);
     for (const a of this.axes.y) {
-      a.transform.onViewPortResize(bScreenVisible);
+      a.transform.onViewPortResize(screenXScale, screenYScale);
       a.scale.range([height, 0]);
     }
   }
@@ -191,9 +184,6 @@ export function setupRender(
   data: ChartData,
 ): RenderState {
   const { width, height } = createDimensions(svg);
-  const screenXBasis: Basis = [0, width];
-  const screenYBasis: Basis = [height, 0];
-  const screenBasis: [Basis, Basis] = [screenXBasis, screenYBasis];
   const maxAxisIdx = data.seriesAxes.reduce(
     (max, idx) => Math.max(max, idx),
     0,
@@ -208,14 +198,17 @@ export function setupRender(
   }
   axisManager.updateScales(zoomIdentity);
 
-  const referenceBasis: [Basis, Basis] = [data.bIndexFull, [0, 1]];
+  const screenXScale = scaleLinear<number, number>().range([0, width]);
+  const screenYScale = scaleLinear<number, number>().range([height, 0]);
+  const referenceXDomain = data.bIndexFull;
+  const referenceYDomain: [number, number] = [0, 1];
   for (const a of yAxes) {
-    a.transform.onViewPortResize(screenBasis);
-    a.transform.onReferenceViewWindowResize(referenceBasis);
+    a.transform.onViewPortResize(screenXScale, screenYScale);
+    a.transform.onReferenceViewWindowResize(referenceXDomain, referenceYDomain);
   }
   const xTransform = new ViewportTransform();
-  xTransform.onViewPortResize(screenBasis);
-  xTransform.onReferenceViewWindowResize(referenceBasis);
+  xTransform.onViewPortResize(screenXScale, screenYScale);
+  xTransform.onReferenceViewWindowResize(referenceXDomain, referenceYDomain);
 
   const series = createSeries(svg, data.seriesAxes);
   const seriesRenderer = new SeriesRenderer();
@@ -247,7 +240,6 @@ export function setupRender(
     axes,
     axisRenders,
     xTransform,
-    screenXBasis,
     dimensions,
     series,
     seriesRenderer,
