@@ -193,4 +193,38 @@ describe("LegendController", () => {
     vi.useRealTimers();
     lc.destroy();
   });
+
+  it("removes highlight dots and ignores highlightIndex after destroy", () => {
+    const { svg, legendDiv } = createSvgAndLegend();
+    const source: IDataSource = {
+      startTime: 0,
+      timeStep: 1,
+      length: 2,
+      getSeries: (i) => [10, 20][i]!,
+      seriesAxes: [0],
+    };
+    const data = new ChartData(source);
+    const state = setupRender(svg, data);
+    select<SVGPathElement, unknown>(state.series[0]!.path).attr(
+      "stroke",
+      "green",
+    );
+    const lc = new LegendController(legendDiv);
+    lc.init({
+      getPoint: data.getPoint.bind(data),
+      getLength: () => data.length,
+      series: state.series.map((s) => ({
+        path: s.path,
+        transform: state.axes.y[s.axisIdx]!.transform,
+      })),
+    });
+
+    expect(svg.selectAll("circle").size()).toBe(2);
+    lc.destroy();
+    expect(svg.selectAll("circle").size()).toBe(0);
+    expect(() => {
+      lc.highlightIndex(0);
+    }).not.toThrow();
+    expect(svg.selectAll("circle").size()).toBe(0);
+  });
 });
