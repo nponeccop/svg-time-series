@@ -66,6 +66,7 @@ export class RenderState {
   public dimensions: Dimensions;
   public series: Series[];
   public seriesRenderer: SeriesRenderer;
+  private prevBIndexFull: Basis;
 
   constructor(
     axisManager: AxisManager,
@@ -76,6 +77,7 @@ export class RenderState {
     dimensions: Dimensions,
     series: Series[],
     seriesRenderer: SeriesRenderer,
+    bIndexFull: Basis,
   ) {
     this.axisManager = axisManager;
     this.axes = axes;
@@ -85,10 +87,15 @@ export class RenderState {
     this.dimensions = dimensions;
     this.series = series;
     this.seriesRenderer = seriesRenderer;
+    this.prevBIndexFull = [...bIndexFull] as Basis;
   }
 
   public refresh(data: ChartData, transform: ZoomTransform): void {
-    this.xTransform.onReferenceViewWindowResize([data.bIndexFull, [0, 1]]);
+    const [b0, b1] = data.bIndexFull;
+    if (b0 !== this.prevBIndexFull[0] || b1 !== this.prevBIndexFull[1]) {
+      this.xTransform.onReferenceViewWindowResize([data.bIndexFull, [0, 1]]);
+      this.prevBIndexFull = [b0, b1] as Basis;
+    }
 
     this.axisManager.setData(data);
     this.axisManager.updateScales(transform);
@@ -251,5 +258,6 @@ export function setupRender(
     dimensions,
     series,
     seriesRenderer,
+    data.bIndexFull,
   );
 }
