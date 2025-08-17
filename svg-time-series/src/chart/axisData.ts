@@ -10,7 +10,7 @@ export interface IMinMax {
   readonly max: number;
 }
 
-function scaleYRange(
+export function scaleYRange(
   window: DataWindow,
   bIndexVisible: readonly [number, number],
   tree: SegmentTree<IMinMax>,
