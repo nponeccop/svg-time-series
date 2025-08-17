@@ -11,13 +11,53 @@ export const constrainTranslation = (
   width: number,
   height: number,
 ): ZoomTransform => {
-  const x0 = current.invertX(0);
-  const x1 = current.invertX(width) - width;
-  const y0 = current.invertY(0);
-  const y1 = current.invertY(height) - height;
-  const tx = x1 > x0 ? (x0 + x1) / 2 : Math.min(0, x0) || Math.max(0, x1);
-  const ty = y1 > y0 ? (y0 + y1) / 2 : Math.min(0, y0) || Math.max(0, y1);
-  return tx !== 0 || ty !== 0 ? current.translate(tx, ty) : current;
+  /**
+   * The zoom transform's translation can place the rendered data in three
+   * distinct states for each axis:
+   * 1. **Beyond the left/top** – translation is positive, revealing empty
+   *    space before the data. We clamp back to `0`.
+   * 2. **Beyond the right/bottom** – translation is more negative than the
+   *    scaled bounds allow. We clamp to the minimum permitted value
+   *    (`width - width * k` or `height - height * k`).
+   * 3. **Fully inside** – the content lies within the bounds. When the scaled
+   *    content is smaller than the viewport (`k < 1`), we center it by splitting
+   *    the empty space evenly on both sides.
+   */
+
+  const k = current.k;
+
+  const minX = width - width * k;
+  let x: number;
+  if (k < 1) {
+    x = minX / 2; // Content smaller than viewport - center horizontally
+  } else if (current.x > 0) {
+    x = 0; // Beyond the left edge
+  } else if (current.x < minX) {
+    x = minX; // Beyond the right edge
+  } else {
+    x = current.x; // Fully inside
+  }
+
+  const minY = height - height * k;
+  let y: number;
+  if (k < 1) {
+    y = minY / 2; // Content smaller than viewport - center vertically
+  } else if (current.y > 0) {
+    y = 0; // Beyond the top edge
+  } else if (current.y < minY) {
+    y = minY; // Beyond the bottom edge
+  } else {
+    y = current.y; // Fully inside
+  }
+
+  if (x !== current.x || y !== current.y) {
+    // Translate by the delta required to reach the clamped position. The
+    // `translate` method scales the supplied deltas by `k`, so we divide by `k`
+    // to achieve the desired pixel shift.
+    return current.translate((x - current.x) / k, (y - current.y) / k);
+  }
+
+  return current;
 };
 
 export interface IZoomStateOptions {
