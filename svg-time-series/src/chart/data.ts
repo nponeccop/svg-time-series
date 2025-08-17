@@ -66,9 +66,9 @@ export class ChartData {
    */
   public readonly indexToTime: ScaleTime<Date, Date>;
   /**
-   * Persistent mapping from data index to screen range. The domain never
-   * changes, and the range is updated on demand in `dIndexFromTransform` to
-   * avoid reconstructing the scale for every call.
+   * Persistent mapping from data index to a normalized screen range. Both the
+   * domain and range remain constant so the scale can be reused without
+   * mutation.
    */
   private readonly indexScale: ScaleLinear<number, number>;
   private axisTrees: [
@@ -159,8 +159,10 @@ export class ChartData {
     transform: ZoomTransform,
     range: [number, number],
   ): [number, number] {
-    this.indexScale.range(range);
-    return transform.rescaleX(this.indexScale).domain() as [number, number];
+    const [r0, r1] = range;
+    const i0 = this.indexScale.invert(transform.invertX(r0));
+    const i1 = this.indexScale.invert(transform.invertX(r1));
+    return [i0, i1];
   }
 
   /**
