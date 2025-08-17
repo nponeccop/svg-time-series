@@ -234,8 +234,8 @@ export class RenderState {
     }));
   }
 
-  public screenToModelX(x: number): number {
-    return this.xTransform.fromScreenToModelX(x);
+  public screenToModelX(x: number): Date {
+    return this.axes.x.scale.invert(x);
   }
 
   public createLegendContext(data: ChartData): LegendContext {

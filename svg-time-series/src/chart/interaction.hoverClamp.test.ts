@@ -106,7 +106,7 @@ function createChart(data: Array<[number]>) {
 
   const source: IDataSource = {
     startTime: 0,
-    timeStep: 1,
+    timeStep: 1000,
     length: data.length,
     seriesAxes: [0],
     getSeries: (i) => data[i]![0],
@@ -125,6 +125,10 @@ function createChart(data: Array<[number]>) {
     () => {},
     () => {},
   );
+  const internal = chart as unknown as {
+    state: { screenToModelX: (x: number) => Date };
+  };
+  internal.state.screenToModelX = (x: number) => new Date(x * 1000);
 
   return { onHover: chart.onHover, legendController };
 }

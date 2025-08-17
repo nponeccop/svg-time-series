@@ -133,7 +133,7 @@ function createChart(
 
   const source: IDataSource = {
     startTime: 0,
-    timeStep: 1,
+    timeStep: 1000,
     length: data.length,
     seriesAxes: [0, 1],
     getSeries: (i, seriesIdx) => data[i]![seriesIdx]!,
@@ -159,6 +159,10 @@ function createChart(
     () => {},
     () => {},
   );
+  const internal = chart as unknown as {
+    state: { screenToModelX: (x: number) => Date };
+  };
+  internal.state.screenToModelX = (x: number) => new Date(x * 1000);
 
   return {
     zoom: chart.zoom,
@@ -230,7 +234,7 @@ describe("chart interaction", () => {
     const { onHover, svgEl, legend } = createChart(data);
     vi.runAllTimers();
 
-    onHover(1);
+    onHover(2);
     vi.runAllTimers();
 
     expect(
@@ -260,7 +264,7 @@ describe("chart interaction", () => {
     chart.updateChartWithNewData([50, 60]);
     vi.runAllTimers();
 
-    onHover(1);
+    onHover(2);
     vi.runAllTimers();
 
     expect(
@@ -292,9 +296,9 @@ describe("chart interaction", () => {
     vi.runAllTimers();
 
     expect(legend.querySelector(".chart-legend__time")!.textContent).toBe(
-      "ts:1",
+      "ts:1000",
     );
-    expect(formatter).toHaveBeenCalledWith(1);
+    expect(formatter).toHaveBeenCalledWith(1000);
   });
 
   it("throws when data contains Infinity", () => {

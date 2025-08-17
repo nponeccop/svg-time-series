@@ -76,7 +76,10 @@ export class DataWindow {
   }
 
   timeToIndex(time: Date): number {
-    return +this.indexToTime.invert(time);
+    const raw =
+      (time.getTime() - this.startTime) / this.timeStep -
+      this.window.startIndex;
+    return this.clampIndex(raw);
   }
 
   timeDomainFull(): [Date, Date] {

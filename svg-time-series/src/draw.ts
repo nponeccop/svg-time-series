@@ -198,8 +198,9 @@ export class TimeSeriesChart {
   };
 
   public onHover = (x: number) => {
-    let idx = Math.round(this.state.screenToModelX(x));
-    idx = this.data.clampIndex(idx);
+    const idx = this.data.clampIndex(
+      Math.round(this.data.timeToIndex(this.state.screenToModelX(x))),
+    );
     const legend = this.legendController;
     if (legend.highlightIndexRaf) {
       legend.highlightIndexRaf(idx);
@@ -225,8 +226,12 @@ export class TimeSeriesChart {
     if (x1 < x0) {
       [x0, x1] = [x1, x0];
     }
-    const m0 = this.data.clampIndex(this.state.screenToModelX(x0));
-    const m1 = this.data.clampIndex(this.state.screenToModelX(x1));
+    const m0 = this.data.clampIndex(
+      this.data.timeToIndex(this.state.screenToModelX(x0)),
+    );
+    const m1 = this.data.clampIndex(
+      this.data.timeToIndex(this.state.screenToModelX(x1)),
+    );
     const sx0 = this.state.xTransform.toScreenFromModelX(m0);
     const sx1 = this.state.xTransform.toScreenFromModelX(m1);
     if (m0 === m1 || sx0 === sx1) {
@@ -237,9 +242,8 @@ export class TimeSeriesChart {
     const k = width / (sx1 - sx0);
     const t = zoomIdentity.scale(k).translate(-sx0, 0);
     this.zoomState.zoomBehavior.transform(this.zoomArea, t);
-    const startIdx = this.data.startIndex;
-    const t0 = this.data.startTime + (startIdx + m0) * this.data.timeStep;
-    const t1 = this.data.startTime + (startIdx + m1) * this.data.timeStep;
+    const t0 = this.data.indexToTime(m0).getTime();
+    const t1 = this.data.indexToTime(m1).getTime();
     this.clearBrush();
     this.selectedTimeWindow = [t0, t1];
   };

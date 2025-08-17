@@ -200,7 +200,7 @@ describe("TimeSeriesChart", () => {
       state: { screenToModelX: ReturnType<typeof vi.fn> };
       data: { length: number };
     };
-    vi.spyOn(internal.state, "screenToModelX").mockReturnValue(10);
+    vi.spyOn(internal.state, "screenToModelX").mockReturnValue(new Date(10));
 
     chart.onHover(5);
 
@@ -272,7 +272,7 @@ describe("TimeSeriesChart", () => {
       zoomState: { zoomBehavior: { transform: ReturnType<typeof vi.fn> } };
       onBrushEnd: (event: D3BrushEvent<unknown>) => void;
     };
-    vi.spyOn(internal.state, "screenToModelX").mockReturnValue(0);
+    vi.spyOn(internal.state, "screenToModelX").mockReturnValue(new Date(0));
     vi.spyOn(internal.state.xTransform, "toScreenFromModelX").mockReturnValue(
       10,
     );

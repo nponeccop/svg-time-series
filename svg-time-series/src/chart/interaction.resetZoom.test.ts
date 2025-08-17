@@ -215,7 +215,7 @@ describe("interaction.enableBrush", () => {
     const internal = chart as unknown as {
       onBrushEnd: (e: D3BrushEvent<unknown>) => void;
       state: {
-        screenToModelX: (x: number) => number;
+        screenToModelX: (x: number) => Date;
         xTransform: { toScreenFromModelX: (x: number) => number };
       };
       zoomState: {
@@ -223,7 +223,7 @@ describe("interaction.enableBrush", () => {
       };
     };
     internal.zoomState.zoomBehavior = { transform: vi.fn() };
-    internal.state.screenToModelX = (x: number) => x;
+    internal.state.screenToModelX = (x: number) => new Date(x);
     (
       internal.state.xTransform as { toScreenFromModelX: (x: number) => number }
     ).toScreenFromModelX = (x: number) => x;
@@ -249,7 +249,7 @@ describe("interaction.disableBrush", () => {
     const internal = chart as unknown as {
       onBrushEnd: (e: D3BrushEvent<unknown>) => void;
       state: {
-        screenToModelX: (x: number) => number;
+        screenToModelX: (x: number) => Date;
         xTransform: { toScreenFromModelX: (x: number) => number };
       };
       zoomState: {
@@ -257,7 +257,7 @@ describe("interaction.disableBrush", () => {
       };
     };
     internal.zoomState.zoomBehavior = { transform: vi.fn() };
-    internal.state.screenToModelX = (x: number) => x;
+    internal.state.screenToModelX = (x: number) => new Date(x);
     (
       internal.state.xTransform as { toScreenFromModelX: (x: number) => number }
     ).toScreenFromModelX = (x: number) => x;
