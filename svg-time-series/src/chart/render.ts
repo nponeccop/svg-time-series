@@ -55,6 +55,18 @@ export interface Series {
   view: SVGGElement;
   path: SVGPathElement;
   line: Line<number[]>;
+  lastMatrix?: DOMMatrix;
+}
+
+function matricesEqual(a: DOMMatrix, b: DOMMatrix): boolean {
+  return (
+    a.a === b.a &&
+    a.b === b.b &&
+    a.c === b.c &&
+    a.d === b.d &&
+    a.e === b.e &&
+    a.f === b.f
+  );
 }
 
 export class RenderState {
@@ -95,7 +107,11 @@ export class RenderState {
 
     for (const s of this.series) {
       const t = this.axes.y[s.axisIdx]!.transform;
-      updateNode(s.view, t.matrix);
+      const m = t.matrix;
+      if (!s.lastMatrix || !matricesEqual(m, s.lastMatrix)) {
+        updateNode(s.view, m);
+        s.lastMatrix = m;
+      }
     }
     this.axes.x.scale = this.axisManager.x;
     this.axes.x.axis.setScale(this.axisManager.x);
