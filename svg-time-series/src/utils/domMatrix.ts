@@ -48,5 +48,5 @@ export function zoomTransformToDomMatrix(
   sm: DOMMatrix = new DOMMatrix(),
 ): DOMMatrix {
   const z = DOMMatrix.fromMatrix(new DOMMatrix([t.k, 0, 0, t.k, t.x, t.y]));
-  return sm.multiply(z);
+  return z.multiply(sm);
 }
