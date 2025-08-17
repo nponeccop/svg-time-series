@@ -127,9 +127,11 @@
   private updateGeneral() {
     this.GeneralMatrix = this.newMatrix();
 
-    this.GeneralMatrix = this.GeneralMatrix.multiply(this.PDCMatrix);
-    this.GeneralMatrix = this.GeneralMatrix.multiply(this.NPCMatrix);
+    // Apply View Orientation first, then Normalized Projection Coordinates,
+    // and finally Projection Device Coordinates
     this.GeneralMatrix = this.GeneralMatrix.multiply(this.VOMatrix);
+    this.GeneralMatrix = this.GeneralMatrix.multiply(this.NPCMatrix);
+    this.GeneralMatrix = this.GeneralMatrix.multiply(this.PDCMatrix);
 
     // update inversed matrix
     this.GeneralMatrixInversed = this.newMatrix();
