@@ -194,4 +194,28 @@ describe("Segment Tree Tests", () => {
     tree.update(1, 9);
     expect(tree.query(0, 5)).toBe(9);
   });
+
+  it("should return the identity for empty ranges", () => {
+    const data = [1, 2, 3];
+    const sumOperator = (a: number, b: number) => a + b;
+    const identity = 0;
+    const tree = new SegmentTree(data, sumOperator, identity);
+
+    expect(tree.queryRange(0, 0)).toBe(identity);
+    expect(tree.queryRange(2, 2)).toBe(identity);
+    expect(tree.queryRange(3, 3)).toBe(identity);
+  });
+
+  it("queryRange should match query for equivalent non-empty ranges", () => {
+    const data = [1, 2, 3, 4, 5];
+    const sumOperator = (a: number, b: number) => a + b;
+    const identity = 0;
+    const tree = new SegmentTree(data, sumOperator, identity);
+
+    for (let start = 0; start < data.length; start++) {
+      for (let end = start + 1; end <= data.length; end++) {
+        expect(tree.queryRange(start, end)).toBe(tree.query(start, end - 1));
+      }
+    }
+  });
 });

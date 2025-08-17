@@ -22,8 +22,11 @@ import { SegmentTree } from "segment-tree-rmq";
 const data = [5, 3, 8, 6, 2, 7];
 const tree = new SegmentTree(data, (a, b) => Math.min(a, b), Infinity);
 
-// Query the minimum value in the range [1, 4]
+// Query the minimum value in the inclusive range [1, 4]
 console.log(tree.query(1, 4)); // 2
+
+// Query using a half-open range [1, 5)
+console.log(tree.queryRange(1, 5)); // 2
 
 // Update a value and query again
 tree.update(3, 1);

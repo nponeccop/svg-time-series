@@ -96,4 +96,29 @@ export class SegmentTree<T> {
 
     return result;
   }
+
+  /**
+   * Queries the half-open range [start, endExclusive) in the tree.
+   *
+   * Both indices are zero-based and the end index is exclusive.
+   *
+   * @param start - Start index (inclusive).
+   * @param endExclusive - End index (exclusive).
+   */
+  queryRange(start: number, endExclusive: number): T {
+    if (!Number.isInteger(start) || !Number.isInteger(endExclusive)) {
+      throw new Error("Index must be an integer");
+    }
+    if (start < 0 || endExclusive > this.size) {
+      throw new Error("Index is out of range");
+    }
+    if (start > endExclusive) {
+      throw new Error("Range is not valid");
+    }
+    if (start === endExclusive) {
+      return this.identity;
+    }
+
+    return this.query(start, endExclusive - 1);
+  }
 }
