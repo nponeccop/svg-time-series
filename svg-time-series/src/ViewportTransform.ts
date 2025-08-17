@@ -1,6 +1,9 @@
 import { scaleLinear, type ScaleLinear } from "d3-scale";
 import { zoomIdentity, type ZoomTransform } from "d3-zoom";
-import { scalesToDomMatrix } from "./utils/domMatrix.ts";
+import {
+  scalesToDomMatrix,
+  zoomTransformToDomMatrix,
+} from "./utils/domMatrix.ts";
 
 export class ViewportTransform {
   private baseScaleX = scaleLinear();
@@ -8,20 +11,33 @@ export class ViewportTransform {
   private scaleX = this.baseScaleX;
   private scaleY = this.baseScaleY;
   private zoomTransform: ZoomTransform = zoomIdentity;
-  private composedMatrix: DOMMatrix = new DOMMatrix();
+  private baseMatrix: DOMMatrix = scalesToDomMatrix(
+    this.baseScaleX,
+    this.baseScaleY,
+  );
+  private composedMatrix: DOMMatrix = zoomTransformToDomMatrix(
+    this.zoomTransform,
+    this.baseMatrix,
+  );
 
   private static readonly DET_EPSILON = 1e-12;
 
-  private updateScales() {
+  private updateScales(recomputeBase = false) {
+    if (recomputeBase) {
+      // Ignore the zoom transform for the Y axis so that it always fits the
+      // data based on its current domain.
+      this.scaleY = this.baseScaleY.copy();
+      this.baseMatrix = scalesToDomMatrix(this.baseScaleX, this.baseScaleY);
+    }
     this.scaleX = this.zoomTransform.rescaleX(this.baseScaleX);
-    // Ignore the zoom transform for the Y axis so that it always fits the data
-    // based on its current domain.
-    this.scaleY = this.baseScaleY.copy();
     this.updateComposedMatrix();
   }
 
   private updateComposedMatrix() {
-    this.composedMatrix = scalesToDomMatrix(this.scaleX, this.scaleY);
+    this.composedMatrix = zoomTransformToDomMatrix(
+      this.zoomTransform,
+      this.baseMatrix,
+    );
   }
 
   public onViewPortResize(
@@ -30,7 +46,7 @@ export class ViewportTransform {
   ): this {
     this.baseScaleX = this.baseScaleX.copy().range(viewX as [number, number]);
     this.baseScaleY = this.baseScaleY.copy().range(viewY as [number, number]);
-    this.updateScales();
+    this.updateScales(true);
     return this;
   }
 
@@ -40,7 +56,7 @@ export class ViewportTransform {
   ): this {
     this.baseScaleX = this.baseScaleX.copy().domain(refX as [number, number]);
     this.baseScaleY = this.baseScaleY.copy().domain(refY as [number, number]);
-    this.updateScales();
+    this.updateScales(true);
     return this;
   }
 
