@@ -29,6 +29,7 @@ export class LegendController implements ILegendController {
   private context!: LegendContext;
   private scheduleUpdate: () => void;
   private cancelUpdate: () => void;
+  private destroyed = false;
 
   constructor(
     legend: Selection<HTMLElement, unknown, HTMLElement, unknown>,
@@ -78,6 +79,9 @@ export class LegendController implements ILegendController {
   }
 
   public highlightIndex(idx: number): void {
+    if (this.destroyed) {
+      return;
+    }
     const clamped = Math.round(
       Math.min(Math.max(idx, 0), this.context.getLength() - 1),
     );
@@ -90,6 +94,9 @@ export class LegendController implements ILegendController {
   }
 
   public highlightIndexRaf(idx: number): void {
+    if (this.destroyed) {
+      return;
+    }
     const clamped = Math.round(
       Math.min(Math.max(idx, 0), this.context.getLength() - 1),
     );
@@ -102,10 +109,16 @@ export class LegendController implements ILegendController {
   }
 
   public refresh(): void {
+    if (this.destroyed) {
+      return;
+    }
     this.scheduleUpdate();
   }
 
   public clearHighlight(): void {
+    if (this.destroyed) {
+      return;
+    }
     this.legendTime.text("");
     this.legendGreen.text("");
     this.legendBlue.text("");
@@ -119,6 +132,9 @@ export class LegendController implements ILegendController {
   }
 
   private update() {
+    if (this.destroyed) {
+      return;
+    }
     const { values, timestamp } = this.context.getPoint(
       this.highlightedDataIdx,
     ) as { values?: number[]; timestamp?: number };
@@ -190,5 +206,6 @@ export class LegendController implements ILegendController {
     this.cancelUpdate();
     this.highlightedGreenDot.remove();
     this.highlightedBlueDot.remove();
+    this.destroyed = true;
   }
 }
