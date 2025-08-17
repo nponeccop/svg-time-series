@@ -29,10 +29,6 @@ export class ZoomState {
     const ty = y1 > y0 ? (y0 + y1) / 2 : Math.min(0, y0) || Math.max(0, y1);
     return tx !== 0 || ty !== 0 ? transform.translate(tx, ty) : transform;
   };
-  private getZoomAreaNode(): SVGRectElement | null {
-    const node = this.zoomArea.node();
-    return node && this.zoomAreaNode ? node : null;
-  }
 
   constructor(
     private zoomArea: Selection<SVGRectElement, unknown, HTMLElement, unknown>,
@@ -80,8 +76,8 @@ export class ZoomState {
   };
 
   public setScaleExtent = (extent: [number, number]) => {
-    const node = this.getZoomAreaNode();
-    if (!node) {
+    const node = this.zoomAreaNode;
+    if (!node || !node.ownerSVGElement) {
       return;
     }
     this.scaleExtent = validateScaleExtent(extent);
@@ -96,8 +92,8 @@ export class ZoomState {
   };
 
   public updateExtents = (dimensions: { width: number; height: number }) => {
-    const node = this.getZoomAreaNode();
-    if (!node) {
+    const node = this.zoomAreaNode;
+    if (!node || !node.ownerSVGElement) {
       return;
     }
     const extent: [[number, number], [number, number]] = [
@@ -113,6 +109,10 @@ export class ZoomState {
   };
 
   public reset = () => {
+    const node = this.zoomAreaNode;
+    if (!node || !node.ownerSVGElement) {
+      return;
+    }
     this.zoomBehavior.transform(this.zoomArea, zoomIdentity);
   };
 

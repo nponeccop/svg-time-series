@@ -38,9 +38,6 @@ describe("ZoomState.updateExtents removed element", () => {
     );
 
     rect.remove();
-    zs["zoomArea"] = select(svg).select<SVGRectElement>(
-      "rect",
-    ) as unknown as Selection<SVGRectElement, unknown, HTMLElement, unknown>;
 
     const transformSpy = vi.spyOn(zs.zoomBehavior, "transform");
 
