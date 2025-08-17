@@ -48,10 +48,15 @@ export class DataWindow {
   append(...values: number[]): void {
     this.window.append(...values);
     const [r0, r1] = this.indexToTime.range() as [Date, Date];
-    this.indexToTime.range([
-      new Date(+r0 + this.timeStep),
-      new Date(+r1 + this.timeStep),
-    ]);
+    this.indexToTime
+      .domain([
+        this.window.startIndex,
+        this.window.startIndex + this.window.length - 1,
+      ])
+      .range([
+        new Date(r0.getTime() + this.timeStep),
+        new Date(r1.getTime() + this.timeStep),
+      ]);
   }
 
   get length(): number {
@@ -70,8 +75,7 @@ export class DataWindow {
     const clamped = Math.round(this.clampIndex(idx));
     return {
       values: this.window.data[clamped]!,
-      timestamp:
-        this.startTime + (this.window.startIndex + clamped) * this.timeStep,
+      timestamp: +this.indexToTime(this.window.startIndex + clamped),
     };
   }
 
@@ -81,7 +85,10 @@ export class DataWindow {
 
   timeDomainFull(): [Date, Date] {
     const toTime = this.indexToTime.copy().clamp(false);
-    return this.bIndexFull.map((i) => toTime(i)) as [Date, Date];
+    return [
+      toTime(this.window.startIndex),
+      toTime(this.window.startIndex + this.window.length - 1),
+    ] as [Date, Date];
   }
 
   dIndexFromTransform(

@@ -117,7 +117,7 @@ describe("ChartData", () => {
       [0, 0],
       [1, 1],
     ]);
-    expect(cd.getPoint(0).timestamp).toBe(0);
+    expect(cd.getPoint(0).timestamp).toBe(+cd.indexToTime(cd.startIndex));
 
     cd.append(2, 2);
 
@@ -126,8 +126,8 @@ describe("ChartData", () => {
       [2, 2],
     ]);
     // appending shifts the index-to-time mapping one step forward
-    expect(cd.getPoint(0).timestamp).toBe(1);
-    expect(cd.getPoint(1).timestamp).toBe(2);
+    expect(cd.getPoint(0).timestamp).toBe(+cd.indexToTime(cd.startIndex + 0));
+    expect(cd.getPoint(1).timestamp).toBe(+cd.indexToTime(cd.startIndex + 1));
   });
 
   it("provides clamped point data and timestamp", () => {
@@ -141,9 +141,18 @@ describe("ChartData", () => {
         [0, 1],
       ),
     );
-    expect(cd.getPoint(1)).toEqual({ values: [30, 40], timestamp: 1 });
-    expect(cd.getPoint(10)).toEqual({ values: [50, 60], timestamp: 2 });
-    expect(cd.getPoint(-5)).toEqual({ values: [10, 20], timestamp: 0 });
+    expect(cd.getPoint(1)).toEqual({
+      values: [30, 40],
+      timestamp: +cd.indexToTime(cd.startIndex + 1),
+    });
+    expect(cd.getPoint(10)).toEqual({
+      values: [50, 60],
+      timestamp: +cd.indexToTime(cd.startIndex + 2),
+    });
+    expect(cd.getPoint(-5)).toEqual({
+      values: [10, 20],
+      timestamp: +cd.indexToTime(cd.startIndex + 0),
+    });
   });
 
   it("throws when index is not finite", () => {
@@ -175,11 +184,11 @@ describe("ChartData", () => {
     );
     expect(cd.getPoint(1_000_000)).toEqual({
       values: [50, 60],
-      timestamp: 2,
+      timestamp: +cd.indexToTime(cd.startIndex + 2),
     });
     expect(cd.getPoint(-1_000_000)).toEqual({
       values: [10, 20],
-      timestamp: 0,
+      timestamp: +cd.indexToTime(cd.startIndex + 0),
     });
   });
 
@@ -242,8 +251,8 @@ describe("ChartData", () => {
       [3, 3],
       [4, 4],
     ]);
-    expect(cd.getPoint(0).timestamp).toBe(3);
-    expect(cd.getPoint(1).timestamp).toBe(4);
+    expect(cd.getPoint(0).timestamp).toBe(+cd.indexToTime(cd.startIndex + 0));
+    expect(cd.getPoint(1).timestamp).toBe(+cd.indexToTime(cd.startIndex + 1));
     const tree0 = cd.buildAxisTree(0);
     const tree1 = cd.buildAxisTree(1);
     expect(tree0.query(0, 1)).toEqual({ min: 3, max: 4 });
@@ -533,7 +542,7 @@ describe("ChartData", () => {
     expect(tree1.query(0, 1)).toEqual({ min: 110, max: 230 });
     expect(cd.getPoint(1)).toEqual({
       values: [2, 30, 25, 130, 230],
-      timestamp: 2,
+      timestamp: +cd.indexToTime(cd.startIndex + 1),
     });
   });
 
