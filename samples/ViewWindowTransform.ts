@@ -34,11 +34,11 @@
   }
 
   public fromScreenToModel(p: SVGPoint) {
-    return p.matrixTransform(this.GeneralMatrix);
+    return p.matrixTransform(this.GeneralMatrixInversed);
   }
 
   public fromModelToScreen(p: SVGPoint) {
-    return p.matrixTransform(this.GeneralMatrixInversed);
+    return p.matrixTransform(this.GeneralMatrix);
   }
 
   private updateVO() {
