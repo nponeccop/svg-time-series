@@ -112,6 +112,10 @@ export class ZoomState {
     this.zoomBehavior.transform(this.zoomArea, zoomIdentity);
   };
 
+  public zoomToTimeWindow(transform: ZoomTransform): void {
+    this.zoomBehavior.transform(this.zoomArea, transform);
+  }
+
   public destroy = () => {
     this.destroyed = true;
     this.zoomScheduler.destroy();

@@ -8,7 +8,7 @@ import type { RenderState } from "./render.ts";
 import { ZoomState } from "./zoomState.ts";
 
 describe("ZoomState class methods", () => {
-  it("defines setScaleExtent and updateExtents on the prototype", () => {
+  it("defines setScaleExtent, updateExtents, and zoomToTimeWindow on the prototype", () => {
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     const rect = select(svg).append("rect");
     const state = {
@@ -33,5 +33,7 @@ describe("ZoomState class methods", () => {
     expect(zs.setScaleExtent).toBe(ZoomState.prototype.setScaleExtent);
     // eslint-disable-next-line @typescript-eslint/unbound-method
     expect(zs.updateExtents).toBe(ZoomState.prototype.updateExtents);
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    expect(zs.zoomToTimeWindow).toBe(ZoomState.prototype.zoomToTimeWindow);
   });
 });

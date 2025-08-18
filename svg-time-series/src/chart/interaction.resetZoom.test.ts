@@ -98,6 +98,7 @@ vi.mock("./zoomState.ts", () => ({
     destroy = vi.fn();
     zoom = vi.fn();
     setScaleExtent = vi.fn();
+    zoomToTimeWindow = vi.fn();
     constructor(
       _zoomArea: unknown,
       state: {

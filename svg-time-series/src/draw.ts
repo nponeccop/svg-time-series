@@ -11,6 +11,7 @@ import type { RenderState } from "./chart/render.ts";
 import type { ILegendController } from "./chart/legend.ts";
 import { ZoomState } from "./chart/zoomState.ts";
 import type { IZoomStateOptions } from "./chart/zoomState.ts";
+import { computeZoomTransform } from "./chart/zoomUtils.ts";
 import { assertFiniteOrNaN } from "./chart/validation.ts";
 
 export type { IDataSource } from "./chart/data.ts";
@@ -210,27 +211,13 @@ export class TimeSeriesChart {
   };
 
   public zoomToTimeWindow = (start: Date | number, end: Date | number) => {
-    const startDate = typeof start === "number" ? new Date(start) : start;
-    const endDate = typeof end === "number" ? new Date(end) : end;
-    let m0 = this.data.timeToIndex(startDate);
-    let m1 = this.data.timeToIndex(endDate);
-    m0 = this.data.clampIndex(m0);
-    m1 = this.data.clampIndex(m1);
-    if (m1 < m0) {
-      [m0, m1] = [m1, m0];
-    }
-    const sx0 = this.state.axes.x.scale(m0);
-    const sx1 = this.state.axes.x.scale(m1);
-    if (m0 === m1 || sx0 === sx1) {
+    const result = computeZoomTransform(this.data, this.state, start, end);
+    if (!result) {
       return;
     }
-    const { width } = this.state.getDimensions();
-    const k = width / (sx1 - sx0);
-    const t = zoomIdentity.scale(k).translate(-sx0, 0);
-    this.zoomState.zoomBehavior.transform(this.zoomArea, t);
-    const t0 = +this.data.indexToTime(m0);
-    const t1 = +this.data.indexToTime(m1);
-    this.selectedTimeWindow = [t0, t1];
+    const { transform, timeWindow } = result;
+    this.zoomState.zoomToTimeWindow(transform);
+    this.selectedTimeWindow = timeWindow;
   };
 
   public getSelectedTimeWindow = (): [number, number] | null => {
@@ -295,7 +282,7 @@ export class TimeSeriesChart {
     const { width } = this.state.getDimensions();
     const k = width / (sx1 - sx0);
     const t = zoomIdentity.scale(k).translate(-sx0, 0);
-    this.zoomState.zoomBehavior.transform(this.zoomArea, t);
+    this.zoomState.zoomToTimeWindow(t);
     const t0 = +this.data.indexToTime(m0);
     const t1 = +this.data.indexToTime(m1);
     this.clearBrush();
