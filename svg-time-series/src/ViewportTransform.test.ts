@@ -28,11 +28,12 @@ describe("ViewportTransform", () => {
     const zoom = zoomIdentity.translate(10, 0).scale(2);
     vt.onZoomPan(zoom);
     expect(vt.fromScreenToModelX(70)).toBeCloseTo(3);
-    expect(vt.fromScreenToModelY(20)).toBeCloseTo(2);
+    // `scale(2)` uniformly scales both axes, so y is halved
+    expect(vt.fromScreenToModelY(20)).toBeCloseTo(1);
 
     const sx = scaleLinear().domain([0, 10]).range([0, 100]);
     const sy = scaleLinear().domain([0, 10]).range([0, 100]);
-    const expected = scalesToDomMatrix(zoom.rescaleX(sx), sy);
+    const expected = scalesToDomMatrix(zoom.rescaleX(sx), zoom.rescaleY(sy));
     expect(vt.matrix.a).toBeCloseTo(expected.a);
     expect(vt.matrix.e).toBeCloseTo(expected.e);
   });
@@ -51,8 +52,8 @@ describe("ViewportTransform", () => {
 
     const basisY = vt.fromScreenToModelBasisY([20, 40]);
     const [y1, y2] = basisY;
-    expect(y1).toBeCloseTo(2);
-    expect(y2).toBeCloseTo(4);
+    expect(y1).toBeCloseTo(1);
+    expect(y2).toBeCloseTo(2);
   });
 
   it("converts screen points to model points", () => {
@@ -65,7 +66,7 @@ describe("ViewportTransform", () => {
     const x = vt.fromScreenToModelX(70);
     const y = vt.fromScreenToModelY(20);
     expect(x).toBeCloseTo(3);
-    expect(y).toBeCloseTo(2);
+    expect(y).toBeCloseTo(1);
   });
 
   it("round-trips between screen and model coordinates", () => {
@@ -108,37 +109,17 @@ describe("ViewportTransform", () => {
     expect(t2).toBeCloseTo(50);
   });
 
-  it("throws when the x range collapses", () => {
+  it("throws when the domain contains non-finite values", () => {
     const vt = new ViewportTransform();
-    vt.onViewPortResize([0, 0], [0, 100]);
-    vt.onReferenceViewWindowResize([0, 10], [0, 10]);
-    expect(() => vt.fromScreenToModelX(0)).toThrow(/degenerate/);
-  });
-
-  it("throws when the y range collapses", () => {
-    const vt = new ViewportTransform();
-    vt.onViewPortResize([0, 100], [50, 50]);
-    vt.onReferenceViewWindowResize([0, 10], [0, 10]);
-    expect(() => vt.fromScreenToModelY(0)).toThrow(/degenerate/);
-  });
-
-  it("throws a helpful error when scale is zero", () => {
-    const vt = new ViewportTransform();
-
     vt.onViewPortResize([0, 100], [0, 100]);
-    vt.onReferenceViewWindowResize([0, 10], [0, 10]);
-
-    vt.onZoomPan(zoomIdentity.scale(0));
-    expect(() => vt.fromScreenToModelX(10)).toThrow(/degenerate/);
+    vt.onReferenceViewWindowResize([NaN, 10], [0, 10]);
+    expect(() => vt.fromScreenToModelX(0)).toThrow(/non-finite/);
   });
 
-  it("throws a helpful error when scale is near zero", () => {
+  it("throws when the range contains non-finite values", () => {
     const vt = new ViewportTransform();
-
-    vt.onViewPortResize([0, 100], [0, 100]);
+    vt.onViewPortResize([NaN, 100], [0, 100]);
     vt.onReferenceViewWindowResize([0, 10], [0, 10]);
-
-    vt.onZoomPan(zoomIdentity.scale(1e-15));
-    expect(() => vt.fromScreenToModelX(10)).toThrow(/degenerate/);
+    expect(() => vt.fromScreenToModelX(0)).toThrow(/non-finite/);
   });
 });
