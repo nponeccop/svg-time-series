@@ -29,8 +29,6 @@ export default config(
       "samples/benchmarks/**",
       "samples/misc/demo2-bug-60/**",
     ],
-  },
-  {
     settings: { "import/resolver": { typescript: {} } },
     languageOptions: {
       parserOptions: {
