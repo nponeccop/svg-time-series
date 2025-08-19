@@ -66,19 +66,6 @@ export function drawCharts(
   };
 
   selectAll(".chart").each(onSelectChart);
-
-  let j = 0;
-  setInterval(function () {
-    const newData = data[j % data.length];
-    charts.forEach((c) => {
-      c.updateChartWithNewData([newData[0], newData[1]]);
-    });
-    j++;
-  }, 5000);
-  measure(3, ({ fps }) => {
-    document.getElementById("fps").textContent = fps.toFixed(2);
-  });
-
   return charts;
 }
 
@@ -106,6 +93,9 @@ interface Resize {
 
 const resize: Resize = { interval: 60, request: null, timer: null, eval: null };
 
+let updateInterval: ReturnType<typeof setInterval> | null = null;
+let resizeListener: ((this: Window, ev: UIEvent) => void) | null = null;
+
 export function loadAndDraw(
   seriesAxes: number[] = [0, 0],
 ): Promise<TimeSeriesChart[]> {
@@ -124,6 +114,23 @@ export function loadAndDraw(
         selectAll(".chart-drawing").append("svg");
         charts = drawCharts(data, seriesAxes);
       };
+      resizeListener = () => {
+        resize.request?.();
+      };
+      window.addEventListener("resize", resizeListener);
+
+      let j = 0;
+      updateInterval = setInterval(() => {
+        const newData = data[j % data.length];
+        charts.forEach((c) => {
+          c.updateChartWithNewData([newData[0], newData[1]]);
+        });
+        j++;
+      }, 5000);
+
+      measure(3, ({ fps }) => {
+        document.getElementById("fps").textContent = fps.toFixed(2);
+      });
 
       resolve(charts);
     });
@@ -159,6 +166,24 @@ export function initDemo(seriesAxes: number[]): Promise<TimeSeriesChart[]> {
           : "Enable Brush";
       });
     }
+
+    const cleanup = () => {
+      if (updateInterval != null) {
+        clearInterval(updateInterval);
+        updateInterval = null;
+      }
+      if (resizeListener) {
+        window.removeEventListener("resize", resizeListener);
+        resizeListener = null;
+      }
+    };
+    charts.forEach((c) => {
+      const originalDispose = c.interaction.dispose;
+      c.interaction.dispose = () => {
+        originalDispose();
+        cleanup();
+      };
+    });
 
     return charts;
   });
