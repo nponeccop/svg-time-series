@@ -26,7 +26,7 @@ export interface IPublicInteraction {
   setScaleExtent: (extent: [number, number]) => void;
   enableBrush: () => void;
   disableBrush: () => void;
-  zoomToTimeWindow: (start: Date | number, end: Date | number) => void;
+  zoomToTimeWindow: (start: Date | number, end: Date | number) => boolean;
   getSelectedTimeWindow: () => [number, number] | null;
   dispose: () => void;
 }
@@ -215,7 +215,10 @@ export class TimeSeriesChart {
     this.clearBrush();
   };
 
-  public zoomToTimeWindow = (start: Date | number, end: Date | number) => {
+  public zoomToTimeWindow = (
+    start: Date | number,
+    end: Date | number,
+  ): boolean => {
     const startDate = typeof start === "number" ? new Date(start) : start;
     const endDate = typeof end === "number" ? new Date(end) : end;
     let m0 = this.data.timeToIndex(startDate);
@@ -228,7 +231,8 @@ export class TimeSeriesChart {
     const sx0 = this.state.axes.x.scale(m0);
     const sx1 = this.state.axes.x.scale(m1);
     if (m0 === m1 || sx0 === sx1) {
-      return;
+      this.selectedTimeWindow = null;
+      return false;
     }
     const { width } = this.state.getDimensions();
     const k = width / (sx1 - sx0);
@@ -237,6 +241,7 @@ export class TimeSeriesChart {
     const t0 = +this.data.indexToTime(m0);
     const t1 = +this.data.indexToTime(m1);
     this.selectedTimeWindow = [t0, t1];
+    return true;
   };
 
   public getSelectedTimeWindow = (): [number, number] | null => {
