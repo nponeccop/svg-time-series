@@ -1,29 +1,39 @@
 import { loadAndDraw } from "./common.ts";
 
-void loadAndDraw([0, 0]).then((charts) => {
-  charts.forEach((c) => {
-    c.interaction.onHover(0);
-  });
-  const resetButton = document.getElementById("reset-zoom");
-  resetButton?.addEventListener("click", () => {
+async function init(): Promise<void> {
+  try {
+    const charts = await loadAndDraw([0, 0]);
     charts.forEach((c) => {
-      c.interaction.resetZoom();
+      c.interaction.onHover(0);
     });
-  });
-
-  const brushButton = document.getElementById("toggle-brush");
-  if (brushButton) {
-    let brushEnabled = false;
-    brushButton.addEventListener("click", () => {
-      brushEnabled = !brushEnabled;
+    const resetButton = document.getElementById("reset-zoom");
+    resetButton?.addEventListener("click", () => {
       charts.forEach((c) => {
-        if (brushEnabled) {
-          c.interaction.enableBrush();
-        } else {
-          c.interaction.disableBrush();
-        }
+        c.interaction.resetZoom();
       });
-      brushButton.textContent = brushEnabled ? "Disable Brush" : "Enable Brush";
     });
+
+    const brushButton = document.getElementById("toggle-brush");
+    if (brushButton) {
+      let brushEnabled = false;
+      brushButton.addEventListener("click", () => {
+        brushEnabled = !brushEnabled;
+        charts.forEach((c) => {
+          if (brushEnabled) {
+            c.interaction.enableBrush();
+          } else {
+            c.interaction.disableBrush();
+          }
+        });
+        brushButton.textContent = brushEnabled
+          ? "Disable Brush"
+          : "Enable Brush";
+      });
+    }
+  } catch (error) {
+    alert("Failed to load data");
+    console.error("Error loading data", error);
   }
-});
+}
+
+void init();
