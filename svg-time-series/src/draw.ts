@@ -31,6 +31,7 @@ export interface IPublicInteraction {
   disableBrush: () => void;
   zoomToTimeWindow: (start: Date | number, end: Date | number) => boolean;
   getSelectedTimeWindow: () => [number, number] | null;
+  resize: (dimensions: { width: number; height: number }) => void;
   dispose: () => void;
   on: (eventName: ChartEvent, handler: ChartEventHandler) => void;
   off: (eventName: ChartEvent, handler: ChartEventHandler) => void;
@@ -138,6 +139,7 @@ export class TimeSeriesChart {
       disableBrush: this.disableBrush,
       zoomToTimeWindow: this.zoomToTimeWindow,
       getSelectedTimeWindow: this.getSelectedTimeWindow,
+      resize: this.resize,
       dispose: this.dispose,
       on: this.on,
       off: this.off,

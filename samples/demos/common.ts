@@ -90,23 +90,14 @@ export function onCsv(): Promise<[number, number][]> {
   });
 }
 
-interface Resize {
-  interval: number;
-  request: (() => void) | null;
-  timer: ReturnType<typeof setTimeout> | null;
-  eval: (() => void) | null;
-}
-
-const resize: Resize = { interval: 60, request: null, timer: null, eval: null };
-
 let intervalId: ReturnType<typeof setInterval> | null = null;
-let resizeListener: (() => void) | null = null;
+let resizeObservers: ResizeObserver[] = [];
 
 export async function loadAndDraw(
   seriesAxes: number[] = [0, 0],
 ): Promise<TimeSeriesChart[]> {
   const data = await onCsv();
-  let charts = drawCharts(data, seriesAxes);
+  const charts = drawCharts(data, seriesAxes);
 
   if (intervalId) {
     clearInterval(intervalId);
@@ -120,23 +111,20 @@ export async function loadAndDraw(
     j++;
   }, 5000);
 
-  resize.request = function () {
-    if (resize.timer) clearTimeout(resize.timer);
-    resize.timer = setTimeout(() => {
-      resize.eval?.();
-    }, resize.interval);
-  };
-  resize.eval = function () {
-    selectAll("svg").remove();
-    selectAll(".chart-drawing").append("svg");
-    charts = drawCharts(data, seriesAxes);
-  };
-
-  if (resizeListener) {
-    window.removeEventListener("resize", resizeListener);
-  }
-  resizeListener = () => resize.request?.();
-  window.addEventListener("resize", resizeListener);
+  resizeObservers.forEach((o) => {
+    o.disconnect();
+  });
+  resizeObservers = [];
+  const containers = selectAll(".chart-drawing").nodes() as HTMLElement[];
+  containers.forEach((el, i) => {
+    const chart = charts[i]!;
+    const observer = new ResizeObserver((entries) => {
+      const { width, height } = entries[0]!.contentRect;
+      chart.interaction.resize({ width, height });
+    });
+    observer.observe(el);
+    resizeObservers.push(observer);
+  });
 
   return charts;
 }
@@ -182,10 +170,10 @@ export async function initDemo(
           clearInterval(intervalId);
           intervalId = null;
         }
-        if (resizeListener) {
-          window.removeEventListener("resize", resizeListener);
-          resizeListener = null;
-        }
+        resizeObservers.forEach((o) => {
+          o.disconnect();
+        });
+        resizeObservers = [];
       }
     };
     charts.forEach((c) => {
