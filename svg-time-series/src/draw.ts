@@ -28,6 +28,9 @@ export interface IPublicInteraction {
   disableBrush: () => void;
   zoomToTimeWindow: (start: Date | number, end: Date | number) => void;
   getSelectedTimeWindow: () => [number, number] | null;
+  updateChartWithNewData: (values: number[]) => void;
+  resize: (dimensions: { width: number; height: number }) => void;
+  resetData: (source: IDataSource) => void;
   dispose: () => void;
 }
 
@@ -129,6 +132,9 @@ export class TimeSeriesChart {
       disableBrush: this.disableBrush,
       zoomToTimeWindow: this.zoomToTimeWindow,
       getSelectedTimeWindow: this.getSelectedTimeWindow,
+      updateChartWithNewData: this.updateChartWithNewData,
+      resize: this.resize,
+      resetData: this.resetData,
       dispose: this.dispose,
     };
   }
@@ -137,7 +143,7 @@ export class TimeSeriesChart {
     return this.publicInteraction;
   }
 
-  public updateChartWithNewData(values: number[]): void {
+  public updateChartWithNewData = (values: number[]): void => {
     if (values.length !== this.data.seriesCount) {
       throw new Error(
         `TimeSeriesChart.updateChartWithNewData expected ${String(
@@ -150,9 +156,9 @@ export class TimeSeriesChart {
     }
     this.data.append(...values);
     this.refreshAll();
-  }
+  };
 
-  public resetData(source: IDataSource): void {
+  public resetData = (source: IDataSource): void => {
     this.data.replace(source);
     this.state.destroy();
     this.state = setupRender(this.svg, this.data);
@@ -178,7 +184,7 @@ export class TimeSeriesChart {
     this.refreshAll();
     const { width } = this.state.getDimensions();
     this.onHover(width - 1);
-  }
+  };
 
   public dispose = () => {
     this.zoomState.destroy();

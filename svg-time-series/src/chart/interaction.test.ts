@@ -167,8 +167,7 @@ function createChart(
   );
 
   return {
-    zoom: chart.zoom,
-    onHover: chart.onHover,
+    interaction: chart.interaction,
     svgEl,
     legend,
     chart,
@@ -194,7 +193,7 @@ afterEach(() => {
 
 describe("chart interaction", () => {
   it("zoom updates transforms and axes", () => {
-    const { zoom } = createChart([
+    const { interaction } = createChart([
       [0, 0],
       [1, 1],
     ]);
@@ -213,9 +212,9 @@ describe("chart interaction", () => {
       transform: { x: 10, k: 2 },
       sourceEvent: new Event("wheel"),
     } as D3ZoomEvent<SVGRectElement, unknown>;
-    zoom(event);
+    interaction.zoom(event);
     vi.runAllTimers();
-    zoom({ transform: { x: 10, k: 2 } } as D3ZoomEvent<
+    interaction.zoom({ transform: { x: 10, k: 2 } } as D3ZoomEvent<
       SVGRectElement,
       unknown
     >);
@@ -234,10 +233,10 @@ describe("chart interaction", () => {
       [10, 20],
       [30, 40],
     ];
-    const { onHover, svgEl, legend } = createChart(data);
+    const { interaction, svgEl, legend } = createChart(data);
     vi.runAllTimers();
 
-    onHover(1);
+    interaction.onHover(1);
     vi.runAllTimers();
 
     expect(
@@ -261,13 +260,13 @@ describe("chart interaction", () => {
       [10, 20],
       [30, 40],
     ];
-    const { onHover, svgEl, legend, chart } = createChart(data);
+    const { interaction, svgEl, legend } = createChart(data);
     vi.runAllTimers();
 
-    chart.updateChartWithNewData([50, 60]);
+    interaction.updateChartWithNewData([50, 60]);
     vi.runAllTimers();
 
-    onHover(1);
+    interaction.onHover(1);
     vi.runAllTimers();
 
     expect(
@@ -292,10 +291,10 @@ describe("chart interaction", () => {
       [30, 40],
     ];
     const formatter = vi.fn((ts: number) => `ts:${String(ts)}`);
-    const { onHover, legend } = createChart(data, formatter);
+    const { interaction, legend } = createChart(data, formatter);
     vi.runAllTimers();
 
-    onHover(1);
+    interaction.onHover(1);
     vi.runAllTimers();
 
     expect(legend.querySelector(".chart-legend__time")!.textContent).toBe(
@@ -316,10 +315,10 @@ describe("chart interaction", () => {
       [30, 40],
       [50, 60],
     ];
-    const { onHover, svgEl, legend } = createChart(data);
+    const { interaction, svgEl, legend } = createChart(data);
     vi.runAllTimers();
 
-    onHover(-100);
+    interaction.onHover(-100);
     vi.runAllTimers();
     let circles = svgEl.querySelectorAll("circle");
     let greenTransform = nodeTransforms.get(circles[0] as SVGCircleElement)!;
@@ -335,7 +334,7 @@ describe("chart interaction", () => {
     expect(blueTransform.e).toBe(0);
     expect(blueTransform.f).toBe(20);
 
-    onHover(100);
+    interaction.onHover(100);
     vi.runAllTimers();
     circles = svgEl.querySelectorAll("circle");
     greenTransform = nodeTransforms.get(circles[0] as SVGCircleElement)!;
@@ -422,7 +421,8 @@ describe("chart interaction", () => {
     zoomRect.dispatchEvent(new MouseEvent("mousemove"));
     expect(mouseMoveHandler).toHaveBeenCalledTimes(1);
 
-    chart.interaction.dispose();
+    const interaction = chart.interaction;
+    interaction.dispose();
 
     expect(destroySpy).toHaveBeenCalled();
 

@@ -102,7 +102,7 @@ describe("TimeSeriesChart", () => {
     appendSpy.mockClear();
     drawSpy.mockClear();
 
-    chart.updateChartWithNewData([10]);
+    chart.interaction.updateChartWithNewData([10]);
 
     expect(appendSpy).toHaveBeenCalledWith(10);
     expect(drawSpy).toHaveBeenCalledWith(internal.data.data);
@@ -111,7 +111,7 @@ describe("TimeSeriesChart", () => {
   it("throws when provided fewer values than series count", () => {
     const { chart } = createChart();
     expect(() => {
-      chart.updateChartWithNewData([]);
+      chart.interaction.updateChartWithNewData([]);
     }).toThrow(
       "TimeSeriesChart.updateChartWithNewData expected 1 values, received 0",
     );
@@ -120,7 +120,7 @@ describe("TimeSeriesChart", () => {
   it("throws when provided more values than series count", () => {
     const { chart } = createChart();
     expect(() => {
-      chart.updateChartWithNewData([10, 20]);
+      chart.interaction.updateChartWithNewData([10, 20]);
     }).toThrow(
       "TimeSeriesChart.updateChartWithNewData expected 1 values, received 2",
     );
@@ -129,20 +129,22 @@ describe("TimeSeriesChart", () => {
   it("throws for invalid value types", () => {
     const { chart } = createChart();
     expect(() => {
-      chart.updateChartWithNewData([undefined as unknown as number]);
+      chart.interaction.updateChartWithNewData([
+        undefined as unknown as number,
+      ]);
     }).toThrow(/values\[0\] must be a finite number or NaN/);
     expect(() => {
-      chart.updateChartWithNewData([Infinity]);
+      chart.interaction.updateChartWithNewData([Infinity]);
     }).toThrow(/values\[0\] must be a finite number or NaN/);
     expect(() => {
-      chart.updateChartWithNewData(["oops" as unknown as number]);
+      chart.interaction.updateChartWithNewData(["oops" as unknown as number]);
     }).toThrow(/values\[0\] must be a finite number or NaN/);
   });
 
   it("accepts NaN values", () => {
     const { chart } = createChart();
     expect(() => {
-      chart.updateChartWithNewData([NaN]);
+      chart.interaction.updateChartWithNewData([NaN]);
     }).not.toThrow();
   });
 
@@ -176,7 +178,7 @@ describe("TimeSeriesChart", () => {
     updateExtentsSpy.mockClear();
     legendRefreshSpy.mockClear();
 
-    chart.resize({ width: 200, height: 150 });
+    chart.interaction.resize({ width: 200, height: 150 });
 
     expect(svgEl.getAttribute("width")).toBe("200");
     expect(svgEl.getAttribute("height")).toBe("150");
@@ -203,7 +205,7 @@ describe("TimeSeriesChart", () => {
     };
     vi.spyOn(internal.state, "screenToModelX").mockReturnValue(10);
 
-    chart.onHover(5);
+    chart.interaction.onHover(5);
 
     expect(legend.highlightIndexRaf).toHaveBeenCalledWith(
       internal.data.length - 1,
@@ -217,7 +219,7 @@ describe("TimeSeriesChart", () => {
       zoomState: { setScaleExtent: ReturnType<typeof vi.fn> };
     };
 
-    chart.setScaleExtent([1, 3]);
+    chart.interaction.setScaleExtent([1, 3]);
 
     expect(internal.zoomState.setScaleExtent).toHaveBeenCalledWith([1, 3]);
   });
@@ -272,10 +274,10 @@ describe("TimeSeriesChart", () => {
     internal.selectedTimeWindow = [1, 2];
     const clearBrushSpy = vi.spyOn(internal, "clearBrush");
 
-    chart.enableBrush();
+    chart.interaction.enableBrush();
 
     expect(clearBrushSpy).toHaveBeenCalled();
-    expect(chart.getSelectedTimeWindow()).toBeNull();
+    expect(chart.interaction.getSelectedTimeWindow()).toBeNull();
   });
 
   it("clears brush and skips zoom when selection collapses", () => {
@@ -298,7 +300,7 @@ describe("TimeSeriesChart", () => {
 
     expect(transformSpy).not.toHaveBeenCalled();
     expect(clearBrushSelection).toHaveBeenCalled();
-    expect(chart.getSelectedTimeWindow()).toBeNull();
+    expect(chart.interaction.getSelectedTimeWindow()).toBeNull();
   });
 
   it("returns a cloned selected time window", () => {
@@ -306,12 +308,12 @@ describe("TimeSeriesChart", () => {
     (
       chart as unknown as { selectedTimeWindow: [number, number] }
     ).selectedTimeWindow = [1, 2];
-    const window1 = chart.getSelectedTimeWindow();
+    const window1 = chart.interaction.getSelectedTimeWindow();
     expect(window1).toEqual([1, 2]);
     if (window1) {
       window1[0] = 100;
     }
-    expect(chart.getSelectedTimeWindow()).toEqual([1, 2]);
+    expect(chart.interaction.getSelectedTimeWindow()).toEqual([1, 2]);
   });
 
   it("resets data without recreating the svg container", () => {
@@ -341,7 +343,7 @@ describe("TimeSeriesChart", () => {
       getSeries: (i, j) => rows[i]![j]!,
     };
 
-    chart.resetData(source);
+    chart.interaction.resetData(source);
 
     expect(replaceSpy).toHaveBeenCalledWith(source);
     expect(destroySpy).toHaveBeenCalledTimes(1);

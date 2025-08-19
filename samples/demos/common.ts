@@ -115,7 +115,8 @@ export async function loadAndDraw(
   intervalId = setInterval(function () {
     const newData = data[j % data.length];
     charts.forEach((c) => {
-      c.updateChartWithNewData([newData[0], newData[1]]);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+      c.interaction.updateChartWithNewData([newData[0], newData[1]]);
     });
     j++;
   }, 5000);

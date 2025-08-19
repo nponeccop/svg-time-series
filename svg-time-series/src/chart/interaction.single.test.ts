@@ -156,8 +156,7 @@ function createChart(data: Array<[number]>) {
   );
 
   return {
-    zoom: chart.zoom,
-    onHover: chart.onHover,
+    interaction: chart.interaction,
     svgEl,
     legend,
     chart,
@@ -182,7 +181,7 @@ afterEach(() => {
 
 describe("chart interaction single-axis", () => {
   it("zoom updates transform and axes", () => {
-    const { zoom } = createChart([[0], [1]]);
+    const { interaction } = createChart([[0], [1]]);
     vi.runAllTimers();
 
     const xAxis = axisInstances[0]!;
@@ -193,12 +192,14 @@ describe("chart interaction single-axis", () => {
     const yCalls = yAxis.axisUpCalls;
     const callCount = updateNodeCalls;
 
-    zoom({
+    interaction.zoom({
       transform: { x: 10, k: 2 },
       sourceEvent: new Event("wheel"),
-    } as Parameters<typeof zoom>[0]);
+    } as Parameters<typeof interaction.zoom>[0]);
     vi.runAllTimers();
-    zoom({ transform: { x: 10, k: 2 } } as Parameters<typeof zoom>[0]);
+    interaction.zoom({
+      transform: { x: 10, k: 2 },
+    } as Parameters<typeof interaction.zoom>[0]);
     vi.runAllTimers();
 
     expect(mtNy.onZoomPan).toHaveBeenCalledWith({ x: 10, k: 2 });
@@ -211,10 +212,10 @@ describe("chart interaction single-axis", () => {
 
   it("onHover updates legend text and dot position", () => {
     const data: Array<[number]> = [[10], [30]];
-    const { onHover, svgEl, legend } = createChart(data);
+    const { interaction, svgEl, legend } = createChart(data);
     vi.runAllTimers();
 
-    onHover(1);
+    interaction.onHover(1);
     vi.runAllTimers();
 
     expect(
@@ -229,13 +230,13 @@ describe("chart interaction single-axis", () => {
 
   it("updates circle after appending data", () => {
     const data: Array<[number]> = [[10], [30]];
-    const { onHover, svgEl, legend, chart } = createChart(data);
+    const { interaction, svgEl, legend } = createChart(data);
     vi.runAllTimers();
 
-    chart.updateChartWithNewData([50]);
+    interaction.updateChartWithNewData([50]);
     vi.runAllTimers();
 
-    onHover(1);
+    interaction.onHover(1);
     vi.runAllTimers();
 
     expect(
