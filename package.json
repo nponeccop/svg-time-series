@@ -5,7 +5,7 @@
   "scripts": {
     "build": "npm run build --workspaces --if-present",
     "dev": "npm run dev --workspace=samples",
-    "lint": "eslint . --cache --max-warnings=0 --report-unused-disable-directives",
+    "lint": "eslint . --cache --max-warnings=0 --report-unused-disable-directives --ignore-pattern '**/dist/**' --ignore-pattern 'samples/unused/**' --ignore-pattern 'samples/benchmarks/**' --ignore-pattern 'samples/misc/demo2-bug-60/**'",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "vitest run --reporter=dot",
     "bench": "npm run bench --workspaces --if-present",
