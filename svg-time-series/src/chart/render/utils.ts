@@ -24,14 +24,3 @@ export function createDimensions(
 
   return { width, height };
 }
-
-export function createSeriesNodes(
-  svg: Selection<SVGSVGElement, unknown, HTMLElement, unknown>,
-): { view: SVGGElement; path: SVGPathElement } {
-  const view = svg.append("g").attr("class", "view");
-  const path = view.append<SVGPathElement>("path");
-  return {
-    view: view.node() as SVGGElement,
-    path: path.node() as SVGPathElement,
-  };
-}
