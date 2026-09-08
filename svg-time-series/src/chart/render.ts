@@ -1,4 +1,5 @@
 import type { Selection } from "d3-selection";
+import { select } from "d3-selection";
 import { scaleTime } from "d3-scale";
 import type { ScaleTime, ScaleLinear } from "d3-scale";
 import type { Line } from "d3-shape";
@@ -260,12 +261,37 @@ export function setupRender(
   const series = createSeries(svg, data.seriesAxes);
   const seriesRenderer = new SeriesRenderer();
   seriesRenderer.series = series;
+
+  // One `g.axis` per axis, keyed so a re-run reuses the existing groups.
+  // The X axis leads, then the Y axes in model order.
+  const axisGroups = svg
+    .selectAll<SVGGElement, string>("g.axis")
+    .data(["x", ...yAxes.map((_, i) => `y-${String(i)}`)], (d) => d)
+    .join((enter) => enter.append("g").attr("class", "axis"));
+  const axisNodes = axisGroups.nodes();
+
+  // Nodes that entered were appended last, which on a re-run puts them behind
+  // the interaction layers. Restore the series-then-axes order the stylesheets
+  // and hit-testing expect; the caller raises the interaction layers back on top.
+  for (const s of series) {
+    s.viewSelection.raise();
+  }
+  axisGroups.raise();
+
+  const asGroup = (node: SVGGElement) =>
+    select(node) as unknown as Selection<
+      SVGGElement,
+      unknown,
+      HTMLElement,
+      unknown
+    >;
+
   const xAxis = new MyAxis(Orientation.Bottom, axisManager.x)
     .ticks(4)
     .setTickSize(height)
     .setTickPadding(8 - height);
   xAxis.setScale(axisManager.x);
-  const xAxisGroup = svg.append("g").attr("class", "axis");
+  const xAxisGroup = asGroup(axisNodes[0]!);
   xAxisGroup.call(xAxis.axis.bind(xAxis));
   const axisX: AxisDataX = {
     axis: xAxis,
@@ -286,7 +312,7 @@ export function setupRender(
     if (i !== 0) {
       axis.setDrawTickLines(false);
     }
-    const g = svg.append("g").attr("class", "axis");
+    const g = asGroup(axisNodes[i + 1]!);
     const xPosition = orientation === Orientation.Left ? width : 0;
     g.attr("transform", `translate(${String(xPosition)},0)`);
     g.call(axis.axis.bind(axis));

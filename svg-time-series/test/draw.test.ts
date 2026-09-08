@@ -348,12 +348,136 @@ describe("TimeSeriesChart", () => {
     chart.resetData(source);
 
     expect(replaceSpy).toHaveBeenCalledWith(source);
-    expect(destroySpy).toHaveBeenCalledTimes(1);
+    expect(destroySpy).not.toHaveBeenCalled();
     expect(zoomDestroySpy).toHaveBeenCalledTimes(1);
     expect((chart as unknown as { state: unknown }).state).not.toBe(oldState);
     expect(internal.svg.node()).toBe(svgEl);
     expect(legend.init).toHaveBeenCalledTimes(1);
     expect(legend.refresh).toHaveBeenCalledTimes(1);
     expect(drawSpy).toHaveBeenCalledWith(internal.data.data);
+  });
+
+  it("reuses the series and axis nodes instead of rebuilding them", () => {
+    const { chart, svgEl } = createChart();
+    const before = {
+      views: Array.from(svgEl.querySelectorAll("g.view")),
+      axes: Array.from(svgEl.querySelectorAll("g.axis")),
+    };
+
+    const rows = [[10], [20]];
+    chart.resetData({
+      startTime: 0,
+      timeStep: 1,
+      length: rows.length,
+      seriesAxes: [0],
+      getSeries: (i, j) => rows[i]![j]!,
+    });
+
+    expect(Array.from(svgEl.querySelectorAll("g.view"))).toEqual(before.views);
+    expect(Array.from(svgEl.querySelectorAll("g.axis"))).toEqual(before.axes);
+    for (const node of [...before.views, ...before.axes]) {
+      expect(node.parentNode).toBe(svgEl);
+    }
+  });
+
+  it("keeps series below axes below the interaction layers when a series is added", () => {
+    const { chart, svgEl } = createChart();
+    const layout = () =>
+      Array.from(svgEl.children).map((c) => c.getAttribute("class"));
+
+    expect(layout()).toEqual([
+      "view",
+      "axis",
+      "axis",
+      "zoom-overlay cursor-grab",
+      "brush-layer",
+    ]);
+
+    const rows = [
+      [10, 1],
+      [20, 2],
+    ];
+    chart.resetData({
+      startTime: 0,
+      timeStep: 1,
+      length: rows.length,
+      seriesAxes: [0, 1],
+      getSeries: (i, j) => rows[i]![j]!,
+    });
+
+    expect(layout()).toEqual([
+      "view",
+      "view",
+      "axis",
+      "axis",
+      "axis",
+      "zoom-overlay cursor-grab",
+      "brush-layer",
+    ]);
+  });
+
+  // samples/demos/index.css colours each series with `g.view:nth-child(N) > path`,
+  // so the views must stay the leading children of the <svg>.
+  it("keeps the g.view:nth-child selectors the sample stylesheet relies on", () => {
+    const { chart, svgEl } = createChart();
+    const nth = (n: number) =>
+      svgEl.querySelector(`g.view:nth-child(${String(n)})`);
+
+    expect(nth(1)).not.toBeNull();
+
+    const rows = [
+      [10, 1],
+      [20, 2],
+    ];
+    chart.resetData({
+      startTime: 0,
+      timeStep: 1,
+      length: rows.length,
+      seriesAxes: [0, 1],
+      getSeries: (i, j) => rows[i]![j]!,
+    });
+
+    const views = Array.from(svgEl.querySelectorAll("g.view"));
+    expect(views.length).toBe(2);
+    expect(nth(1)).toBe(views[0]);
+    expect(nth(2)).toBe(views[1]);
+  });
+
+  it("removes the surplus nodes when a source with fewer series is applied", () => {
+    const { chart, svgEl } = createChart();
+    const grown = [
+      [10, 1],
+      [20, 2],
+    ];
+    chart.resetData({
+      startTime: 0,
+      timeStep: 1,
+      length: grown.length,
+      seriesAxes: [0, 1],
+      getSeries: (i, j) => grown[i]![j]!,
+    });
+    expect(svgEl.querySelectorAll("g.view").length).toBe(2);
+    expect(svgEl.querySelectorAll("g.axis").length).toBe(3);
+
+    const rows = [[10], [20]];
+    chart.resetData({
+      startTime: 0,
+      timeStep: 1,
+      length: rows.length,
+      seriesAxes: [0],
+      getSeries: (i, j) => rows[i]![j]!,
+    });
+
+    expect(svgEl.querySelectorAll("g.view").length).toBe(1);
+    expect(svgEl.querySelectorAll("g.axis").length).toBe(2);
+    expect(
+      Array.from(svgEl.children).map((c) => c.getAttribute("class")),
+    ).toEqual([
+      "view",
+      "axis",
+      "axis",
+      "zoom-overlay cursor-grab",
+      "brush-layer",
+    ]);
   });
 });

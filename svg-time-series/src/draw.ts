@@ -172,7 +172,9 @@ export class TimeSeriesChart {
 
   public resetData(source: IDataSource): void {
     this.data.replace(source);
-    this.state.destroy();
+    // setupRender re-joins the series and axis nodes, so the existing DOM is
+    // reused rather than torn down and rebuilt. Only the interaction layers
+    // need lifting back on top, in case the new source added series or axes.
     this.state = setupRender(this.svg, this.data);
     this.zoomArea.raise();
     this.brushLayer.raise();
