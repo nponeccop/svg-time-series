@@ -15,7 +15,7 @@
 </svg>
 ```
 
-- **`g.view`** – container for a data series. Each group holds a `<path>` node that draws the series line.
+- **`g.view`** – container for a data series. Each group holds a `<path>` node that draws the series line. Charts created through `timeSeriesChart()` also bind the series spec to that path and write it to a `data-series` attribute, so series can be addressed by key (`g.view > path[data-series="ny"]`) instead of by document position.
 - **`g.axis`** – axis groups. The first is the bottom X axis. Subsequent groups render Y axes: index `0` on the right and index `1` on the left.
 - **`rect.zoom-overlay`** – transparent overlay capturing zoom and pan gestures. The chart toggles `cursor-grab` and `cursor-grabbing` on this element.
 - **`g.brush-layer`** – hidden layer activated for rectangular brush selections.
@@ -34,6 +34,14 @@ brushLayer.style("display", null).select(".selection").attr("stroke", "red");
 
 // style all series paths
 selectAll("g.view > path").attr("stroke", "steelblue").attr("fill", "none");
+
+// style one series by key (charts created with timeSeriesChart())
+select("svg").select('g.view > path[data-series="ny"]').attr("stroke", "green");
+
+// read the bound series spec back from the DOM
+select("svg")
+  .selectAll("g.view > path")
+  .attr("stroke", (spec) => spec.stroke);
 
 // dim X-axis labels
 select("svg").select("g.axis").selectAll("text").attr("fill", "#777");

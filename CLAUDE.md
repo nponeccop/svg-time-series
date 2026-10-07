@@ -71,9 +71,22 @@ The library achieves 60 FPS through several key optimizations:
 
 ### Key Components
 
+#### timeSeriesChart (timeSeriesChart.ts)
+
+Idiomatic D3 facade over the engine: a chainable closure component
+(`.x()`, `.series()`, `.scaleExtent()`, `.brush()`, `.on()`/`.off()`) rendered with
+`selection.datum(data).call(chart)`. It converts accessor-based data into the
+engine's `IDataSource`, implements the engine's `ILegendController` internally to
+dispatch `hover`/`leave` events (with pixel coordinates) and re-binds the parsed
+series specs to the produced paths. Both entry points are exported from
+`src/draw.ts`. Tests: `test/chart/timeSeriesChart.test.ts`; demo:
+`samples/idiomatic/`; head-less render smoke test:
+`scripts/render-idiomatic-chart.mjs`. The design and the remaining migration
+phases are in `docs/proposals/idiomatic-d3.md`.
+
 #### TimeSeriesChart (draw.ts)
 
-Main entry point that orchestrates the entire chart. Constructor takes:
+Low-level engine that orchestrates the entire chart. Constructor takes:
 
 - `svg` - D3 selection for target SVG element
 - `data` - IDataSource implementation with `startTime`, `timeStep`, `length`, `seriesAxes`, and `getSeries()`

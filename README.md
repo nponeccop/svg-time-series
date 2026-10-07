@@ -33,6 +33,16 @@ This monorepo is organized into several workspaces:
 
 For a guide to the chart's SVG element hierarchy—views, axes, and interaction layers—and examples of selecting or styling nodes with D3, see [docs/dom-structure.md](docs/dom-structure.md).
 
+The library has two entry points: the idiomatic D3 component
+`timeSeriesChart()` (chainable accessors, data bound through the selection,
+`d3-dispatch` events) and the original `TimeSeriesChart` class. The plan for
+making the whole package idiomatic—margins, in-place updates, `d3-axis`
+interop, packaging, testing—is in
+[docs/proposals/idiomatic-d3.md](docs/proposals/idiomatic-d3.md); the facade
+proposed there is already implemented and demonstrated by
+[`samples/idiomatic/index.html`](samples/idiomatic) (open
+`/idiomatic/index.html` on the dev server).
+
 Run tests and benchmarks from the repository root:
 
 ```sh
