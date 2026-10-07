@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1"
+    />
+    <link href="index.css" rel="stylesheet" type="text/css" />
+    <title>SVG Time Series — idiomatic D3 API</title>
+  </head>
+  <body>
+    <header>
+      <h1>Idiomatic D3 API</h1>
+      <p>
+        <code>timeSeriesChart&lt;Row&gt;().x(...).series(...).on(...)</code>
+        called with <code>selection.datum(rows).call(chart)</code>. The legend
+        and the hover markers below are built with plain
+        <code>d3-selection</code> joins from the chart's
+        <code>hover</code>/<code>leave</code>/<code>zoom</code> events.
+      </p>
+    </header>
+
+    <div class="toolbar">
+      <button id="reset-zoom">Reset zoom</button>
+      <button id="zoom-to-quarter">Zoom to first quarter</button>
+      <button id="toggle-brush">Toggle brush</button>
+      <span class="status">
+        <span id="fps">n/a</span>
+        <span id="zoom-level">k = 1</span>
+        <span id="brush-window"></span>
+      </span>
+    </div>
+
+    <div class="chart">
+      <div class="chart-drawing"><svg></svg></div>
+      <div class="chart-legend">
+        <span class="chart-legend__time"></span>
+      </div>
+    </div>
+
+    <script type="module" src="index.ts"></script>
+  </body>
+</html>

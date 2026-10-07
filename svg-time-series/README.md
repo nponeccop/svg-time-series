@@ -1,6 +1,17 @@
 # svg-time-series
 
-A small library for rendering high-performance SVG time series charts with D3. It exports a single class, `TimeSeriesChart`, which handles drawing, zooming and hover interactions. The library supports an arbitrary number of data series across up to two Y axes (left and right).
+A small library for rendering high-performance SVG time series charts with D3. It handles drawing, zooming and hover interactions, and supports an arbitrary number of data series across up to two Y axes (left and right).
+
+Two entry points are available:
+
+- `timeSeriesChart()` — the idiomatic D3 component: chainable accessors, data bound
+  through the selection, `d3-dispatch` events. Start here.
+- `TimeSeriesChart` — the original class API with a C-style data source and a
+  required legend controller. Still supported; see [Legacy class API](#legacy-class-api).
+
+The [idiomatic D3 proposal](../docs/proposals/idiomatic-d3.md) describes the
+migration path for the remaining differences (margins, in-place updates,
+`d3-axis` interop, packaging).
 
 ## Installation
 
@@ -11,10 +22,50 @@ npm install svg-time-series
 ## Importing
 
 ```ts
-import { TimeSeriesChart } from "svg-time-series";
+import { timeSeriesChart } from "svg-time-series";
 ```
 
 ## Basic usage
+
+```ts
+import { select } from "d3-selection";
+import { timeSeriesChart } from "svg-time-series";
+
+interface Row {
+  date: Date;
+  ny: number;
+  sf: number;
+}
+
+const chart = timeSeriesChart<Row>()
+  .x((d) => d.date)
+  .series([
+    { key: "ny", y: (d) => d.ny, stroke: "steelblue" },
+    { key: "sf", y: (d) => d.sf, axis: 1, stroke: "orange" },
+  ])
+  .on("hover", (event) => {
+    // event.index, event.date, event.datum and event.points[].{x,y,value}
+    console.log(event.datum, event.points);
+  })
+  .on("zoom", (event) => console.log(event.transform.k));
+
+select("#chart").select("svg").datum(rows).call(chart);
+```
+
+The data lives in the DOM: after rendering, the series paths are bound to their
+series spec, so ordinary D3 code styles them.
+
+```ts
+svg.selectAll("g.view > path").attr("stroke", (spec) => spec.stroke);
+```
+
+Data points must be evenly spaced in time (the renderer indexes data by a fixed
+time step); the accessor output is validated and reported with an actionable
+error. Call `chart.dispose()` when the chart is no longer needed, or
+`chart.resetZoom()`, `chart.brush(true)`, `chart.scaleExtent([1, 80])`,
+`chart.zoomToTimeWindow(start, end)` to drive it programmatically.
+
+## Legacy class API
 
 ```ts
 import { select } from "d3-selection";
@@ -53,6 +104,9 @@ const chart = new TimeSeriesChart(
 
 When the chart is no longer needed, release its resources by calling
 `chart.interaction.dispose()`.
+
+The class API is what `timeSeriesChart()` renders with; it remains available for
+existing code and for consumers who want to supply their own `ILegendController`.
 
 `getSeries` returns a value for the requested series index. Any number of
 series may be provided, but each must be assigned to either the left or right Y

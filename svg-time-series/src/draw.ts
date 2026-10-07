@@ -19,6 +19,24 @@ export type { IDataSource } from "./chart/data.ts";
 export type { IMinMax } from "./chart/axisData.ts";
 export type { ILegendController } from "./chart/legend.ts";
 export type { IZoomStateOptions } from "./chart/zoomState.ts";
+export {
+  chartEventNames,
+  timeSeriesChart,
+  type BrushChartEvent,
+  type ChartEvent as ComponentChartEvent,
+  type ChartListener,
+  type ChartEventName,
+  type HoverChartEvent,
+  type HoverPoint,
+  type LeaveChartEvent,
+  type RenderChartEvent,
+  type SeriesAxis,
+  type SeriesSpec,
+  type TimeAccessor,
+  type TimeSeriesChartComponent,
+  type ValueAccessor,
+  type ZoomChartEvent,
+} from "./timeSeriesChart.ts";
 
 export type ChartEvent =
   | "beforeRender"
