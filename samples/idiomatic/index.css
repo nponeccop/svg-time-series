@@ -1,0 +1,152 @@
+:root {
+  --ny: rgb(136, 204, 91);
+  --sf: rgb(96, 77, 196);
+  --ink: #222;
+  --muted: #6b7280;
+}
+
+body {
+  margin: 0;
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+header {
+  padding: 0.75rem 1rem 0.25rem;
+}
+
+header h1 {
+  font-size: 1rem;
+  margin: 0 0 0.25rem;
+}
+
+header p {
+  margin: 0;
+  max-width: 60rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+code {
+  font-size: 0.75rem;
+  background: #f3f4f6;
+  padding: 0 0.2rem;
+  border-radius: 0.2rem;
+}
+
+.toolbar {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.5rem 1rem;
+}
+
+.toolbar button {
+  font: inherit;
+  font-size: 0.8rem;
+  padding: 0.25rem 0.6rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.25rem;
+  background: #fff;
+  cursor: pointer;
+}
+
+.toolbar button:hover {
+  background: #f9fafb;
+}
+
+.status {
+  margin-left: auto;
+  font-size: 0.8rem;
+  color: var(--muted);
+  display: flex;
+  gap: 0.75rem;
+}
+
+.chart {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0 1rem 1rem;
+}
+
+.chart-drawing {
+  flex: 1;
+  min-height: 0;
+}
+
+svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Series are addressed by key, not by document position. */
+path {
+  vector-effect: non-scaling-stroke;
+}
+.view,
+.axis,
+.zoom-overlay {
+  fill: none;
+}
+.axis line {
+  stroke-opacity: 0.3;
+  shape-rendering: crispEdges;
+  stroke-width: 1px;
+}
+.zoom-overlay {
+  pointer-events: all;
+}
+
+.tick text {
+  fill: var(--muted);
+  font-size: 0.7rem;
+}
+
+.hover-dot {
+  pointer-events: none;
+}
+
+.chart-legend {
+  display: flex;
+  gap: 1rem;
+  padding-top: 0.5rem;
+  min-height: 1.5rem;
+  font-size: 0.8rem;
+  align-items: baseline;
+}
+
+.chart-legend__time {
+  color: var(--muted);
+  min-width: 6rem;
+}
+
+.legend-row {
+  display: flex;
+  gap: 0.35rem;
+  align-items: baseline;
+}
+
+.legend-row__swatch {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  align-self: center;
+}
+
+.legend-row__caption {
+  color: var(--muted);
+}
+
+.legend-row__value {
+  font-variant-numeric: tabular-nums;
+}

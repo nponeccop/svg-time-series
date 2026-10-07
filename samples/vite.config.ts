@@ -6,6 +6,10 @@ export default defineConfig({
   root: ".",
   server: {
     port: 5173,
+    // Bind to every interface and accept proxied hosts so the dev server also
+    // works in containers, VMs and remote preview environments.
+    host: true,
+    allowedHosts: true,
     fs: {
       allow: [".."],
     },
@@ -81,6 +85,8 @@ export default defineConfig({
         "demos-demo1": resolve(__dirname, "demos/demo1.html"),
         "demos-demo2": resolve(__dirname, "demos/demo2.html"),
         "demos-resetZoom": resolve(__dirname, "demos/resetZoom.html"),
+        // idiomatic API demo
+        idiomatic: resolve(__dirname, "idiomatic/index.html"),
         // misc
         "misc-d3-pan-zoom-vwt": resolve(
           __dirname,
